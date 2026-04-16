@@ -1,0 +1,22 @@
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/
+.claude/**/*.local.md
+
+# Build outputs
+*.pptx
+output/
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
