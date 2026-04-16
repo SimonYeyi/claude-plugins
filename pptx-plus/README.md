@@ -42,23 +42,16 @@ pptx-plus/
 
 ### 方式一：从 GitHub 市场安装（推荐）
 
-1. 确保 `~/.claude/settings.json` 中已配置市场源：
+1. 添加插件市场
 
-```json
-"extraKnownMarketplaces": {
-  "claude-plugins": {
-    "source": {
-      "source": "github",
-      "repo": "SimonYeyi/claude-plugins"
-    }
-  }
-}
+```bash
+/plugin marketplace add SimonYeyi/cc-plugins
 ```
 
 2. 安装插件：
 
 ```bash
-/plugin install pptx-plus@claude-plugins
+/plugin install pptx-plus@cc-plugins
 ```
 
 ### 方式二：本地加载（开发时使用）
@@ -66,18 +59,24 @@ pptx-plus/
 使用 `--plugin-dir` 参数启动 Claude Code：
 
 ```bash
-claude --plugin-dir D:/yeyi/AI/pptx-plus
+claude --plugin-dir D:/path/to/cc-plugins/pptx-plus
 ```
 
 这样可以实时调试插件修改。
 
-### 方式三：复制到插件目录
+## 升级
 
-将 `pptx-plus` 文件夹复制到插件目录：
+### 市场安装的用户
 
 ```bash
-# Windows
-C:/Users/<用户名>/.claude/plugins/pptx-plus
+/plugin update pptx-plus@cc-plugins
+```
+
+### 本地开发用户
+
+```bash
+cd D:/path/to/cc-plugins/pptx-plus
+git pull origin master
 ```
 
 ## 卸载
@@ -85,31 +84,8 @@ C:/Users/<用户名>/.claude/plugins/pptx-plus
 ### 市场安装的用户
 
 ```bash
-/plugin uninstall pptx-plus@claude-plugins
+/plugin uninstall pptx-plus@cc-plugins
 ```
-
-### 复制安装的用户
-
-```bash
-rm -rf C:/Users/<用户名>/.claude/plugins/pptx-plus
-```
-
-## 升级
-
-### 市场安装的用户
-
-```bash
-/plugin update pptx-plus@claude-plugins
-```
-
-### 本地开发用户
-
-```bash
-cd D:/yeyi/AI/pptx-plus
-git pull origin master
-```
-
-> **注意**：升级前建议备份 `~/.pptx-plus/` 目录（包含用户的工作输出）。
 
 ## 验证安装
 

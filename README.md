@@ -10,8 +10,6 @@ Claude Code 插件市场，管理多个插件项目。
 
 ## 添加市场
 
-### 方式一：使用命令添加
-
 GitHub 市场：
 ```bash
 /plugin marketplace add SimonYeyi/cc-plugins
