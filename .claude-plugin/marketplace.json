@@ -1,0 +1,19 @@
+{
+  "name": "simon-plugins",
+  "description": "Claude Code plugin marketplace for Simon's plugins",
+  "owner": {
+    "name": "Simon Yeyi",
+    "email": "simon@yeyi.com"
+  },
+  "plugins": [
+    {
+      "name": "pptx-plus",
+      "description": "通过智能工作流生成专业分享 PPT 的插件。将简略材料转换为可用于团队分享的专业演示文稿。",
+      "version": "1.0.0",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/SimonYeyi/pptx-plus.git"
+      }
+    }
+  ]
+}
