@@ -1,0 +1,17 @@
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/*.local.md
+
+# Build outputs
+*.pptx
+output/
+
+# Node
+node_modules/
