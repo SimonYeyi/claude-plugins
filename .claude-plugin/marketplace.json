@@ -1,6 +1,6 @@
 {
-  "name": "yeyi-plugins",
-  "description": "Claude Code plugin marketplace for Yeyi's plugins",
+  "name": "claude-plugins",
+  "description": "Claude Code plugin marketplace",
   "owner": {
     "name": "Yeyi",
     "email": "yi.ye@dreamsmart.com"
