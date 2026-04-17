@@ -1,0 +1,9 @@
+{
+  "name": "super-flow",
+  "version": "0.1.0",
+  "description": "超级生产线 — 拦截所有功能性开发请求，从创意到上线的全链路自主开发流程。多 Agent 协作：创意团队 → 产品规划 → 开发 → 测试 → 多视角审查，循环迭代直到所有问题解决。",
+  "author": {
+    "name": "yi.ye"
+  },
+  "keywords": ["workflow", "multi-agent", "development", "automation", "pipeline"]
+}
