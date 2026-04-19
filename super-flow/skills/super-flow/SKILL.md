@@ -136,7 +136,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - 主干Agent与内嵌审查Agent之间可以直接通信
 - 分歧采用**双向沟通机制**解决，而非简单投票
 - 循环直到达成共识，或升级主控裁断
-- **评审最大重试次数**：每个内循环最多重试 **5 次**，5 次后仍未通过需升级报告（列出未解决问题及分歧点，由**主控裁断**）
+- **评审最大重试次数**：每个内循环最多重试 **5 次**，5 次后仍未通过需升级主控裁断
 
 **主控职责**：
 - 按顺序启动各主干Agent
@@ -144,7 +144,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - **展示SPEC文档**：创意Agent/用户确认SPEC时，由主控展示完整文档
 - **必须收到主干Agent的"评审通过"通知，才能进入下一阶段**（不能仅以文档写入作为进入下一阶段的依据）
 - **处理测试Agent响应**：根据返回的ESCALATE指令执行（见下方执行规则）
-- 在主干Agent报告内循环5次后仍有分歧时决断
+- **自动处理升级**：内循环5次后仍有分歧时，主控自动裁断（不等待用户介入），根据裁断结果继续流程
 
 **测试Agent响应与主控执行**：
 
@@ -163,6 +163,9 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 ├── ESCALATE_TEST_AGENT_STAGE2 → 把枚举传回测试Agent
 ├── ESCALATE_DEVELOPER → 打回开发Agent
 └── ESCALATE_MAIN_CONTROLLER → 主控确认流程完成
+
+内循环5次后升级：
+└── 主控自动裁断（根据未解决问题和分歧点做出决策），不等待用户介入
 ```
 
 **终止条件**：全部问题修复，所有评审/审查 agent 全部通过，且主控确认。
