@@ -88,7 +88,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 | 角色 | 职责 | 规模 |
 |------|------|------|
-| **主控（我）** | 按顺序启动各主干Agent、协调阶段交接、监控内循环、**内循环5次后仍有分歧时决断** | 当前 session |
+| **主控（我）** | 按顺序启动各主干Agent、协调阶段交接、监控内循环、**裁断所有主干Agent升级问题（除brainstorming转发和SPEC确认外）** | 当前 session |
 | **创意 Agent** | CEO/高级产品战略官。输出 Creative Brief（创意说明书），经评审通过后移交产品 Agent | 1 个 |
 | **创意评审团 — 子功能创意** | 创新性 + 可行性 + 商业价值，每个实例评估全部视角，3 个并行评审 | 3 个 |
 | **创意评审团 — 项目立项创意** | 创新性 + 可行性 + 商业价值，每个实例评估全部视角，5 个并行评审 | 5 个 |
@@ -140,11 +140,9 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 **主控职责**：
 - 按顺序启动各主干Agent
-- **转发brainstorming对话**：产品Agent与创意Agent/用户之间的brainstorming通过主控转发
-- **展示SPEC文档**：创意Agent/用户确认SPEC时，由主控展示完整文档
-- **必须收到主干Agent的"评审通过"通知，才能进入下一阶段**（不能仅以文档写入作为进入下一阶段的依据）
-- **处理测试Agent响应**：根据返回的ESCALATE指令执行（见下方执行规则）
-- **自动处理升级**：内循环5次后仍有分歧时，主控自动裁断（不等待用户介入），根据裁断结果继续流程
+- **转发brainstorming对话**：产品Agent与创意Agent/用户之间的brainstorming通过主控转发（此过程**不需要裁断**）
+- **展示SPEC文档**：创意Agent/用户确认SPEC时，由主控展示完整文档（**确认过程不需要裁断**）
+- **裁断所有主干Agent的升级问题**：除brainstorming转发和SPEC确认外，任何主干Agent抛出的问题主控都必须裁断，根据问题内容做出决策并继续流程
 
 **测试Agent响应与主控执行**：
 
@@ -164,8 +162,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 ├── ESCALATE_DEVELOPER → 打回开发Agent
 └── ESCALATE_MAIN_CONTROLLER → 主控确认流程完成
 
-内循环5次后升级：
-└── 主控自动裁断（根据未解决问题和分歧点做出决策），不等待用户介入
+主干Agent升级问题：
+└── 主控裁断（除brainstorming转发和SPEC确认外，所有主干Agent抛出的问题都必须裁断）
 ```
 
 **终止条件**：全部问题修复，所有评审/审查 agent 全部通过，且主控确认。
