@@ -42,6 +42,31 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 ---
 
+## 工作流程
+
+### 阶段一：Brainstorming 对齐
+1. **读取** Creative Brief（创意模式）或用户原始需求（产品模式）
+2. **brainstorm式对话**（通过主控转发）：
+   - 创意模式（与创意Agent）：一次全问，创意Agent一次性回答所有问题
+   - 产品模式（与用户）：一次一问，逐步确认
+3. **整合** brainstorming所有内容，展示完整SPEC文档设计（**此时不要写入文件**）
+
+### 阶段二：确认
+1. **展示** 完整SPEC给创意提出者确认（通过主控）
+2. **确认循环**（必须执行）：
+   - 创意提出者提出修改意见 → 主控转发给产品Agent
+   - 产品Agent修改SPEC
+   - 主控再次展示完整SPEC给创意提出者确认
+   - **循环直到创意提出者明确表示没有任何意见** → 才能写入
+3. **写入** SPEC到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+
+### 阶段三：评审
+1. **dispatch** spec-reviewer 进行SPEC评审
+2. **评审循环**：根据评审意见修改SPEC → 重新评审，最多5次
+3. **通知主控** 评审通过
+
+---
+
 ## 需求分析专业能力
 
 | 能力 | 含义 | 如何应用 |

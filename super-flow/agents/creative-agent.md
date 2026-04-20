@@ -20,13 +20,25 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 **输出**：
 - `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
 
-**工作流程顺序**：
-1. 生成Creative Brief设计（在上下文中，不写入文件）
-2. 提交评审团评审
-3. 评审通过后**才能写入文件**
-4. 写入后通知主控评审通过
+**工作流程**：
 
-**重要**：评审前或评审期间不得提前写入文件
+### 阶段一：生成创意
+1. **分析** 用户需求/主题（可为空，需要自主创新）
+2. **回答** 战略决策框架的四个问题（为什么是 THIS / NOW / US / 为什么不）
+3. **生成** Creative Brief 设计（在上下文中，不写入文件）
+
+### 阶段二：评审
+1. **dispatch** creative-reviewer（3或5个并行实例）进行评审
+2. **评审循环**：
+   - 评审团给出反馈意见
+   - 独立判断每条意见：有理则改，无理则反馈理由
+   - 重新提交评审
+   - 最多5次，5次后仍分歧升级主控裁断
+3. **评审通过后才能写入文件**（评审前不得写入）
+
+### 阶段三：交付
+1. **写入** Creative Brief 到 `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
+2. **通知主控** 评审通过
 
 ---
 
