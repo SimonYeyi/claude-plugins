@@ -73,10 +73,8 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
    - 主控再次展示完整SPEC给创意提出者确认
    - **循环直到创意提出者明确表示没有任何意见**
 3. **写入** SPEC到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-4. **生成** 产品使用指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`（创意模式下必须执行）
-
-### 阶段二：评审
-1. **dispatch** spec-reviewer 进行SPEC评审，传递SPEC.md、Creative Brief/对话记录
+4. **dispatch** spec-reviewer 进行SPEC评审，传递SPEC.md、Creative Brief/对话记录
+5. **评审通过后生成** 产品使用指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`（创意模式下必须执行）
 
 ---
 
