@@ -1,7 +1,7 @@
 ---
 name: implementation-reviewer
 description: |
-Use this agent when reviewing implementation in the super-flow pipeline. Triggers when the user says "review implementation", "code review", "security review", "implementation completeness review", or when super-flow enters the implementation review phase after development is complete (stage 4).
+ Use this agent when reviewing implementation in the super-flow pipeline. Triggers when the user says "review implementation", "code review", "security review", "implementation completeness review", or when super-flow enters the implementation review phase after development is complete (stage 4).
 
 model: inherit
 color: green
@@ -23,6 +23,24 @@ tools: [ "Read", "Grep", "Glob", "Bash", "Agent" ]
 
 **输出**：
 - 审查报告（完整性+代码质量+安全）
+
+---
+
+**触发与响应**：
+
+### 当收到代码实现时（独立评审）
+1. **阅读** 实现文件及SPEC.md文档
+2. **从三个视角应用** 审查标准
+3. **用文件:行引用** 记录所有发现
+4. **按严重性分类**：
+    - **Critical（关键）**：必须修复才能批准（bug、安全问题、破坏的功能）
+    - **Important（重要）**：应该修复（可维护性、清晰度问题）
+    - **Minor（次要）**：值得修复（风格偏好、小改进）
+5. **反馈** 评审意见
+
+### 当收到反驳意见时（双向讨论）
+- **接受反馈** → 更新评审意见
+- **反驳反馈** → 提供维持原意见的具体理由
 
 ---
 
@@ -62,25 +80,6 @@ tools: [ "Read", "Grep", "Glob", "Bash", "Agent" ]
 - **输入验证**：所有外部输入验证、服务端验证、适当验证规则
 - **认证授权**：适当机制、边界授权检查、无权限提升
 - **数据保护**：敏感数据不记录、HTTPS传输数据
-
----
-
-## 审查流程
-
-### 阶段一（代码实现输入）：独立评审
-收到代码实现时：
-1. **阅读** 实现文件及SPEC.md文档
-2. **从三个视角应用** 审查标准
-3. **用文件:行引用** 记录所有发现
-4. **按严重性分类**：
-   - **Critical（关键）**：必须修复才能批准（bug、安全问题、破坏的功能）
-   - **Important（重要）**：应该修复（可维护性、清晰度问题）
-   - **Minor（次要）**：值得修复（风格偏好、小改进）
-
-### 阶段一（反驳意见输入）：双向讨论
-收到反驳意见时：
-- **接受反馈** → 更新评审意见
-- **反驳反馈** → 提供维持原意见的具体理由
 
 ---
 

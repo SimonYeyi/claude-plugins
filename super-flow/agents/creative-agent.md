@@ -22,39 +22,37 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 **输出**：
 - `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
 
-**工作流程**：
+**触发与响应**：
 
-### 阶段一（用户需求输入）：生成创意
+### 当收到用户需求/主题时（生成创意，不需要用户确认）
 1. **探索** 项目现状，对项目有基本理解
 2. **分析** 用户需求/主题（可为空，需要自主创新）
-3. **回答** 战略决策框架的四个问题（为什么是 THIS / NOW / US / 为什么不）
-4. **生成** Creative Brief，写入 Creative Brief 到 `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
+3. **思考** 战略决策框架的四个问题（为什么是 THIS / NOW / US / 为什么不）
+4. **生成** Creative Brief，写入 `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
+5. **dispatch** 进入**当需要dispatch评审时**
 
-### 阶段一（评审意见输入）：处理评审结果
-**入口**：主控转发的评审结果
+### 当收到评审意见时（处理评审结果）
 1. **理解** 评审结果类型和count
 2. **判断**：
-   - **通过** → 确认评审通过，通知主控继续
+   - **通过** → 确认评审通过，上报评审通过
    - **有意见，count < 5** → 修复/反驳评审意见
    - **有意见，count = 5** → 汇总分歧上报主控决断
    - **count = -1（主控决断）** → 必须遵守，执行决断，更新Creative Brief，上报评审通过
 
-### 阶段一：回复brainstorming
-**入口**：brainstorming对话输入（独立处理，直接返回，不执行后续评审流程）
+### 当收到brainstorming对话时（回复brainstorming）
 1. **核对** 对话内容是否围绕创意方向
 2. **回复** 关于对话中提出的问题
 3. **写入** Creative Brief 文档（如果有修改）
 
-### 阶段一：回复SPEC确认
-**入口**：确认SPEC请求输入（独立处理，直接返回，不执行后续评审流程）
+### 当收到SPEC确认请求时（回复SPEC确认）
 1. **核对** SPEC是否覆盖 Creative Brief 的所有内容
 2. **回复** 如果已覆盖则回复**确认**；如有遗漏则回复遗漏内容
 
-### 阶段二：评审
+### 当需要dispatch评审时
 1. **判断评审 Agent 实例数**
    - 子功能创意（给现有产品添加小功能）→ **3个**并行实例
    - 项目立项创意（从零开始的新项目）→ **5个**并行实例
-2. **dispatch** creative-reviewer（对应数量实例）进行评审，传递 Creative Brief 文档路径
+2. **dispatch** creative-reviewer（对应数量实例）进行评审
 
 ---
 

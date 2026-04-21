@@ -24,57 +24,61 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 - `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
 - `docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`
 
-**SPEC确认规则**：
-- 创意模式：**必须先由创意Agent确认**，才能写入
-- 产品模式：**必须先由用户确认**，才能写入
+---
+
+**触发与响应**：
+
+### 当收到Creative Brief/用户需求时（Brainstorming对齐）
+1. **读取** Creative Brief（创意模式）或用户原始需求（产品模式）
+2. **brainstorm式对话**（通过主控转发）：
+    - 创意模式（与创意Agent）：一次全问，创意Agent一次性回答所有问题
+    - 产品模式（与用户）：一次一问，逐步确认
+3. **整合** brainstorming所有内容，输出完整SPEC文档设计
+
+### 当收到评审意见时（处理评审结果）
+1. **理解** 评审结果类型和count
+2. **判断**：
+    - **通过** → 进入**当需要上报主控评审通过时**
+    - **有意见，count < 5** → 修复/反驳评审意见
+    - **有意见，count = 5** → 汇总分歧上报主控决断
+    - **count = -1（主控决断）** → 必须遵守，执行决断，更新SPEC，进入**当需要上报主控评审通过时**
+
+### 当收到brainstorming对话记录时（继续Brainstorming对齐）
+根据brainstorming对话继续对齐，更新SPEC文档
+
+### 当需要确认SPEC时（向创意提出者确认）
+1. **确认循环**：
+    - 主控展示完整SPEC给创意提出者确认
+    - 创意提出者提出修改意见 → 主控转发给产品Agent
+    - 产品Agent修改SPEC
+    - 主控再次展示完整SPEC给创意提出者确认
+    - **循环直到创意提出者明确表示没有任何意见**
+2. **生成** SPEC到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+3. **dispatch** spec-reviewer 进行SPEC评审
+
+### 当需要上报主控评审通过时
+1. **生成** 产品使用指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`
+2. **上报** 评审通过
+
+---
+
+**SPEC确认规则**：谁提出创意，谁确认SPEC
+- 创意模式：**必须先由创意Agent确认**
+- 产品模式：**必须先由用户确认**
 - **通过主控展示完整SPEC文档**，以便创意提出者理解全部设计
 - **确认循环（必须执行）**：
   1. 主控展示完整SPEC给创意提出者确认
   2. 创意提出者提出修改意见 → 主控转发给产品Agent
   3. 产品Agent修改SPEC
   4. 主控再次展示完整SPEC给创意提出者确认
-  5. **循环直到创意提出者明确表示没有任何意见** → 才能写入
+  5. **循环直到创意提出者明确表示没有任何意见**
 
 **重要区分**：
 - **确认**：由创意提出者主观判断SPEC是否符合自己的创意/需求，**不是评审**
 - **评审**：由SPEC审查Agent客观验证SPEC是否完整执行了Creative Brief或brainstorming结果，是独立的内循环流程
-- 两者独立：确认通过后，还需经过SPEC审查Agent评审才能进入下一阶段
+- 两者独立：SPEC被确认后，必须经过SPEC审查Agent评审
 
 **通信机制**：所有brainstorming对话必须通过主控转发，创意Agent/用户不与产品Agent直接交流
-
----
-
-## 工作流程
-
-### 阶段一（Creative Brief/用户需求输入）：Brainstorming对齐
-1. **读取** Creative Brief（创意模式）或用户原始需求（产品模式）
-2. **brainstorm式对话**（通过主控转发）：
-   - 创意模式（与创意Agent）：一次全问，创意Agent一次性回答所有问题
-   - 产品模式（与用户）：一次一问，逐步确认
-3. **整合** brainstorming所有内容，展示完整SPEC文档设计
-
-### 阶段一（评审意见输入）：处理评审结果
-**入口**：主控转发的评审结果
-1. **理解** 评审结果类型和count
-2. **判断**：
-   - **通过** → 确认评审通过，通知主控继续
-   - **有意见，count < 5** → 修复/反驳评审意见
-   - **有意见，count = 5** → 汇总分歧上报主控决断
-   - **count = -1（主控决断）** → 必须遵守，执行决断，更新SPEC，上报评审通过
-
-### 阶段一（brainstorming对话记录输入）：继续Brainstorming对齐
-根据brainstorming对话继续对齐，更新SPEC文档
-
-### 阶段一：确认（需创意提出者确认时）
-1. **展示** 完整SPEC给创意提出者确认（通过主控）
-2. **确认循环**（必须执行）：
-   - 创意提出者提出修改意见 → 主控转发给产品Agent
-   - 产品Agent修改SPEC
-   - 主控再次展示完整SPEC给创意提出者确认
-   - **循环直到创意提出者明确表示没有任何意见**
-3. **写入** SPEC到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-4. **dispatch** spec-reviewer 进行SPEC评审，传递SPEC.md、Creative Brief/对话记录
-5. **评审通过后生成** 产品使用指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`（创意模式下必须执行）
 
 ---
 
