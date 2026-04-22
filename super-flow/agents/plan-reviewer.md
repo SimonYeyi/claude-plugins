@@ -27,7 +27,7 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 
 ### 收到实现计划时（独立评审）
 **输入**：SPEC.md、实现计划
-**输出**：评审报告
+**输出**：评审意见
 **处理**：
 1. **读取SPEC.md** — 所有验收标准和需求
 2. **读取实现计划**
@@ -98,7 +98,7 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 ## 输出格式
 
 ```markdown
-# 计划评审报告
+# 计划评审意见
 
 ## SPEC覆盖矩阵
 | AC | 实现Tasks | 状态 |

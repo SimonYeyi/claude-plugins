@@ -13,7 +13,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 |----------------------------------|------|
 | `/superflow`（无任何参数）              | 直接进入**创意模式** |
 | `/superflow <有主题但细节不明确>`         | 询问选择：创意模式 / 产品模式 |
-| `/superflow <有主题有细节> 或 <无法识别主题>` | 直接进入**产品模式**（brainstorm 流程，探讨需求） |
+| `/superflow <有主题有细节> 或 <无法识别主题>` | 直接进入**产品模式** |
 
 **主控决断的最高原则**：
 - **创意模式**：全自动生产线，**无论何时**都不能把问题抛给用户，必须自行决断确保流程继续
@@ -41,7 +41,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     │     （创意Agent + 创意评审团内循环）                  │
     │                    ↺ 内循环                          │
     │                                                      │
-    └──→ 产品模式 ──→ 用户 ────────────────────────────────┤
+    └──→ 产品模式 ──→ 阶段一：用户输入───────────────────────┤
                                                            ▼
                                                     阶段二：产品流程
                                               （产品Agent + SPEC审查Agent内循环）
@@ -66,38 +66,15 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                                                        主控确认
 ```
 
-## **Brainstorming与SPEC确认**要求
-
-**必须保证产品Agent内部流程完整** 
-- Brainstorming完成后，不可直接进入下一阶段，必须先 dispatch 创意Agent 继续完成内部流程
-- SPEC被创意Agent/用户确认后，不可直接进入下一阶段，必须先 dispatch 产品Agent 继续完成内部流程
-
-**创意Agent与产品Agent**（创意模式下）
-- **展示** Brainstorming对话
-- **dispatch** 创意Agent 回复Brainstorming对话
-- 此时主控不提供任何决断
-
-**产品Agent与用户**（产品模式下）
-- **展示** Brainstorming对话给用户
-- **dispatch** 用户 回复问题
-- 此时主控不提供任何决断
-
-**信息展示要求**：
-- 主控在协调流程时，**必须将Agent间的信息传递和交流展示给用户**
-- 包括但不限于：评审意见、反馈回复、brainstorming对话、SPEC确认内容
-- 让用户了解流程进展，而非黑箱操作
-- 所有 Agent 在陈述流程、汇报进展时，**必须加上 agent 名称前缀**
-- 格式：`主控：`、`创意Agent：`、`产品Agent：`、`架构Agent：`、`开发Agent：`、`XX评审Agent：`等
-
 ## 主控的职责与权力
 
 **推理依据要求**：
 - 主控的每一次操作或决定必须说明**推理依据**，**推理过程**，**推理结论**和**行为决定**，让用户了解为何如此决策
-- 格式示例：`主控：根据<推理依据>，我说这么想的（推理过程），判断为<推理结论>，所以执行<行为决定>`
+- 格式示例：`主控：根据<推理依据>，我是这么想的：xxx（推理过程），判断为<推理结论>，所以执行<行为决定>`
 
 **职责与权力**：
 - 按顺序启动各主干Agent
-- **dispatch主干Agent**：评审意见、决断意见等需要Agent处理的信息，必须dispatch对应主干Agent处理
+- **dispatch主干Agent**：评审意见（包含通过）、决断意见等需要Agent处理的信息，必须dispatch对应主干Agent处理
 - **brainstorming对话**：
     - **展示** 产品Agent的问题给创意Agent/用户
     - **dispatch** 创意Agent/用户 回复问题
@@ -108,7 +85,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     - **dispatch** 创意Agent/用户 的回复结果
     - 创意Agent/用户 确认SPEC，不是向主控确认，主控**必须**将确认反馈dispatch给产品Agent
     - 此过程**不需要主控决断**
-- **达到评审循环最大次数（count=5）时主控才可决断**，未达到时主控不做决断，持续dispatch主干Agent处理评审意见
+- **count计数**：评审Agent反馈结果时count+1
 - **主控决断真正的升级**：当主干Agent明确表示无法决定、无法推进时，主控必须做出决断
 
 **区分"dispatch处理"与"真正升级"**：
@@ -134,7 +111,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - 主控决断内容示例：
     - "采用方案A，继续进入架构流程"
     - "分歧是细节问题，记录在案，上报评审通过"
-    - "dispatch 开发Agent 修复第3个Task，完成后重新评审"
+    - "dispatch 开发Agent 修复第9个Task，完成后重新评审"
 - **主控决断是最终决定**——不是发表意见，不是转达，而是dispatch执行
 
 **产出物清单**（主控最终确认时核对）：
@@ -149,11 +126,10 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 **终止条件**：全部问题修复，所有主干 Agent 汇报评审通过，且主控确认。
 
-## 角色与职责
+## 主干Agent与职责
 
 | 角色 | 职责                                                                                  | 规模 |
 |------|-------------------------------------------------------------------------------------|------|
-| **主控（我）** | 按顺序启动各主干Agent、协调阶段交接、监控内循环、**主控决断所有主干Agent升级问题（除brainstorming和SPEC确认的dispatch处理外）** | 当前 session |
 | **创意 Agent** | CEO/高级产品战略官。输出 Creative Brief（创意说明书），经评审通过后移交产品 Agent                               | 1 个 |
 | **产品 Agent** | 接收用户/创意 Agent 的创意，进行brainstorm式对话（创意模式：一次全问；产品模式：一次一问）后转化为 SPEC.md                  | 1 个 |
 | **架构 Agent** | 接收 SPEC，生成实现计划（含架构设计）                                                               | 1 个 |
@@ -174,6 +150,28 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - **`../agents/implementation-reviewer.md`** — 实现评审团（完整性+代码质量+安全）
 - **`../agents/tester-agent.md`** — 测试 Agent（产出测试用例文档+单元测试+执行测试+测试报告）
 
+## 产品Agent请求与创意Agent/用户**Brainstorming及SPEC确认**要求
+
+**必须保证产品Agent内部流程完整**
+- Brainstorming确认后，不可直接进入下一阶段，必须先 dispatch 产品Agent 闭合流程
+- SPEC被创意Agent/用户确认后，不可直接进入下一阶段，必须先 dispatch 产品Agent 闭合流程
+
+**创意Agent与产品Agent**（创意模式下）
+- **展示** Brainstorming对话
+- **dispatch** 创意Agent 回复Brainstorming问题
+- 此时主控不提供任何决断
+
+**产品Agent与用户**（产品模式下）
+- **展示** Brainstorming对话给用户
+- **dispatch** 用户 回复Brainstorming问题
+- 此时主控不提供任何决断
+
+**信息展示要求**：
+- 主控在协调流程时，**必须将Agent间的信息传递和交流展示给用户**
+- 包括但不限于：评审意见、反馈回复、brainstorming对话、SPEC确认内容
+- 让用户了解流程进展，而非黑箱操作
+- 所有 Agent 在陈述流程、汇报进展时，**必须加上 agent 名称前缀**
+- 格式：`主控：`、`创意Agent：`、`产品Agent：`、`架构Agent：`、`开发Agent：`、`XX评审Agent：`等
 
 ## 评审反馈处理原则
 
@@ -186,10 +184,10 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
   - 错误做法：主控收到主干Agent"流程结束" → 主控**还在评审中就进入下一阶段**
 
 **主控评审循环控制**：
-- 主控追踪每个阶段的评审循环次数，每阶段开始时 count = 0
+- 主控追踪每个流程阶段的评审循环次数，每流程阶段开始时 count = 0
 - **dispatch** 主干Agent处理评审意见，附带count值
 - 主控**不自行判断**，根据主干Agent的反馈决定下一步
-- 主干Agent返回"通过" → 进入下一阶段；"修复" → 主控 count+1 → 重新 dispatch 主干Agent（附带更新后的count值）；"汇总分歧" → 主控决断后 dispatch 主干Agent执行决断（count=-1）
+- 主干Agent返回"通过" → 进入下一阶段；"汇总分歧升级主控决断" → 主控决断后 dispatch 主干Agent执行决断（count=-1）
 
 **count值含义**：
 | count | 含义 |
@@ -209,11 +207,11 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     - 如果同意：不追究，记录在案，评审通过
     - 如果不同意：给出明确的不同意理由，打回主干Agent
 
-**双向沟通循环**（重新dispatch时 count+1）：
+**双向沟通循环**（评审Agent反馈结果时 count+1）：
 ```
-评审Agent给出意见 → 主干Agent独立思考
+评审Agent反馈结果 → count+1 → 主干Agent独立思考
     │
-    ├──→ 认为有理 → 修改 → 重新dispatch → count+1 → 评审Agent重新核实
+    ├──→ 认为有理 → 修改 → 重新dispatch → 评审Agent重新核实
     │
     └──→ 认为无理 → 坚持己见 + 反馈不修改理由 → 评审Agent重新思考
                                                                 │
@@ -223,7 +221,6 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                                                                      │
                                                                      ▼
                                                               重新dispatch
-                                                              count+1
 ```
 
 ## 产物路径
