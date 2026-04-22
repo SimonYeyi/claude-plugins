@@ -63,4 +63,4 @@ docs/superflow/
 
 ## 设计参考
 
-完整设计文档：`docs/superflow/specs/superflow-overview.md`
+完整设计文档：`docs/superflow/specs/superflow-design.md`

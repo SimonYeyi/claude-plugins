@@ -53,7 +53,7 @@ super-flow/
 ├── docs/
 │   └── superflow/
 │       └── specs/
-│           └── superflow-overview.md  # 设计文档
+│           └── superflow-design.md  # 设计文档
 ├── CLAUDE.md
 └── README.md
 ```
@@ -64,4 +64,4 @@ super-flow/
 
 ## 详细设计
 
-参见 `docs/superflow/specs/superflow-overview.md`
+参见 `docs/superflow/specs/superflow-design.md`
