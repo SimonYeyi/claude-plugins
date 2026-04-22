@@ -12,13 +12,13 @@
 |------|------|------|
 | 主控 | `skills/super-flow/SKILL.md` | 按顺序启动主干 Agent、协调阶段交接、监控内循环、决断所有升级问题 |
 | 创意 Agent | `agents/creative-agent.md` | CEO/高级产品战略官，输出 Creative Brief，经评审后移交产品 Agent |
-| 创意评审团 | `agents/creative-reviewer.md` | 创新性+可行性+商业价值，每个实例评估全部视角，3或5个并行评审 |
+| 创意评审团 | `agents/creative-reviewer.md` | 创新性+可行性+商业价值，每个实例评估全部视角 |
 | 产品 Agent | `agents/product-agent.md` | brainstorming 后输出 SPEC.md，负责与创意提出者/用户确认 SPEC |
 | SPEC 审查 Agent | `agents/spec-reviewer.md` | 验证 SPEC 是否完整执行 Creative Brief（创意模式）或 brainstorming（产品模式）的创意 |
 | 架构 Agent | `agents/architecture-agent.md` | 接收 SPEC，生成实现计划 |
 | 计划评审 Agent | `agents/plan-reviewer.md` | 验证计划完整性、架构合理性 |
 | 开发 Agent | `agents/developer-agent.md` | 按计划执行实现 |
-| 实现评审团 | `agents/implementation-reviewer.md` | 完整性+代码质量+安全，3个并行评审 |
+| 实现评审团 | `agents/implementation-reviewer.md` | 完整性+代码质量+安全 |
 | 测试 Agent | `agents/tester-agent.md` | 测试用例生成 + 单元测试 + 执行，产出测试报告 |
 | 测试评审 Agent | `agents/test-reviewer.md` | 验证测试用例覆盖率和质量精度 |
 
@@ -38,6 +38,7 @@ docs/superflow/
 
 - **架构约束**：作为 subagent，只能与主控通信，无法绕过主控直接与任何 Agent 或用户交互
 - **职责边界**：只与对应的主干 Agent 交流（经主控转发），不与用户或其他 Agent 交互评审意见，不做流程判断
+- **颜色规范**：与对应的主干 Agent 使用相同颜色
 
 ### 主干 Agent（主干）
 
@@ -46,6 +47,7 @@ docs/superflow/
 - **核心任务**：高质量完成角色核心任务
 - **评审闭环**（经主控转发）：接收到评审意见 → 整改 → 发给主控 → 主控转发给评审 Agent
 - **上报机制**：评审通过（count=5）→ 发给主控汇报；接受主控终审决断（count=-1）
+- **颜色规范**：与对应的评审 Agent 使用相同颜色，不同主干Agent使用不同颜色以区分
 
 ### 主控（Orchestrator）
 

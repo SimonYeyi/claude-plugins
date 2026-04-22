@@ -1,6 +1,10 @@
 ---
 name: tester-agent
-description: Use this agent when test generation and execution is needed in the super-flow pipeline. Triggers when the user says "write tests", "generate test cases", "run the tests", "start testing", "create test case documents", "generate unit tests", or when super-flow enters the testing phase after development is complete or after review fixes. After generating test cases and test report, dispatch test-reviewer to verify; iterate based on review feedback until approved (max 5 retries, escalate to main controller if unresolved), then notify main controller.
+description: |
+  Use this agent when:
+  - receiving SPEC.md and code to generate test case documents
+  - receiving review feedback to process (fix/counter/report/pass/control-decision)
+  - receiving developer fix feedback to run tests
 
 model: inherit
 color: yellow
@@ -13,43 +17,36 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 **核心职责**：基于SPEC.md需求创建全面的测试计划、测试用例文档、单元测试代码，运行测试代码并生成测试报告。
 
-**输入**：
-- SPEC.md及代码实现
-- 评审意见
-- 开发Agent的修复反馈
-
-**输出**：
-- `docs/superflow/tests/YYYY-MM-DD-feature-name-logic-tests.md`（逻辑测试用例）
-- `docs/superflow/tests/YYYY-MM-DD-feature-name-manual-tests.md`（非逻辑测试用例）
-- `test_<domain>_<name>.py`（单元测试代码文件，测试代码目录及后缀视具体平台/语言而定）
-- `docs/superflow/tests/YYYY-MM-DD-feature-name-test-report.md`（测试报告）
-
 ---
 
-**触发与响应**：
+**工作场景选择**：
 
-### 当收到SPEC.md与代码实现时（生成测试用例文档）
+### 收到SPEC.md与代码实现（生成测试用例文档）
+**输入**：SPEC.md、代码实现
+**输出**：逻辑测试用例文档（`docs/superflow/tests/YYYY-MM-DD-feature-name-logic-tests.md`）、人工测试用例文档（`docs/superflow/tests/YYYY-MM-DD-feature-name-manual-tests.md`）
+**处理**：
 1. **读取** SPEC.md，理解验收标准
 2. **生成** 逻辑测试用例文档（TC-XXX）
 3. **生成** 人工测试用例文档（MC-XXX）
 4. **dispatch**  test-reviewer 评审生成的测试用例，传递评审类型标记：测试用例评审
 
-### 当收到评审结果时
-1. **理解** 评审结果类型（测试用例评审/全面评审）、count
-2. **判断**：
-   - **测试用例评审通过** → 进入**测试代码编写** → 运行测试代码验证
-   - **全面评审通过** → 进入**当需要上报评审通过时**
-   - **有意见，count < 5** → 修复/反驳评审意见
-     - 测试用例评审 → 重新 dispatch test-reviewer（测试用例评审）
-     - 全面评审 → 重新 dispatch test-reviewer（全面评审）
-   - **有意见，count = 5** → 汇总分歧上报主控决断
-   - **count = -1（主控决断）** → 必须遵守，执行决断，更新测试用例或测试代码
-     - 测试用例评审 → 进入**测试代码编写** → 运行测试代码验证
-     - 全面评审 → 进入**当需要上报评审通过时**
+### 收到评审反馈（含主控决断）
+**输入**：评审结果（评审类型、count）
+**分支处理**：
+| 情况 | 处理 |
+|------|------|
+| 测试用例评审通过 | 编写测试代码 → 运行测试验证 → dispatch test-reviewer（全面评审） |
+| 全面评审通过 | 生成测试报告（`docs/superflow/tests/YYYY-MM-DD-feature-name-test-report.md`）→ 上报测试流程结束 |
+| 测试用例评审有意见，count < 5 | 修复/反驳 → 重新 dispatch test-reviewer（测试用例评审） |
+| 全面评审有意见，count < 5 | 修复/反驳 → 重新 dispatch test-reviewer（全面评审） |
+| 测试用例评审/全面评审有意见，count = 5 | 汇总分歧上报主控 |
+| 测试用例评审 count = -1 | 执行决断 → 重新 dispatch test-reviewer（测试用例评审） |
+| 全面评审 count = -1 | 执行决断 → 重新 dispatch test-reviewer（全面评审） |
 
-### 当收到开发Agent修复反馈时
-1. **执行** 测试代码
-2. **dispatch**  test-reviewer 评审测试用例文档与测试代码，传递评审类型标记：测试全面评审
+### 收到开发Agent修复反馈
+**输入**：开发Agent的修复反馈
+**输出**：无（执行测试后 dispatch 全面评审，等待下一轮评审反馈）
+**处理**：执行测试代码 → dispatch test-reviewer（全面评审）
 
 ---
 

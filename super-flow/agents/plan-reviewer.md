@@ -1,6 +1,9 @@
 ---
 name: plan-reviewer
-description: Use this agent when reviewing implementation plan in the super-flow pipeline. Triggers when the user says "review plan", "check the plan", "start plan review", or when super-flow enters the plan review phase after architecture agent generates the plan.
+description: |
+  Use this agent when:
+  - receiving implementation plan for independent review
+  - receiving architecture agent's counter-arguments for discussion
 
 model: inherit
 color: cyan
@@ -18,19 +21,14 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 - 检查设计合理性，不是实现质量
 - 验证spec覆盖，不是代码正确性
 
-**输入**：
-- SPEC.md
-- 实现计划文档
-- 架构Agent反驳意见
-
-**输出**：
-- 评审报告（通过/不通过，含详细意见）
-
 ---
 
-**触发与响应**：
+**工作场景选择**：
 
-### 当收到实现计划时（独立评审）
+### 收到实现计划时（独立评审）
+**输入**：SPEC.md、实现计划
+**输出**：评审报告
+**处理**：
 1. **读取SPEC.md** — 所有验收标准和需求
 2. **读取实现计划**
 3. **创建SPEC-to-Task映射**：
@@ -45,7 +43,10 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 6. **记录发现**
 7. **反馈** 评审意见
 
-### 当收到反驳意见时（双向讨论）
+### 收到架构Agent反驳意见时（双向讨论）
+**输入**：架构Agent的反驳意见
+**输出**：更新后的评审意见
+**处理**：
 - **接受反馈** → 更新评审意见
 - **反驳反馈** → 提供维持原意见的具体理由
 

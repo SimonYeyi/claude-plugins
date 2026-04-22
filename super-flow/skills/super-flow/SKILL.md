@@ -54,7 +54,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                                                            │
                                                            ▼
                                                     阶段四：开发流程
-                                            （开发Agent + 实现评审团3实例并行）
+                                            （开发Agent + 实现评审团）
                                                             ↺ 内循环
                                                            │
                                                            ▼
@@ -68,9 +68,9 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 ## **Brainstorming与SPEC确认**要求
 
-**防止产品Agent内部流程不完整的重要提醒** 
+**必须保证产品Agent内部流程完整** 
 - Brainstorming完成后，不可直接进入下一阶段，必须先 dispatch 创意Agent 继续完成内部流程
-- SPEC确认后，不可直接进入下一阶段，必须先 dispatch 产品Agent 继续完成内部流程
+- SPEC被创意Agent/用户确认后，不可直接进入下一阶段，必须先 dispatch 产品Agent 继续完成内部流程
 
 **创意Agent与产品Agent**（创意模式下）
 - **展示** Brainstorming对话
@@ -90,6 +90,10 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - 格式：`主控：`、`创意Agent：`、`产品Agent：`、`架构Agent：`、`开发Agent：`、`XX评审Agent：`等
 
 ## 主控的职责与权力
+
+**推理依据要求**：
+- 主控的每一次操作或决定必须说明**推理依据**，**推理过程**，**推理结论**和**行为决定**，让用户了解为何如此决策
+- 格式示例：`主控：根据<推理依据>，我说这么想的（推理过程），判断为<推理结论>，所以执行<行为决定>`
 
 **职责与权力**：
 - 按顺序启动各主干Agent
@@ -151,36 +155,35 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 |------|-------------------------------------------------------------------------------------|------|
 | **主控（我）** | 按顺序启动各主干Agent、协调阶段交接、监控内循环、**主控决断所有主干Agent升级问题（除brainstorming和SPEC确认的dispatch处理外）** | 当前 session |
 | **创意 Agent** | CEO/高级产品战略官。输出 Creative Brief（创意说明书），经评审通过后移交产品 Agent                               | 1 个 |
-| **创意评审团 — 子功能创意** | 创新性 + 可行性 + 商业价值，每个实例评估全部视角，3 个并行评审                                                 | 3 个 |
-| **创意评审团 — 项目立项创意** | 创新性 + 可行性 + 商业价值，每个实例评估全部视角，5 个并行评审                                                 | 5 个 |
 | **产品 Agent** | 接收用户/创意 Agent 的创意，进行brainstorm式对话（创意模式：一次全问；产品模式：一次一问）后转化为 SPEC.md                  | 1 个 |
-| **SPEC 审查 Agent** | 验证 SPEC 是否完全执行 Creative Brief（创意模式）或 brainstorming对话记录（产品模式）的创意                     | 1 个 |
 | **架构 Agent** | 接收 SPEC，生成实现计划（含架构设计）                                                               | 1 个 |
-| **计划评审 Agent** | 验证计划完整性、架构合理性                                                                       | 1 个 |
 | **开发 Agent** | 按计划执行 → 修复问题                                                                        | 1 个 |
-| **实现评审团** | 完整性 + 代码质量 + 安全，每个实例评估全部视角，3 个并行评审                                                  | 3 个 |
 | **测试 Agent** | 产出测试用例文档（逻辑+非逻辑）+ 编写单元测试 + 执行测试 + 生成测试报告；**测试不通过时：测试代码错误打回测试Agent，功能不通过打回开发Agent**  | 1 个 |
-| **测试评审Agent** | 验证测试用例覆盖率和质量精度（Coverage + Precision + Detail + Completeness）                        | 1 个 |
 
 ## Agent 调用参考
 
 详细 Agent 定义和调用方式见 `../agents/` 目录：
 
 - **`../agents/creative-agent.md`** — 创意 Agent（CEO/高级产品战略官，输出 Creative Brief）
-- **`../agents/creative-reviewer.md`** — 创意评审团（创新性+可行性+商业价值，每个实例评估全部视角，3或5个并行评审）
+- **`../agents/creative-reviewer.md`** — 创意评审团（创新性+可行性+商业价值）
 - **`../agents/product-agent.md`** — 产品 Agent（接收 Creative Brief，输出 SPEC.md）
 - **`../agents/spec-reviewer.md`** — SPEC 审查 Agent（验证 SPEC 是否完全执行 Creative Brief 的创意）
 - **`../agents/architecture-agent.md`** — 架构 Agent（接收 SPEC，生成实现计划）
 - **`../agents/plan-reviewer.md`** — 计划评审 Agent（验证计划完整性和架构合理性）
 - **`../agents/developer-agent.md`** — 开发 Agent（按计划执行）
-- **`../agents/implementation-reviewer.md`** — 实现评审团（完整性+代码质量+安全，每个实例评估全部视角，3个并行评审）
+- **`../agents/implementation-reviewer.md`** — 实现评审团（完整性+代码质量+安全）
 - **`../agents/tester-agent.md`** — 测试 Agent（产出测试用例文档+单元测试+执行测试+测试报告）
 
-## 评审/审查意见处理原则
 
-**主控处理评审反馈的原则**
-- 评审Agent反馈评审通过 → dispatch 主干Agent 闭合流程
-- 主干Agent反馈评审通过 → 真正的阶段流程结束，进入下一个阶段
+## 评审反馈处理原则
+
+**必须遵守**：
+- **评审Agent反馈评审通过** → dispatch 对应主干Agent 闭合流程
+  - 正确做法：主控收到**任意评审Agent** "评审通过" → dispatch 对应主干Agent 闭合流程
+  - 错误做法：主控收到评审通过 → **跳过闭合流程，直接进入下一阶段**
+- **主干Agent反馈流程结束** → 真正的阶段流程结束，进入下一个阶段
+  - 正确做法：主控收到主干Agent"流程结束" → 主控进入下一阶段
+  - 错误做法：主控收到主干Agent"流程结束" → 主控**还在评审中就进入下一阶段**
 
 **主控评审循环控制**：
 - 主控追踪每个阶段的评审循环次数，每阶段开始时 count = 0

@@ -1,6 +1,9 @@
 ---
 name: architecture-agent
-description: Use this agent when generating implementation plan from SPEC in the super-flow pipeline. Triggers when the user says "generate plan", "create implementation plan", "start architecture design", or when super-flow enters the architecture phase after SPEC confirmation. After generating implementation plan, dispatch plan-reviewer to review; iterate based on review feedback until approved (max 5 retries, escalate to main controller if unresolved), then notify main controller to hand off to developer agent.
+description: |
+  Use this agent when:
+  - receiving SPEC.md to design implementation plan
+  - receiving review feedback to process (fix/counter/report/pass/control-decision)
 
 model: inherit
 color: cyan
@@ -13,18 +16,14 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 
 **核心职责**：将SPEC.md翻译为详细的、可执行的实现计划。
 
-**输入**：
-- SPEC.md
-- 或评审 Agent 的修改意见
-
-**输出**：
-- `docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
-
 ---
 
-**触发与响应**：
+**工作场景选择**：
 
-### 当收到SPEC.md时（设计实现计划）
+### 收到SPEC.md时（设计实现计划）
+**输入**：SPEC.md
+**输出**：实现计划文档（`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`）
+**处理**：
 1. **读取** SPEC.md，理解所有验收标准
 2. **评估** SPEC可实现性（技术可行性、复杂度、依赖、风险）
 3. **设计** 架构方案（模块划分、接口设计、数据流、设计模式）
@@ -33,13 +32,15 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 6. **生成** 实现计划文档，写入到 `docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
 7. **dispatch** plan-reviewer 进行计划评审
 
-### 当收到评审结果时
-1. **理解** 评审结果类型和count
-2. **判断**：
-   - **通过** → 确认评审通过，上报评审通过
-   - **有意见，count < 5** → 修复/反驳评审意见
-   - **有意见，count = 5** → 汇总分歧上报主控决断
-   - **count = -1（主控决断）** → 必须遵守，执行决断，更新实现计划，上报评审通过
+### 收到评审反馈（含主控决断）
+**输入**：评审结果（评审类型、count）
+**分支处理**：
+| 情况 | 处理 |
+|------|------|
+| 通过 | 确认评审通过，上报架构流程结束 |
+| 有意见，count < 5 | 修复/反驳评审意见 → 重新 dispatch |
+| 有意见，count = 5 | 汇总分歧上报主控 |
+| count = -1（主控决断） | 执行决断 → 更新实现计划 → 重新 dispatch |
 
 ---
 

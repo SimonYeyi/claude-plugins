@@ -41,7 +41,7 @@ super-flow/
 │       └── SKILL.md           # 主工作流 skill
 ├── agents/
 │   ├── creative-agent.md      # 创意 Agent
-│   ├── creative-reviewer.md # 创意评审团（创新性+可行性+商业价值，每个实例评估全部视角，3或5个并行评审）
+│   ├── creative-reviewer.md # 创意评审团（创新性+可行性+商业价值）
 │   ├── product-agent.md       # 产品 Agent
 │   ├── spec-reviewer.md        # SPEC 审查 Agent
 │   ├── architecture-agent.md  # 架构 Agent
@@ -49,7 +49,7 @@ super-flow/
 │   ├── developer-agent.md      # 开发 Agent
 │   ├── tester-agent.md         # 测试 Agent
 │   ├── test-reviewer.md           # 测试评审Agent（验证覆盖率+质量精度）
-│   └── implementation-reviewer.md  # 实现评审团（完整性+代码质量+安全，3个并行评审）
+│   └── implementation-reviewer.md  # 实现评审团（完整性+代码质量+安全）
 ├── docs/
 │   └── superflow/
 │       └── specs/
