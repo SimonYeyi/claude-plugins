@@ -72,6 +72,13 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - 主控的每一次操作或决定必须说明**推理依据**，**推理过程**，**推理结论**和**行为决定**，让用户了解为何如此决策
 - 格式示例：`主控：根据<推理依据>，我是这么想的：xxx（推理过程），判断为<推理结论>，所以执行<行为决定>`
 
+**信息展示要求**：
+- 主控在协调流程时，**必须将Agent间的信息传递和交流展示给用户**
+- 包括但不限于：评审意见、反馈回复、brainstorming对话、SPEC确认内容
+- 让用户了解流程进展，而非黑箱操作
+- 所有 Agent 在陈述流程、汇报进展时，**必须加上 agent 名称前缀**
+- 格式：`主控：`、`创意Agent：`、`产品Agent：`、`架构Agent：`、`开发Agent：`、`XX评审Agent：`等
+
 **职责与权力**：
 - 按顺序启动各主干Agent
 - **dispatch主干Agent**：评审意见（包含通过）、决断意见等需要Agent处理的信息，必须dispatch对应主干Agent处理
@@ -85,7 +92,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     - **dispatch** 创意Agent/用户 的回复结果
     - 创意Agent/用户 确认SPEC，不是向主控确认，主控**必须**将确认反馈dispatch给产品Agent
     - 此过程**不需要主控决断**
-- **count计数**：评审Agent反馈结果时count+1
+- **count计数**：进入下一阶段流程时count=0，评审Agent反馈结果时count+1
 - **主控决断真正的升级**：当主干Agent明确表示无法决定、无法推进时，主控必须做出决断
 
 **区分"dispatch处理"与"真正升级"**：
@@ -147,31 +154,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - **`../agents/architecture-agent.md`** — 架构 Agent（接收 SPEC，生成实现计划）
 - **`../agents/plan-reviewer.md`** — 计划评审 Agent（验证计划完整性和架构合理性）
 - **`../agents/developer-agent.md`** — 开发 Agent（按计划执行）
-- **`../agents/implementation-reviewer.md`** — 实现评审团（完整性+代码质量+安全）
+- **`../agents/implementation-reviewer.md`** — 实现评审 Agent（完整性+代码质量+安全）
 - **`../agents/tester-agent.md`** — 测试 Agent（产出测试用例文档+单元测试+执行测试+测试报告）
-
-## 产品Agent请求与创意Agent/用户**Brainstorming及SPEC确认**要求
-
-**必须保证产品Agent内部流程完整**
-- Brainstorming确认后，不可直接进入下一阶段，必须先 dispatch 产品Agent 闭合流程
-- SPEC被创意Agent/用户确认后，不可直接进入下一阶段，必须先 dispatch 产品Agent 闭合流程
-
-**创意Agent与产品Agent**（创意模式下）
-- **展示** Brainstorming对话
-- **dispatch** 创意Agent 回复Brainstorming问题
-- 此时主控不提供任何决断
-
-**产品Agent与用户**（产品模式下）
-- **展示** Brainstorming对话给用户
-- **dispatch** 用户 回复Brainstorming问题
-- 此时主控不提供任何决断
-
-**信息展示要求**：
-- 主控在协调流程时，**必须将Agent间的信息传递和交流展示给用户**
-- 包括但不限于：评审意见、反馈回复、brainstorming对话、SPEC确认内容
-- 让用户了解流程进展，而非黑箱操作
-- 所有 Agent 在陈述流程、汇报进展时，**必须加上 agent 名称前缀**
-- 格式：`主控：`、`创意Agent：`、`产品Agent：`、`架构Agent：`、`开发Agent：`、`XX评审Agent：`等
 
 ## 评审反馈处理原则
 

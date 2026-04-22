@@ -10,7 +10,7 @@ color: green
 tools: [ "Read", "Grep", "Glob", "Bash", "Agent" ]
 ---
 
-# 实现评审团 (Implementation Review Team)
+# 实现评审 Agent (Implementation Reviewer)
 
 **定位**：代码评审专家
 

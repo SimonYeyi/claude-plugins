@@ -24,22 +24,24 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 ### 收到Creative Brief时
 **输入**：Creative Brief
 **输出**：SPEC.md（`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`）、user-guide.md（`docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`）
-**处理**：
+**处理**：必须严格按以下顺序完整处理
 1. **读取** Creative Brief
-2. **请求与创意Agent brainstorm式对话**：一次全问，由创意Agent一次性回答所有问题
+2. **dispatch 创意Agent brainstorming**：一次全问，由创意Agent一次性回答所有问题
 3. **整合** brainstorming对话内容（无须写入文件）
 4. **生成** SPEC到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-5. **请求与创意Agent确认** SPEC 是否满足创意设计
+5. **dispatch 创意Agent 确认** SPEC 是否满足创意设计
+6. **等待** 创意Agent的回复并处理
+7. **dispatch** spec-reviewer 进行SPEC评审
 
 ### 收到用户需求时
 **输入**：用户原始需求
-**输出**：SPEC.md（`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`）、user-guide.md（`docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`）
-**处理**：
+**输出**：SPEC文档（`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`）
+**处理**：必须严格按以下顺序完整处理
 1. **理解** 用户原始需求
-2. **请求与用户brainstorm式对话**：一次一问，逐步确认
-3. **整合** brainstorming对话内容（无须写入文件）
+2. **与用户brainstorm式对话**：一次一问，逐步确认，直到所有需求都确认完成
+3. **与用户确认** SPEC 是否满足需求（向用户展示 SPEC 完整内容），直到用户没有提出任何意见为止
 4. **生成** SPEC到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-5. **请求与用户确认** SPEC 是否满足需求，向用户展示 SPEC 详细内容，以便创意提出者理解全部设计
+5. **dispatch** spec-reviewer 进行SPEC评审
 
 ### 收到评审反馈（含主控决断）
 **输入**：评审结果（评审类型、count）
@@ -50,17 +52,6 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 | 有意见，count < 5 | 修复/反驳评审意见 → 重新 dispatch |
 | 有意见，count = 5 | 汇总分歧上报主控 |
 | count = -1（主控决断） | 执行决断 → 更新SPEC → 上报产品流程结束 |
-
-### 收到brainstorming对话记录时（继续Brainstorming对齐）
-**输入**：brainstorming对话记录
-**输出**：更新后的SPEC.md
-**处理**：根据brainstorming对话继续对齐，更新SPEC文档
-
-### 收到SPEC确认回复时
-**输入**：创意Agent/用户对SPEC的确认意见
-**处理**：
-- **确认通过** → dispatch spec-reviewer 进行SPEC评审
-- **有修改意见** → 更新SPEC，再次发起SPEC确认
 
 ---
 
