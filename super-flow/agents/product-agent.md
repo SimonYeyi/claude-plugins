@@ -27,7 +27,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 1. **评审反馈** → 输入包含"评审结果"和count值
 2. **SPEC确认回复** → 输入是对SPEC的确认意见(如"确认通过"或"有修改意见")
-3. **brainstorming完成** → 输入是完整的brainstorming对话记录且所有问题已回答
+3. **brainstorming完成** → 输入是要求完成/输出SPEC或表示brainstorming已完成
 4. **Creative Brief** → 输入包含Creative Brief文档路径(`docs/superflow/creatives/`)或完整内容
 5. **用户原始需求** → 输入是用户直接提出的需求描述
 
@@ -72,13 +72,17 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 ---
 
-### 上报产品流程结束
-1. **生成** 产品使用指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`
-2. **上报** 产品流程结束
+## 上报产品流程结束
+- **生成** 产品使用指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`
+- **上报** 产品流程结束
 
 ---
 
-## Brainstorming 对话规范
+## Brainstorming要求及对话规范
+
+**必须执行Brainstorming澄清需求**
+
+**Brainstorming问题通过上下文交流** 不可写入文件
 
 **对话模式区分**：
 - **与创意Agent**：一次全问 — 可同时提出多个问题，创意Agent一次性回答所有问题
@@ -108,6 +112,15 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 | 提出方案 | 不只问，还给建议 | ✓ "考虑到X，我建议A或B，你的优先级是？" |
 | 分部分确认 | 逐步确认，不要最后一起确认 | ✓ "我们就这个流程达成一致了？" |
 | 多轮迭代 | 需要多轮深入 | ✓ [第一轮确认范围 → 第二轮确认细节] |
+
+---
+
+## SPEC确认与评审的要求
+- **必须发起SPEC确认** 在Brainstorming完成后
+- **必须发起SPEC评审** 在SPEC确认后
+- **确认**：由创意Agent/用户主观判断SPEC是否符合自己的创意/需求，**不是评审**
+- **评审**：由SPEC审查Agent客观验证SPEC是否完整执行了Creative Brief或brainstorming结果，是独立的内循环流程
+- 两者独立：SPEC确认通过后，还需经过SPEC审查Agent评审才能进入下一阶段
 
 ---
 

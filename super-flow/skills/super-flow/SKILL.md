@@ -12,8 +12,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 | 场景                                 | 触发 |
 |------------------------------------|------|
 | `/superflow`（无任何参数）                | 直接进入**创意模式** |
-| `/superflow <有主题但细节不明确>`           | 询问选择：创意模式 / 产品模式 |
-| `/superflow <有主题且细节丰富> 或 <无法识别主题>` | 直接进入**产品模式** |
+| `/superflow <有明确主题主题但细节不明确>`       | 询问选择：创意模式 / 产品模式 |
+| `/superflow <有明确主题且细节丰富> 或 <无法识别主题>` | 直接进入**产品模式** |
 
 **主控决断的最高原则**：
 - **创意模式**：全自动生产线，**无论何时**都不能把问题抛给用户，必须自行决断确保流程继续
@@ -32,46 +32,46 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 | 2 | 产品模式 | 需求明确、有参考实现、渐进式功能 |
 ```
 
-**主控询问示例**：
-| 用户输入 | 推理依据（规则原文） | 询问内容 |
-|---------|---------------------|----------|
-| `/superflow 我想做个有趣的东西` | `/superflow <有主题但细节不明确>` | 请选择工作模式... |
-| `/superflow` | `/superflow（无任何参数）` | 直接进入创意模式（无需询问） |
-
 ## 完整流程
+
+> **重要规则**：进入下一阶段流程的唯一标准是收到主干Agent的"流程结束"反馈，而不是评审Agent的评审通过，更不是xx已确认
 
 ```
 入口分支
     │
-    ├──→ 创意模式 ──→ 阶段一：创意流程 ─────────────────┐
+    ├──→ 创意模式 ──→ 阶段一：创意流程 ─────────────────────┐
     │                                                      │
-    │     （创意Agent + 创意评审团内循环）                  │
-    │                    ↺ 内循环                          │
-    │                                                      │
+    │     （创意Agent + 创意评审团内循环）                    │
+    │                    ↺ 内循环                            │
     └──→ 产品模式 ──→ 阶段一：传达用户需求 ───────────────────┤
                                                            ▼
                                                     阶段二：产品流程
                                               （产品Agent + SPEC审查Agent内循环）
-                                                            ↺ 内循环
+                                                           ↺ 内循环
                                                            │
                                                            ▼
                                                     阶段三：架构流程
                                               （架构Agent + 计划评审Agent内循环）
-                                                            ↺ 内循环
+                                                           ↺ 内循环
                                                            │
                                                            ▼
                                                     阶段四：开发流程
                                             （开发Agent + 实现评审团）
-                                                            ↺ 内循环
+                                                           ↺ 内循环
                                                            │
                                                            ▼
                                                     阶段五：测试流程
                                               （测试Agent + 测试评审Agent内循环）
-                                                            ↺ 内循环
+                                                           ↺ 内循环
                                                            │
                                                            ▼
                                                        主控确认
 ```
+
+**评审内循环说明**：
+- 每个阶段的内循环包含：主干Agent dispatch 评审Agent → 评审Agent评审 → 主干Agent处理评审意见（循环）
+- 评审Agent评审通过后，**必须dispatch主干Agent闭合流程**，主干Agent反馈"流程结束"才算该阶段真正完成
+- 主控收到主干Agent"流程结束"后才能进入下一阶段
 
 ## 主控的职责与权力
 
@@ -87,7 +87,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - 所有 Agent 在陈述流程、汇报进展时，**必须加上 agent 名称前缀**
 - 格式：`主控：`、`创意Agent：`、`产品Agent：`、`架构Agent：`、`开发Agent：`、`XX评审Agent：`等
 
-**职责与权力**：
+**核心职责**：
 - **禁止干扰主干Agent的工作流程**：主干Agent有自己的使命，内部工作流必须完整，不允许主控擅自决定主干Agent的工作流程，必须由主干Agent自己决定
 - 按顺序启动各主干Agent
 - **dispatch主干Agent**：评审意见（包含通过）、决断意见等需要Agent处理的信息，必须dispatch对应主干Agent处理
@@ -101,8 +101,28 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     - **dispatch** 创意Agent/用户 的回复结果
     - 创意Agent/用户 确认SPEC，不是向主控确认，主控**必须**将确认反馈dispatch给产品Agent
     - 此过程**不需要主控决断**
-- **count计数**：进入下一阶段流程时count=0，dispatch 评审Agent前count+1，主控决断后count=-1
+- **count计数**：进入下一阶段流程时count=0，dispatch 评审Agent时count+1，主控决断后count=-1
 - **主控决断真正的升级**：当主干Agent明确表示无法决定、无法推进时，主控必须做出决断
+
+**核对产出物清单**：
+- Creative Brief（仅创意模式）
+- SPEC.md
+- user-guide.md
+- 实现计划
+- 代码实现
+- 测试用例文档 + 单元测试代码
+- **测试报告**
+- 所有产出物已保存至对应目录
+
+**报告流程完成**：全部问题修复，所有主干 Agent 汇报评审通过，核对产出物清单，确认流程完成。
+
+## 主控决断原则
+
+**为何需要主控决断**：
+- 决断流程问题是主控的**核心职责**，不是"必要时才做"——不决断流程就会卡住
+- **主控决断错了可以修复**，但不决断代价更大
+- 遇到分歧时，选择**最能推进流程**的方案，而不是"最安全的"
+- 主干Agent的升级意味着他们已经尽力了，主控决断是最后一道关卡，主控必须做出决断，并dispatch主干Agent执行（count=-1）
 
 **区分"dispatch处理"与"真正升级"**：
 | 情况 | 类型 | 主控操作 |
@@ -115,12 +135,6 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 | SPEC确认 | 展示+dispatch | 展示SPEC给创意Agent/用户 + dispatch 确认结果 |
 | 主干Agent明确说"我无法决定，升级主控" | 真正升级 | 主控做出决断，dispatch主干Agent执行 |
 
-**主控决断**：
-- 决断流程问题是主控的**核心职责**，不是"必要时才做"——不决断流程就会卡住
-- **主控决断错了可以修复**，但不决断代价更大
-- 遇到分歧时，选择**最能推进流程**的方案，而不是"最安全的"
-- 主干Agent的升级意味着他们已经尽力了，主控决断是最后一道关卡，主控必须做出决断，并dispatch主干Agent执行（count=-1）
-
 **主控决断执行规则**：
 - 主控决断 = **做出决定** + **指明下一步** + **dispatch主干Agent执行决断（count=-1）**
 - 主控决断后，**必须dispatch主干Agent执行决断（count=-1）**，否则流程中断
@@ -129,18 +143,6 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     - "分歧是细节问题，记录在案，上报评审通过"
     - "dispatch 开发Agent 修复第9个Task，完成后重新评审"
 - **主控决断是最终决定**——不是发表意见，不是转达，而是dispatch执行
-
-**产出物清单**（主控最终确认时核对）：
-- Creative Brief（仅创意模式）
-- SPEC.md
-- user-guide.md
-- 实现计划
-- 代码实现
-- 测试用例文档 + 单元测试代码
-- **测试报告**
-- 所有产出物已保存至对应目录
-
-**终止条件**：全部问题修复，所有主干 Agent 汇报评审通过，且主控确认。
 
 ## 主干Agent与核心职责
 
@@ -166,12 +168,15 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - **`../agents/implementation-reviewer.md`** — 实现评审 Agent（完整性+代码质量+安全）
 - **`../agents/tester-agent.md`** — 测试 Agent（产出测试用例文档+单元测试+执行测试+测试报告）
 
-## 产品Agent**Brainstorming**与**SPEC确认**原则
+## **Brainstorming**与**SPEC确认**原则
+
+**谁提出的创意** 就有由谁与产品Agent Brainstorming or SPEC确认
+- 创意Agent提出的创意，dispatch 创意Agent Brainstorming or SPEC确认
+- 用户提出的创意（需求），展示给用户 Brainstorming or SPEC确认
 
 **必须遵守**：
-- 主控在 brainstorming 和 SPEC确认 环节中，**仅承担传话筒职责**
-- 创意Agent（创意模式）/用户（产品模式）是信息的**接收方**，产品Agent是信息的**发出方**
-- 创意Agent/用户的回复是发给产品Agent的，**主控不得拦截，必须立即dispatch产品Agent**
+- 与创意Agent/用户Brainstorming完成后，不可直接进入下一阶段，必须先 dispatch 产品Agent 继续完成内部流程
+- SPEC被创意Agent/用户确认后，不可直接进入下一阶段，必须先 dispatch 产品Agent 继续完成内部流程
 - **示例**：
 | 环节 | 正确做法 | 错误做法 |
 |------|----------|----------|
@@ -185,7 +190,6 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 ## 评审反馈处理原则
 
 **必须遵守**：
-- **进入下一阶段流程的唯一标准**：收到主干Agent的“流程结束”反馈，而不是评审Agent的评审通过
 - **评审Agent反馈评审通过** → dispatch 对应主干Agent 闭合流程
     - 正确做法：主控收到**任意评审Agent** "评审通过" → dispatch 对应主干Agent 闭合流程
     - 错误做法：主控收到评审通过 → **跳过闭合流程，直接进入下一阶段**
@@ -195,7 +199,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 **主控评审循环控制**：
 - 主控追踪每个流程阶段的评审循环次数，每流程阶段开始时 count = 0
-- **每次 dispatch 评审Agent前** count+1
+- **每次 dispatch 评审Agent时** count+1
 - **dispatch** 主干Agent处理评审意见时，附带count值
 - 主控**不自行判断**，根据主干Agent的反馈决定下一步
 - 主干Agent返回"流程结束" → 进入下一阶段；"汇总分歧升级主控决断" → 主控决断后 dispatch 主干Agent执行决断（count=-1）
