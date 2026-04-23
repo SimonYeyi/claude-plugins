@@ -19,7 +19,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 ---
 
-**工作场景选择**：
+## 工作场景选择
 
 ### 收到SPEC.md与代码实现（生成测试用例文档）
 **输入**：SPEC.md、代码实现
@@ -50,7 +50,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 ---
 
-## 核心职责
+## 职责细分
 
 ### 1. 测试用例文档生成
 - 阅读SPEC.md理解功能需求

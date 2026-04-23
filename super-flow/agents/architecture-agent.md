@@ -18,7 +18,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 
 ---
 
-**工作场景选择**：
+## 工作场景选择
 
 ### 收到SPEC.md时（设计实现计划）
 **输入**：SPEC.md

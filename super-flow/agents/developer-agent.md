@@ -19,7 +19,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "TodoWrite", "Agent"]
 
 ---
 
-**工作场景选择**：
+## 工作场景选择
 
 ### 收到实现计划时（执行实现）
 **输入**：实现计划

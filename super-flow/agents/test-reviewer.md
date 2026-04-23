@@ -21,7 +21,7 @@ tools: [ "Read", "Grep", "Glob", "Bash", "Agent" ]
 
 ---
 
-**工作场景选择**：
+## 工作场景选择
 
 ### 收到测试用例文档时（测试用例评审）
 **输入**：SPEC.md、逻辑测试用例文档、人工测试用例文档
@@ -59,7 +59,7 @@ tools: [ "Read", "Grep", "Glob", "Bash", "Agent" ]
 
 ---
 
-## 核心职责
+## 职责细分
 
 ### 1. 覆盖广度（Coverage Breadth）
 - 阅读SPEC中的每条验收标准

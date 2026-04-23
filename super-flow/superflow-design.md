@@ -20,7 +20,7 @@
 |--------------------------------|------|
 | `/superflow`（无任何参数）            | 直接进入**创意模式** |
 | `/superflow <有主题但无明确功能细节>`     | 询问选择：创意模式 / 产品模式 |
-| `/superflow <有主题有细节> 或 <无法识别主题>` | 直接进入**产品模式**（brainstorm 流程，探讨需求） |
+| `/superflow <有主题且细节丰富> 或 <无法识别主题>` | 直接进入**产品模式**（brainstorm 流程，探讨需求） |
 
 ## 三、完整流程
 
@@ -215,11 +215,11 @@
 ### SPEC审查Agent
 
 - **定位**：规格书审查
-- **输入**：SPEC.md + Creative Brief 或 brainstorming对话记录
+- **输入**：SPEC.md + Creative Brief 或 brainstorming对话上下文
 - **输出**：SPEC审查报告
 - **步骤**：
   1. 对照Creative Brief逐项检查SPEC（创意模式）
-  2. 或对照brainstorming对话记录逐项检查SPEC（产品模式）
+  2. 或对照brainstorming对话上下文逐项检查SPEC（产品模式）
   3. 验证每条需求是否有对应SPEC实现
   4. 输出审查结论
 - **要求**：确保SPEC完全执行brainstorming结果，无遗漏无偏差

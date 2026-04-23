@@ -18,7 +18,7 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 
 ---
 
-**工作场景选择**：
+## 工作场景选择
 
 ### 收到Creative Brief时（独立评审）
 **输入**：Creative Brief
