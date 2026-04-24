@@ -20,7 +20,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 ## 工作场景选择
 
-### 收到用户需求/主题时（生成创意）
+### 收到用户需求/主题时（生成Creative Brief）
 **输入**：用户需求/主题（可为空）
 **输出**：Creative Brief（`docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`）
 **处理**：
@@ -28,7 +28,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 2. **分析** 用户需求/主题（可为空，需要自主创新）
 3. **思考** 战略决策框架的四个问题（为什么是 THIS / NOW / US / 为什么不）
 4. **生成** Creative Brief，写入 `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
-5. **dispatch** creative-reviewer 进行 Creative Brief 评审
+5. **请求** 主控 dispatch **creative-reviewer** 进行 Creative Brief 评审
 
 ### 收到评审反馈（含主控决断）
 **输入**：评审结果（评审类型、count）
@@ -36,19 +36,19 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 | 情况 | 处理 |
 |------|------|
 | 通过 | 确认评审通过，上报产品流程结束 |
-| 有意见，count < 5 | 修复/反驳评审意见 → 重新 dispatch |
+| 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent |
 | 有意见，count = 5 | 汇总分歧上报主控 |
 | count = -1（主控决断） | 执行决断 → 更新Creative Brief → 上报产品流程结束 |
 
-### 收到brainstorming对话时（回复brainstorming）
-**输入**：product-agent的brainstorming对话内容
+### 收到brainstorming问题时
+**输入**：brainstorming问题
 **输出**：更新后的Creative Brief
 **处理**：
 1. **核对** 对话内容是否围绕创意方向
 2. **回复** 关于对话中提出的问题
 3. **写入** Creative Brief 文档（如果有修改）
 
-### 收到SPEC确认请求时（回复SPEC确认）
+### 收到SPEC确认请求时
 **输入**：product-agent请求确认SPEC
 **输出**：确认回复或遗漏内容
 **处理**：
@@ -158,28 +158,6 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 - ✗ "我们以后再想" — 范围必须明确
 - ✗ "竞争对手难以复制" — 假设他们会回应
 - ✗ "用户会喜欢这个" — 必须有具体的用户洞察
-
----
-
-## 与评审Agent交互规范
-
-**评审后行为**：
-1. **独立判断**：对每条评审意见进行独立思考，不盲目接受
-2. **有理则改**：如果评审意见确实有理，按意见修改Creative Brief
-3. **坚持己见并反馈**：如果认为评审意见有问题，可以坚持，但必须给出具体理由
-
-**重要：创意Agent有权自主决定创意修改，无需上报任何确认**
-- 修改后的创意直接进入下一轮评审
-- 评审通过后直接写入文件，不等待任何外部确认
-
-**收到反驳后**：
-- 认真重新思考评审Agent的反驳理由
-- 如果确实改变了想法，明确承认并更新立场
-- 如果仍坚持，提供新的论据支持
-
-**输出格式**：
-- 每次反馈必须包含：**修改了什么**、**修改理由**或**坚持己见的理由**
-- 禁止只说"我不同意"，必须说明为什么
 
 ---
 

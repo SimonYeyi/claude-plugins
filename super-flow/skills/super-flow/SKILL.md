@@ -34,11 +34,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 ## 完整流程
 
-> **主干Agent的定义**：流程图中每个阶段对应的任务实现Agent，如：创意Agent、产品Agent...
-
-> **主控作为流程协调者必须要遵守的原则**：优先保证流程完整，不能为了加快进度而忽略规则、跳过流程或步骤，必须确保每个阶段、每个流程、每个步骤都执行到位
-
-> **进入下一阶段流程的唯一依据**：收到主干Agent的”流程结束”反馈，而不是评审Agent的评审通过，更不是”xx已确认/通过”
+> **重要：主控作为流程协调者必须遵守的原则**：优先保证流程完整，不能为了加快进度而忽略规则、跳过流程或步骤，必须确保每个阶段、每个流程、每个步骤都执行到位
 
 ```
 入口分支
@@ -50,7 +46,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──→ 产品模式 ──→ 阶段一：传达用户需求 ─────────────────────┤
                                                            ▼
                                                     阶段二：产品流程
-                                              （产品Agent + SPEC审查Agent内循环）
+                                              （产品Agent + SPEC评审Agent内循环）
                                                            ↺ 内循环
                                                            │
                                                            ▼
@@ -72,21 +68,278 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                                                        主控确认
 ```
 
-**阶段流程激活任务与输入要求**：
+## 流程图详细说明
 
-| 阶段 | 激活任务 | 输入要求 |
-|------|----------|----------|
-| 阶段一：创意流程 | dispatch **创意Agent** | 用户原始需求/主题 |
-| 阶段一：传达用户需求 | dispatch **产品Agent** | 用户原始需求/主题（产品模式入口） |
-| 阶段二：产品流程 | dispatch **产品Agent** | Creative Brief（创意模式）或 用户需求（产品模式） |
-| 阶段三：架构流程 | dispatch **架构Agent** | SPEC.md |
-| 阶段四：开发流程 | dispatch **开发Agent** | 实现计划（含架构设计） |
-| 阶段五：测试流程 | dispatch **测试Agent** | SPEC.md + 代码实现 |
+**主干Agent的定义**：流程图中每个阶段对应的任务实现Agent，如：创意Agent、产品Agent...
 
-**评审内循环说明**：
-- 每个阶段的内循环包含：主干Agent dispatch 评审Agent → 评审Agent评审 → 主干Agent处理评审意见（循环）
-- 评审Agent评审通过后，**必须dispatch主干Agent闭合流程**，主干Agent反馈“流程结束”才算该阶段真正完成
-- 主控收到主干Agent“流程结束”后才能进入下一阶段
+**进入下一阶段流程的唯一判断标准**：收到主干Agent的”流程结束”反馈，而不是评审Agent的评审通过，更不是”xx已确认/通过”
+
+**主控职责边界**（非常重要）：
+- ✓ 转发信息：把A Agent的消息转发给B Agent
+- ✓ 展示信息：让用户看到Agent间的交流内容
+- ✓ 追踪count：记录评审循环次数
+- ✓ 决断上报：当主干Agent明确说”无法决定/请求决断”时做出决断
+- ✓ 收到主干Agent反馈”流程结束”进入下一阶段
+- ✗ 不判断内容：不对brainstorming回复、SPEC确认结果做合理性判断
+- ✗ 不干预流程：不决定何时评审、何时进入下一阶段
+- ✗ 不主动dispatch评审Agent：评审Agent必须由主干Agent明确请求后才能dispatch
+
+---
+
+### 阶段角色间的关系及其内部流转
+
+#### 创意模式流程
+
+```
+用户输入主题
+    │
+    ▼
+主控dispatch创意Agent（magenta）← count=0（阶段一：创意流程开始）
+    │
+    ▼
+创意Agent输出Creative Brief
+    │
+    ▼
+创意Agent请求主控dispatch创意评审团（magenta）← count+1
+    │
+    ├──不通过 → 评审结果返回创意Agent修复（附带count，循环）
+    │       │
+    │       ├──循环5次内 → 继续循环
+    │       │
+    │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch创意Agent执行决断（附带count=-1）
+    │
+    └──通过 → 评审结果返回创意Agent → 创意Agent上报"流程结束"
+                  │
+                  ▼
+    主控dispatch产品Agent（orange）← count=0（阶段二：产品流程开始）
+              │
+              ▼
+          产品Agent与创意Agent进行brainstorming（主控传话，一次全问）
+              │
+              ▼
+          产品Agent生成SPEC.md
+              │
+              ▼
+          主控展示SPEC给创意Agent确认
+              │
+              ├──创意Agent有修改意见 → 主控传话给产品Agent修改SPEC（循环）
+              │       │
+              │       ▼
+              │   产品Agent修改后重新展示SPEC给创意Agent确认
+              │
+              └──创意Agent确认通过（主控传话）
+                      │
+                      ▼
+                  确认结果返回产品Agent
+              │
+              ▼
+          产品Agent请求主控dispatch SPEC审查Agent（orange）
+              │
+              ├──不通过 → 评审结果返回产品Agent修复（附带count，循环）
+              │       │
+              │       ├──循环5次内 → 继续循环
+              │       │
+              │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch产品Agent执行决断（附带count=-1）
+              │
+              └──通过 → 评审结果返回产品Agent → 产品Agent生成user-guide.md → 上报"流程结束" → 进入阶段三：架构流程
+```
+
+#### 产品模式流程
+
+```
+用户输入需求
+    │
+    ▼
+主控dispatch产品Agent（orange）← count=0（阶段二：产品流程开始）
+    │
+    ▼
+产品Agent与用户进行brainstorming（主控传话，一次一问，循环到所有问题已确认）
+    │
+    ▼
+产品Agent生成SPEC.md
+    │
+    ▼
+主控展示SPEC给用户确认
+    │
+    ├──用户有修改意见 → 主控传话给产品Agent修改SPEC（循环）
+    │       │
+    │       ▼
+    │   产品Agent修改后重新展示SPEC给用户确认
+    │
+    └──用户确认通过（主控传话）
+            │
+            ▼
+        确认结果返回产品Agent
+    │
+    ▼
+产品Agent请求主控dispatch SPEC审查Agent（orange）
+    │
+    ├──不通过 → 评审结果返回产品Agent修复（附带count，循环）
+    │       │
+    │       ├──循环5次内 → 继续循环
+    │       │
+    │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch产品Agent执行决断（附带count=-1）
+    │
+    └──通过 → 评审结果返回产品Agent → 产品Agent生成user-guide.md → 上报"流程结束" → 进入阶段三：架构流程
+```
+
+#### 阶段三：架构流程
+
+```
+主控dispatch架构Agent（cyan） ← count=0（阶段三：架构流程开始）
+    │
+    ▼
+架构Agent评估SPEC可实现性
+    │
+    ├──发现问题（技术不可行/需求矛盾/依赖缺失）
+    │       │
+    │       ▼
+    │   主控dispatch产品Agent修复SPEC
+    │       │
+    │       ▼
+    │   产品Agent修复后重新传入SPEC
+    │       │
+    │       ▼
+    │   架构Agent继续评估（循环）
+    │
+    └──可实现 → 输出实现计划
+                │
+                ▼
+    架构Agent请求主控dispatch计划评审Agent（cyan）← count+1
+        │
+        ├──不通过 → 评审结果返回架构Agent修复（附带count，循环）
+        │       │
+        │       ├──循环5次内 → 继续循环
+        │       │
+        │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch架构Agent执行决断（附带count=-1）
+        │
+        └──通过 → 评审结果返回架构Agent → 架构Agent上报"流程结束" → 进入阶段四：开发流程
+```
+
+#### 阶段四：开发流程
+
+```
+主控dispatch开发Agent（green） ← count=0（阶段四：开发流程开始）
+    │
+    ▼
+开发Agent输出代码实现
+    │
+    ▼
+开发Agent请求主控dispatch实现评审团（green）← count+1
+    │
+    ├──不通过 → 评审结果返回开发Agent修复（附带count，循环）
+    │       │
+    │       ├──循环5次内 → 继续循环
+    │       │
+    │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch开发Agent执行决断（附带count=-1）
+    │
+    └──通过 → 评审结果返回开发Agent → 开发Agent上报"流程结束" → 进入阶段五：测试流程
+```
+
+#### 阶段五：测试流程
+
+```
+主控dispatch测试Agent（yellow） ← count=0（阶段五：测试流程开始）
+    │
+    ▼
+测试Agent生成测试用例文档（测试阶段一：只写测试用例文档，不写测试代码）
+    │
+    ▼
+测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段一评审：测试用例评审）
+    │
+    ├──不通过 → 评审结果返回测试Agent修复（附带count，循环）
+    │       │
+    │       ├──循环5次内 → 继续循环
+    │       │
+    │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch测试Agent执行决断（附带count=-1）
+    │
+    └──通过 → 评审结果返回测试Agent
+            │
+            ▼
+测试Agent编写单元测试代码（测试阶段二：单元测试代码编写）
+    │
+    ▼
+执行测试
+    │
+    ├──测试代码有误（语法错误/运行错误）
+    │       │
+    │       ▼
+    │   测试Agent修复测试代码
+    │       │
+    │       ▼
+    │   重新执行测试（循环）
+    │
+    ├──测试失败（功能问题）
+    │       │
+    │       ▼
+    │   主控dispatch开发Agent修复
+    │       │
+    │       ▼
+    │   开发Agent修复后重新传入代码
+    │       │
+    │       ▼
+    │   重新执行测试（循环）
+    │
+    └──测试通过
+            │
+            ▼
+测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段二评审：全面评审）
+    │
+    ├──不通过 → 评审结果返回测试Agent修复（附带count，循环）
+    │       │
+    │       ├──循环5次内 → 继续循环
+    │       │
+    │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch测试Agent执行决断（附带count=-1）
+    │
+    └──通过 → 评审结果返回测试Agent → 测试Agent生成测试报告 → 测试Agent上报"流程结束"
+            │
+            ▼
+主控确认所有产出物
+    │
+    ▼
+流程完成
+```
+
+---
+
+### 评审循环的内部流转机制
+
+**双向沟通循环**（适用于所有评审场景）：
+```
+评审Agent给出评审意见
+    │
+    ▼
+主干Agent独立思考（不是盲目接受）
+    │
+    ├──认为有理 → 修改 → 反馈给评审Agent
+    │               │
+    │               ▼
+    │         评审Agent重新核实
+    │               │
+    │               ├──同意（记录在案）──→ 评审通过
+    │               │
+    │               └──不同意（给出理由）──→ 打回主干Agent
+    │                                           
+    └──认为无理 → 坚持己见 + 反馈不修改的具体理由
+                    │
+                    ▼
+              评审Agent重新思考
+                    │
+                    ├──同意（记录在案）──→ 评审通过
+                    │
+                    └──不同意 ──→ 循环（最多5次）
+                                │
+                                └──5次后主控决断
+```
+
+**count值追踪机制**：
+| count值 | 含义 | 主控操作 |
+|---------|------|---------|
+| 0 | 阶段开始 | 不显示 |
+| 1~5 | 第N轮评审 | 显示"第N轮评审" |
+| -1 | 主控决断 | 显示"主控决断" |
+
+---
 
 ## 主控的职责与权力
 
@@ -100,38 +353,31 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - 包括但不限于：评审意见、反馈回复、brainstorming对话、SPEC确认内容
 - 让用户了解流程进展，而非黑箱操作
 - **dispatch 任何subagent交代任务时**，必须把传入subagent的上下文展示给用户
-- **任何subagent返回任务结果时**，必须把subagent的返回上下文展示给用户
+- **任何subagent返回任务结果时**，必须把subagent返回的结果展示给用户
 - 所有 Agent 在陈述流程、汇报进展时，**必须加上 agent 名称前缀**
 - 格式：`主控：`、`创意Agent：`、`产品Agent：`、`架构Agent：`、`开发Agent：`、`XX评审Agent：`等
 
 **核心职责**：
-- **禁止干扰主干Agent的工作流程**：主干Agent有自己的使命，内部工作流必须完整，不允许主控擅自决定主干Agent的工作流程，必须由主干Agent自己决定
 - 按顺序启动各主干Agent
-- **dispatch主干Agent**：评审意见（包含通过）、决断意见等需要Agent处理的信息，必须dispatch对应主干Agent处理
-- **brainstorming对话**：
-    - **展示** 产品Agent的问题给创意Agent/用户
-    - **dispatch** 创意Agent/用户 回复问题
-    - 对话是否完成不由主控决定，主控**必须**将所有的对话dispatch给产品Agent
-    - 此过程**不需要主控决断**
-- **SPEC确认**：
-    - **展示** SPEC文档给创意Agent/用户确认
-    - **dispatch** 创意Agent/用户 的回复结果
-    - 创意Agent/用户 确认SPEC，不是向主控确认，主控**必须**将确认反馈dispatch给产品Agent
-    - 此过程**不需要主控决断**
-- **count计数**：进入下一阶段流程时count=0，dispatch 评审Agent时count+1，主控决断后count=-1
-- **主控决断真正的上报**：当主干Agent明确表示无法决定、无法推进时，主控必须做出决断
+- **禁止干扰主干Agent的工作流程**：主干Agent有自己的使命，内部工作流必须完整
+- **dispatch主干Agent**：阶段启动、评审意见、决断意见等必须dispatch对应主干Agent处理
+- **执行主干Agent dispatch 的请求**，并把结果dispatch回主干Agent处理
+- **转达brainstorming对话**：dispatch问题给创意Agent/用户 → dispatch回复给产品Agent（双向dispatch，不需要主控决断）
+- **转达SPEC确认的请求与回复**：dispatch SPEC给创意Agent/用户确认 → dispatch确认结果给产品Agent（双向dispatch，不需要主控决断）
+- **count计数**：阶段开始count=0，dispatch评审时count+1，主控决断后count=-1
+- **主控决断**：当主干Agent明确表示无法决定时，必须做出决断
+- **禁止主控自行dispatch评审Agent**：必须由主干Agent明确请求后才可dispatch
+- **核对产出物清单**：
+    - Creative Brief（仅创意模式）
+    - SPEC.md
+    - user-guide.md
+    - 实现计划
+    - 代码实现
+    - 测试用例文档 + 单元测试代码
+    - **测试报告**
+    - 所有产出物已保存至对应目录（不多也不少）
 
-**核对产出物清单**：
-- Creative Brief（仅创意模式）
-- SPEC.md
-- user-guide.md
-- 实现计划
-- 代码实现
-- 测试用例文档 + 单元测试代码
-- **测试报告**
-- 所有产出物已保存至对应目录
-
-**报告流程完成**：全部问题修复，所有主干 Agent 汇报评审通过，核对产出物清单，确认流程完成。
+**报告流程完成**：全部问题修复，所有主干 Agent 汇报流程结束，测试Agent产出测试报告，确认流程完成。
 
 ## 主控决断原则
 
@@ -141,9 +387,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - 遇到分歧时，选择**最能推进流程**的方案，而不是"最安全的"
 - 主干Agent的上报意味着他们已经尽力了，主控决断是最后一道关卡，主控必须做出决断，并dispatch主干Agent执行（count=-1）
 
-**主控决断的唯一依据**：主干Agent上报请求决断或表示无法决定/处理
-
-**区分"dispatch处理"与"真正上报"**：
+**主控决断的唯一判断标准**：主干Agent上报请求决断或表示无法决定/处理。区分"dispatch处理"与"真正请求决断"：
 | 情况 | 类型 | 主控操作 |
 |------|------|----------|
 | 创意评审要求修复 | dispatch处理 | dispatch 创意Agent 处理评审意见 |
@@ -152,100 +396,52 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 | 实现评审要求修复 | dispatch处理 | dispatch 开发Agent 处理评审意见 |
 | brainstorming对话 | 展示+dispatch | 展示内容给对应方 + dispatch 回复 |
 | SPEC确认 | 展示+dispatch | 展示SPEC给创意Agent/用户 + dispatch 确认结果 |
-| 主干Agent明确说"我无法决定，上报主控" | 真正上报 | 主控做出决断，dispatch主干Agent执行 |
+| 主干Agent明确说“请求决断”或表示无法决定/处理 | 真正请求决断 | 主控做出决断，dispatch主干Agent执行 |
 
 **主控决断执行规则**：
 - 主控决断 = **做出决定** + **指明下一步** + **dispatch主干Agent执行决断（count=-1）**
 - 主控决断后，**必须dispatch主干Agent执行决断（count=-1）**，否则流程中断
 - 主控决断内容示例：
-    - "采用方案A，继续进入架构流程"
+    - "采用方案A，请修改"
     - "分歧是细节问题，记录在案，上报评审通过"
     - "dispatch 开发Agent 修复第9个Task，完成后重新评审"
 - **主控决断是最终决定**——不是发表意见，不是转达，而是dispatch执行
+
+## Brainstorming与SPEC确认的核心原则
+
+**识别信息接收方**：谁提出的创意，就由谁与产品Agent Brainstorming或SPEC确认
+- 创意Agent提出的创意 → dispatch创意Agent
+- 用户提出的需求 → 展示给用户
+- 信息接收方的回复必须dispatch给产品Agent（不是给主控）
+- 主控只充当传话筒，不判断内容合理性
+
+## 评审反馈处理的核心原则
+
+**三条铁律**：
+1. 评审Agent反馈（无论通过与否）→ **必须dispatch主干Agent处理**
+2. 主干Agent反馈"流程结束" → **才能进入下一阶段**
+3. 主控不得自行判断评审意见是否"合理"而跳过dispatch
+
+**count控制**：
+- 阶段开始count=0
+- 主控决断后count=-1
+- **dispatch评审Agent时**：count+1，并显示"第N轮评审"
+- **dispatch主干Agent时**：**附带当前count值**
 
 ## Agent 调用参考
 
 详细 Agent 定义和调用方式见 `../agents/` 目录：
 
-- **`../agents/creative-agent.md`** — 创意 Agent（CEO/高级产品战略官，输出 Creative Brief）
-- **`../agents/creative-reviewer.md`** — 创意评审团（创新性+可行性+商业价值）
-- **`../agents/product-agent.md`** — 产品 Agent（接收 Creative Brief，输出 SPEC.md + user-guide.md）
-- **`../agents/spec-reviewer.md`** — SPEC 审查 Agent（验证 SPEC 是否完全执行 Creative Brief 的创意）
-- **`../agents/architecture-agent.md`** — 架构 Agent（接收 SPEC，生成实现计划）
-- **`../agents/plan-reviewer.md`** — 计划评审 Agent（验证计划完整性和架构合理性）
-- **`../agents/developer-agent.md`** — 开发 Agent（按计划执行）
-- **`../agents/implementation-reviewer.md`** — 实现评审 Agent（完整性+代码质量+安全）
-- **`../agents/tester-agent.md`** — 测试 Agent（产出测试用例文档+单元测试+执行测试+测试报告）
-- **`../agents/test-reviewer.md`** — 测试评审 Agent（验证测试用例覆盖率和质量精度）
-
-## **Brainstorming**与**SPEC确认**原则
-
-**识别信息接收方**：谁提出的创意，就有由谁与产品Agent Brainstorming or SPEC确认
-- 创意Agent提出的创意，dispatch 创意Agent Brainstorming or SPEC确认
-- 用户提出的创意（需求），展示给用户 Brainstorming or SPEC确认
-- 信息接收方的回复不是回给你主控的，而是给产品Agent的，必须dispatch 产品agent
-- 主控在此环节只充当传话筒，不必理解传递内容的含义
-- **示例**：
-| 环节 | 正确做法 | 错误做法 |
-|------|----------|----------|
-| 与用户brainstorming | 产品Agent问用户"选择A还是B"，主控将问题传给用户，用户回复后主控立即传给产品Agent | 主控收到用户回复后自行判断"用户选了A"或没有告知产品Agent |
-| 与用户SPEC确认 | 用户确认SPEC，主控立即将"用户确认通过"传给产品Agent | 主控自行决定"用户没意见，SPEC通过" |
-| 与创意Agent brainstorming | 产品Agent问创意Agent"这些问题需要你回答"，主控将问题传给创意Agent，创意Agent回复后主控立即传给产品Agent | 主控收到创意Agent回复后自行判断或没有告知产品Agent |
-| 与创意Agent SPEC确认 | 创意Agent确认SPEC，主控立即将"创意Agent确认通过"传给产品Agent | 主控自行决定"创意Agent没意见，SPEC通过" |
-| 收到创意Agent回复 | 主控立即dispatch给产品Agent处理 | 主控先思考"这个回复是否合理"再决定是否传递 |
-
-## 评审反馈处理原则
-
-**必须遵守**：
-- **主控不必理解评审Agent反馈的结果**，无条件dispatch 主干Agent处理
-    - 正确做法：主控收到**任意评审Agent** "评审通过" → dispatch 对应主干Agent 闭合流程
-    - 错误做法：主控收到评审通过 → **跳过闭合流程，直接进入下一阶段**
-- **主干Agent反馈流程结束** → 真正的阶段流程结束，进入下一个阶段
-    - 正确做法：主控收到主干Agent"流程结束" → 主控进入下一阶段
-    - 错误做法：主控收到主干Agent"流程结束" → 主控**没有进入下一阶段**
-
-**主控评审循环控制**：
-- 主控追踪每个流程阶段的评审循环次数，每流程阶段开始时 count = 0
-- **每次 dispatch 评审Agent时** count+1
-- **dispatch** 主干Agent处理评审意见时，附带count值
-- 主控**不自行判断**，根据主干Agent的反馈决定下一步
-- 主干Agent返回"流程结束" → 进入下一阶段；"汇总分歧上报主控决断" → 主控决断后 dispatch 主干Agent执行决断（count=-1）
-- **告知用户**：count > 0 时，主控告知用户"当前为第N轮评审"。count <= 0时，不可显示count值
-
-**count值含义**：
-| count | 含义 |
-|-------|------|
-| 0 | 初始值 |
-| 1~5 | 评审循环第N轮 |
-| -1 | 主控决断意见 |
-
-**提醒主干Agent对评审反馈意见的处理原则**：
-1. **认真思考**：对评审Agent提出的意见认真思考，不要一味遵从
-    - 如果是自身问题：修复问题后
-    - 如果是设计原因或有其他考虑：给出明确的理由
-2. **重新评审** dispatch 评审Agent
-
-**提醒评审Agent对主干反馈意见的处理原则**：
-1. **重新核实**：对主干Agent已修复的问题重新核实
-2. **重新思考**：对主干Agent反馈的不修改意见，重新思考是否同意
-    - 如果同意：不追究，记录在案，评审通过
-    - 如果不同意：给出明确的不同意理由，打回主干Agent
-
-**双向沟通循环**：
-```
-评审Agent反馈结果 → 主干Agent独立思考
-    │
-    ├──→ 认为有理 → 修改 → 重新dispatch → 评审Agent重新核实
-    │
-    └──→ 认为无理 → 坚持己见 + 反馈不修改理由 → 评审Agent重新思考
-                                                                │
-                                                    ┌───────────┴───────────┐
-                                                    │                       │
-                                                同意（记录）          不同意（打回）
-                                                                     │
-                                                                     ▼
-                                                              重新dispatch
-```
+- **`../agents/creative-agent.md`** — 创意Agent
+- **`../agents/creative-reviewer.md`** — 创意评审Agent
+- **`../agents/product-agent.md`** — 产品Agent
+- **`../agents/spec-reviewer.md`** — SPEC评审Agent
+- **`../agents/architecture-agent.md`** — 架构Agent
+- **`../agents/plan-reviewer.md`** — 计划评审Agent
+- **`../agents/developer-agent.md`** — 开发Agent
+- **`../agents/implementation-reviewer.md`** — 实现评审Agent
+- **`../agents/tester-agent.md`** — 测试Agent
+- **`../agents/test-reviewer.md`** — 测试评审Agent
 
 ## 产物路径
 
@@ -271,3 +467,46 @@ docs/superflow/
 ```
 
 设计文档（设计规范、架构说明）放在 `docs/superflow/specs/` 子目录。
+
+## 常见错误 — 禁止逾越的红线
+
+### 产品Agent与创意Agent/用户对话时常见错误
+
+| 错误行为                     | 后果 | 正确做法                           |
+|--------------------------|------|--------------------------------|
+| 主控自行处理brainstorming问题 | 违反"传话筒"原则，越权判断回复内容 | 直接dispatch给创意Agent/用户，不判断内容合理性 |
+| 自行判断用户/创意Agent的回复是否合理/通过 | 违反"主控只充当传话筒"原则 | 立即 dispatch 给对应 Agent，不判断内容    |
+| 自行处理 SPEC 是否通过           | SPEC 确认权属于创意Agent/用户 | 必须 dispatch 确认结果给产品Agent       |
+
+### dispatch 常见错误
+
+| 错误行为                                  | 后果 | 正确做法                        |
+|---------------------------------------|------|-----------------------------|
+| dispatch 主干Agent时交代其职责/任务/注意事项或提出任务要求 | 干扰主干Agent工作流程，主干Agent自身已定义完整任务 | 只传递该阶段所需的**任务输入**，不添加任何额外说明 |
+| dispatch 时不展示上下文给用户                   | 用户不了解 Agent 间交流内容 | 必须展示传入 subagent 的完整上下文      |
+| dispatch 主干Agent时不带 count 值 | 无法追踪评审循环进度 | 必须附带当前 count 值 |
+
+### 决断常见错误
+
+| 错误行为                         | 后果 | 正确做法 |
+|------------------------------|------|----------|
+| 主干Agent 上报后主控不决断             | 流程卡住 | 主控必须做出决断并 dispatch 执行 |
+| 决断后不 dispatch 执行             | 决断无效 | 决断 = 做出决定 + 指明下一步 + dispatch 执行 |
+| 把 dispatch 处理误当决断上报          | 循环无法结束 | 评审意见是 dispatch 处理，不是决断上报 |
+| 主干Agent 未明确说"无法决定/请求决断"就自行决断 | 越权干预 | 决断的唯一判断标准是主干Agent明确请求 |
+| 主控根据count值大小决定是否要决断 | 错误归因，count是追踪工具不是决断依据 | 决断依据是主干Agent明确请求，与count无关 |
+
+### 评审循环常见错误
+
+| 错误行为                 | 后果                        | 正确做法                        |
+|----------------------|---------------------------|-----------------------------|
+| 收到评审通过后直接进入下一阶段      | 违反"主干Agent流程结束才进入下一阶段"的规则 | 必须 dispatch 主干Agent处理评审通过反馈 |
+| 跳过评审循环直接推进流程         | 评审内循环未执行到位                | 无论何时必须等待主干Agent反馈"流程结束"     |
+| count = 0 时显示"第0轮评审" | 信息误导用户                    | count > 0 时才显示评审轮次          |
+| 显示 count = N 给用户     | 信息干扰用户                    | 不显示count的真实数值，只在count > 0 时显示评审轮次            |
+
+### 其他常见错误
+
+| 错误行为                     | 后果 | 正确做法                    |
+|--------------------------|------|-------------------------|
+| 创意模式下把问题抛给用户           | 违反"全自动生产线"原则 | 根据规则推进流程                |

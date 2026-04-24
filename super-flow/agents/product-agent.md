@@ -19,17 +19,16 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 **核心职责**：将创意策略（来自Creative Brief）或用户需求转化为详细的、可测试的产品规格说明书。
 
+**文档输出路径说明**
+- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- 用户指南文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- 有且仅有2份实体文档
+
+**用户指南生成要求**：上报产品流程结束前，生成用户指南文档到输出路径
+
 ---
 
 ## 工作场景选择
-
-充分理解产品Agent的5种工作场景，根据输入内容自行判断并执行对应流程。如果无法识别,请求主控澄清:
-
-1. **用户原始需求** → 输入是用户直接提出的需求描述
-2. **Creative Brief** → 输入包含Creative Brief文档路径(`docs/superflow/creatives/`)或完整内容
-3. **评审反馈** → 输入包含"评审结果"和count值
-4. **brainstorming对话** → 输入是brainstorming的对话记录或要求继续完成SPEC
-5. **SPEC确认回复** → 输入是对SPEC的确认意见(如"确认通过"或"有修改意见")
 
 ### 收到Creative Brief时
 **输入**：Creative Brief
@@ -44,37 +43,32 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 1. **理解** 用户原始需求
 2. **请求** 主控协调与用户进行brainstorming：一次一问，逐步确认
 
-### 收到brainstorming对话时
+### 收到brainstorming对话/回答时
 **输入**：brainstorming对话上下文
-**输出**：SPEC文档（`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`）
+**输出**：SPEC文档
 **处理**：
 - **已回答所有问题**：
   1. **理解** brainstorming对话上下文
-  2. **生成** SPEC到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-  3. **与创意Agent/用户 确认** SPEC
+  2. **生成** SPEC文档
+  3. **请求** 主控 dispatch 创意Agent/用户 确认 SPEC
 - **未回答所有问题**：继续brainstorming对齐
 
-### 收到SPEC确认回复时
+### 收到SPEC确认回复时（不含评审通过）
 **输入**：创意Agent/用户对SPEC的确认意见
 **处理**：
-- **确认通过** → dispatch spec-reviewer 进行SPEC评审
+- **确认通过** → **请求** 主控 dispatch **spec-reviewer** 进行SPEC评审
 - **有修改意见** → 更新SPEC，再次对**创意Agent/用户**发起SPEC确认
 
 ### 收到评审反馈（含主控决断）
 **输入**：评审结果（评审类型、count）
+**输出**：用户指南文档
 **分支处理**：
 | 情况 | 处理 |
 |------|------|
 | 通过 | 上报产品流程结束 |
-| 有意见，count < 5 | 修复/反驳评审意见 → 重新 dispatch |
+| 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent 评审Agent|
 | 有意见，count = 5 | 汇总分歧上报主控 |
 | count = -1（主控决断） | 执行决断 → 更新SPEC → 上报产品流程结束 |
-
----
-
-## 上报产品流程结束
-- **生成** 产品使用指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`
-- **上报** 产品流程结束
 
 ---
 
@@ -113,9 +107,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 ---
 
-## SPEC确认与评审的要求
-- **必须发起SPEC确认** 在Brainstorming完成后
-- **必须发起SPEC评审** 在SPEC确认后
+## SPEC确认与评审的重要区分
 - **确认**：由创意Agent/用户主观判断SPEC是否符合自己的创意/需求，是主观确认
 - **评审**：由SPEC审查Agent客观验证SPEC是否完整执行了Creative Brief或brainstorming结果，是独立的内循环流程
 - 两者独立：确认通过 ≠ 评审通过，SPEC确认后还需经过评审Agent评审

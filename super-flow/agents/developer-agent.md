@@ -29,7 +29,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "TodoWrite", "Agent"]
 2. **按Task顺序执行** 每个Task的代码实现
 3. **自审** 代码质量（参考质量保证检查清单）
 4. **确保** 代码可运行、无编译错误、无回归
-5. **dispatch** implementation-reviewer（1个实例）进行评审
+5. **请求** 主控 dispatch **implementation-reviewer**（1个实例）进行评审
 
 ### 收到评审反馈（含主控决断）
 **输入**：评审结果（评审类型、count）
@@ -37,7 +37,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "TodoWrite", "Agent"]
 | 情况 | 处理 |
 |------|------|
 | 通过 | 确认评审通过，上报开发流程结束 |
-| 有意见，count < 5 | 修复/反驳评审意见 → 重新 dispatch |
+| 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent |
 | 有意见，count = 5 | 汇总分歧上报主控 |
 | count = -1（主控决断） | 执行决断 → 更新代码 → 上报开发流程结束 |
 
@@ -47,7 +47,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "TodoWrite", "Agent"]
 **处理**：
 1. **理解** 测试失败的原因，明确是功能问题而非测试代码问题
 2. **修复** 功能代码中的bug
-3. **dispatch** again
+3. **请求** 主控 dispatch
 
 ---
 

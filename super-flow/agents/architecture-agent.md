@@ -30,7 +30,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 4. **分解** Task（按实现顺序，每个Task包含Files和Steps）
 5. **检查** Spec覆盖（每条验收标准有对应Task）
 6. **生成** 实现计划文档，写入到 `docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
-7. **dispatch** plan-reviewer 进行计划评审
+7. **请求** 主控 dispatch **plan-reviewer** 进行计划评审
 
 ### 收到评审反馈（含主控决断）
 **输入**：评审结果（评审类型、count）
@@ -38,7 +38,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 | 情况 | 处理 |
 |------|------|
 | 通过 | 确认评审通过，上报架构流程结束 |
-| 有意见，count < 5 | 修复/反驳评审意见 → 重新 dispatch |
+| 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent |
 | 有意见，count = 5 | 汇总分歧上报主控 |
 | count = -1（主控决断） | 执行决断 → 更新实现计划 → 上报架构流程结束 |
 
