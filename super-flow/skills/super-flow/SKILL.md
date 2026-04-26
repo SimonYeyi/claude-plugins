@@ -5,7 +5,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 # 超级生产线（SuperFlow）
 
-全链路自主开发流程的入口 skill。协调多个 Agent 完成：创意生成 → 产品规划 → 开发 → 测试 → 完成，循环迭代直到所有问题解决。
+全链路自主开发流程的入口 skill。协调多个 Agent 完成：创意生成 → 产品规划 → 架构设计 → UI/UX 设计 → 代码实现 → 测试验证，循环迭代直到所有问题解决。
 
 ## 入口分支（请认真思考用户输入，准确判断模式）
 
@@ -18,7 +18,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 **主控决断的最高原则**：
 - **创意模式**：全自动生产线，**无论何时**都不能把问题抛给用户，必须自行决断确保流程继续
 - **产品模式**：半自动生产线，仅「产品 Agent 与用户 Brainstorming」和「请求用户确认 SPEC」允许用户参与，其余情况必须自行决断确保流程继续
-- **流程统一**：产品流程（SPEC确认）后，后续流程（架构 → 开发 → 测试 → 评审）均为全自动，无需用户介入
+- **流程统一**：产品流程（SPEC确认）后，后续流程（架构 → 设计 → 开发 → 测试 → 评审）均为全自动，无需用户介入
 
 **主控询问固定格式**：
 当需要询问用户选择模式时，主控应使用以下格式：
@@ -55,12 +55,17 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                                                            ↺ 内循环
                                                            │
                                                            ▼
-                                                    阶段四：开发流程
+                                                    阶段四：设计流程
+                                              （设计Agent + 设计评审Agent内循环）
+                                                           ↺ 内循环
+                                                           │
+                                                           ▼
+                                                    阶段五：开发流程
                                             （开发Agent + 实现评审团）
                                                            ↺ 内循环
                                                            │
                                                            ▼
-                                                    阶段五：测试流程
+                                                    阶段六：测试流程
                                               （测试Agent + 测试评审Agent内循环）
                                                            ↺ 内循环
                                                            │
@@ -213,13 +218,39 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
         │       │
         │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch架构Agent执行决断（附带count=-1）
         │
-        └──通过 → 评审结果返回架构Agent → 架构Agent上报"流程结束" → 进入阶段四：开发流程
+        └──通过 → 评审结果返回架构Agent → 架构Agent上报"流程结束" → 进入阶段四：设计流程
 ```
 
-#### 阶段四：开发流程
+#### 阶段四：设计流程
 
 ```
-主控dispatch开发Agent（green） ← count=0（阶段四：开发流程开始）
+主控dispatch设计Agent（purple） ← count=0（阶段四：设计流程开始）
+    │
+    ▼
+设计Agent读取SPEC.md和架构计划
+    │
+    ▼
+设计Agent基于需求和架构设计UI/UX方案
+    │
+    ▼
+设计Agent请求主控dispatch设计评审Agent（purple）← count+1
+    │
+    ├──不通过 → 评审结果返回设计Agent修复（附带count，循环）
+    │       │
+    │       ├──循环5次内 → 继续循环
+    │       │
+    │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch设计Agent执行决断（附带count=-1）
+    │
+    └──通过 → 评审结果返回设计Agent → 设计Agent上报"流程结束" → 进入阶段五：开发流程
+```
+
+#### 阶段五：开发流程
+
+```
+主控dispatch开发Agent（green） ← count=0（阶段五：开发流程开始）
+    │
+    ▼
+开发Agent读取SPEC.md、实现计划和设计文档
     │
     ▼
 开发Agent输出代码实现
@@ -233,13 +264,13 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     │       │
     │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch开发Agent执行决断（附带count=-1）
     │
-    └──通过 → 评审结果返回开发Agent → 开发Agent上报"流程结束" → 进入阶段五：测试流程
+    └──通过 → 评审结果返回开发Agent → 开发Agent上报"流程结束" → 进入阶段六：测试流程
 ```
 
-#### 阶段五：测试流程
+#### 阶段六：测试流程
 
 ```
-主控dispatch测试Agent（yellow） ← count=0（阶段五：测试流程开始）
+主控dispatch测试Agent（yellow） ← count=0（阶段六：测试流程开始）
     │
     ▼
 测试Agent生成测试用例文档（测试阶段一：只写测试用例文档，不写测试代码）
@@ -359,7 +390,6 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 **核心职责**：
 - 按顺序启动各主干Agent
-- **禁止干扰主干Agent的工作流程**：主干Agent有自己的使命，内部工作流必须完整
 - **dispatch主干Agent**：阶段启动、评审意见、决断意见等必须dispatch对应主干Agent处理
 - **执行主干Agent dispatch 的请求**，并把结果dispatch回主干Agent处理
 - **转达brainstorming对话**：dispatch问题给创意Agent/用户 → dispatch回复给产品Agent（双向dispatch，不需要主控决断）
@@ -372,6 +402,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     - SPEC.md
     - user-guide.md
     - 实现计划
+    - **UI/UX 设计文档**
     - 代码实现
     - 测试用例文档 + 单元测试代码
     - **测试报告**
@@ -393,6 +424,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 | 创意评审要求修复 | dispatch处理 | dispatch 创意Agent 处理评审意见 |
 | SPEC评审要求修复 | dispatch处理 | dispatch 产品Agent 处理评审意见 |
 | 计划评审要求修复 | dispatch处理 | dispatch 架构Agent 处理评审意见 |
+| 设计评审要求修复 | dispatch处理 | dispatch 设计Agent 处理评审意见 |
 | 实现评审要求修复 | dispatch处理 | dispatch 开发Agent 处理评审意见 |
 | brainstorming对话 | 展示+dispatch | 展示内容给对应方 + dispatch 回复 |
 | SPEC确认 | 展示+dispatch | 展示SPEC给创意Agent/用户 + dispatch 确认结果 |
@@ -438,6 +470,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - **`../agents/spec-reviewer.md`** — SPEC评审Agent
 - **`../agents/architecture-agent.md`** — 架构Agent
 - **`../agents/plan-reviewer.md`** — 计划评审Agent
+- **`../agents/design-agent.md`** — 设计Agent
+- **`../agents/design-reviewer.md`** — 设计评审Agent
 - **`../agents/developer-agent.md`** — 开发Agent
 - **`../agents/implementation-reviewer.md`** — 实现评审Agent
 - **`../agents/tester-agent.md`** — 测试Agent
@@ -458,6 +492,8 @@ docs/superflow/
 │   └── YYYY-MM-DD-feature-name-spec.md
 ├── plans/              # 实现计划
 │   └── YYYY-MM-DD-feature-name-plan.md
+├── designs/            # UI/UX 设计文档
+│   └── YYYY-MM-DD-feature-name-design.md
 ├── creatives/         # 创意文档
 │   └── YYYY-MM-DD-feature-name-creative.md
 ├── tests/              # 测试用例
@@ -467,23 +503,20 @@ docs/superflow/
 │   └── YYYY-MM-DD-feature-name-test-report.md     # 测试报告
 ```
 
-设计文档（设计规范、架构说明）放在 `docs/superflow/specs/` 子目录。
-
 ## 常见错误 — 禁止逾越的红线
 
 ### 产品Agent与创意Agent/用户对话时常见错误
 
-| 错误行为                     | 后果 | 正确做法                           |
-|--------------------------|------|--------------------------------|
-| 主控自行处理brainstorming问题 | 违反"传话筒"原则，越权判断回复内容 | 直接dispatch给创意Agent/用户，不判断内容合理性 |
-| 自行判断用户/创意Agent的回复是否合理/通过 | 违反"主控只充当传话筒"原则 | 立即 dispatch 给对应 Agent，不判断内容    |
-| 自行处理 SPEC 是否通过           | SPEC 确认权属于创意Agent/用户 | 必须 dispatch 确认结果给产品Agent       |
+| 错误行为                     | 后果                   | 正确做法                           |
+|--------------------------|----------------------|--------------------------------|
+| 主控自行处理brainstorming问题    | 违反“传话筒”原则，越权判断回复内容   | 直接dispatch给创意Agent/用户，不判断内容合理性 |
+| 自行判断用户/创意Agent的回复是否合理/通过 | 违反“主控只充当传话筒”原则       | 立即 dispatch 给对应 Agent，不判断内容    |
+| SPEC确认后未dispatch产品Agent  | 流程中断，产品Agent无法处理确认结果 | 创意Agent/用户确认后 dispatch回产品Agent |
 
 ### dispatch 常见错误
 
 | 错误行为                                  | 后果 | 正确做法                        |
 |---------------------------------------|------|-----------------------------|
-| dispatch 主干Agent时交代其职责/任务/注意事项或提出任务要求 | 干扰主干Agent工作流程，主干Agent自身已定义完整任务 | 只传递该阶段所需的**任务输入**，不添加任何额外说明 |
 | dispatch 时不展示上下文给用户                   | 用户不了解 Agent 间交流内容 | 必须展示传入 subagent 的完整上下文      |
 | dispatch 主干Agent时不带 count 值 | 无法追踪评审循环进度 | 必须附带当前 count 值 |
 
