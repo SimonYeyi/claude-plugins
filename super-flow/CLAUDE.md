@@ -40,9 +40,10 @@ docs/superflow/
 ├── creatives/          # 创意文档
 │   └── YYYY-MM-DD-feature-name-creative.md
 ├── tests/              # 测试用例
-│   ├── YYYY-MM-DD-feature-name-logic-tests.md    # 逻辑测试用例
-│   ├── YYYY-MM-DD-feature-name-manual-tests.md    # 非逻辑测试用例
-│   └── YYYY-MM-DD-feature-name-test-report.md     # 测试报告
+│   ├── YYYY-MM-DD-feature-name-unit-tests.md       # 单元测试用例
+│   ├── YYYY-MM-DD-feature-name-platform-tests.md    # 平台测试用例
+│   ├── YYYY-MM-DD-feature-name-acceptance-tests.md # 验收测试用例
+│   └── YYYY-MM-DD-feature-name-test-report.md      # 测试报告
 ```
 
 设计文档（设计规范、架构说明）放在 `docs/superflow/specs/` 子目录。

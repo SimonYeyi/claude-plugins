@@ -256,7 +256,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──通过 → 评审结果返回测试Agent
             │
             ▼
-测试Agent编写单元测试代码（测试阶段二：单元测试代码编写）
+测试Agent编写单元测试代码和平台测试代码（测试阶段二：测试代码编写）
     │
     ▼
 执行测试
@@ -283,7 +283,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──测试通过
             │
             ▼
-测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段二评审：全面评审）
+测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段二评审：测试代码评审）
     │
     ├──不通过 → 评审结果返回测试Agent修复（附带count，循环）
     │       │
@@ -461,9 +461,10 @@ docs/superflow/
 ├── creatives/         # 创意文档
 │   └── YYYY-MM-DD-feature-name-creative.md
 ├── tests/              # 测试用例
-│   ├── YYYY-MM-DD-feature-name-logic-tests.md    # 逻辑测试用例
-│   ├── YYYY-MM-DD-feature-name-manual-tests.md  # 非逻辑测试用例
-│   └── YYYY-MM-DD-feature-name-test-report.md    # 测试报告
+│   ├── YYYY-MM-DD-feature-name-unit-tests.md       # 单元测试用例
+│   ├── YYYY-MM-DD-feature-name-platform-tests.md # 平台测试用例
+│   ├── YYYY-MM-DD-feature-name-acceptance-tests.md # 验收测试用例
+│   └── YYYY-MM-DD-feature-name-test-report.md     # 测试报告
 ```
 
 设计文档（设计规范、架构说明）放在 `docs/superflow/specs/` 子目录。
