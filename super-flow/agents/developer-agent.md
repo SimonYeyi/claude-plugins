@@ -17,15 +17,16 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "TodoWrite", "Agent"]
 
 **核心职责**：基于 SPEC、实现计划和UX/UI设计文档，将需求转化为可工作的代码。
 
+## 依赖文档
+- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- 实现计划文档：`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
+- 设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+
 ---
 
 ## 工作流
 
 ### 处理编写实现代码（执行实现计划）
-**输入**：SPEC.md、实现计划文档、UX/UI设计文档
-**输出**：代码实现
-
-**处理**：
 1. **读取** SPEC.md，理解功能需求和验收标准
 2. **读取** 实现计划文档，了解技术架构和 Task 分解
 3. **读取** UX/UI 设计文档，理解交互规范和视觉标准
@@ -34,24 +35,6 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "TodoWrite", "Agent"]
 6. **自审** 代码质量（参考质量保证检查清单）
 7. **确保** 代码可运行、无编译错误、无回归、符合设计规范
 8. **请求** 主控 dispatch **implementation-reviewer**（1个实例）进行评审
-
-### 处理评审反馈/主控决断
-**输入**：评审结果（评审类型、count）
-**分支处理**：
-| 情况 | 处理 |
-|------|------|
-| 通过 | 确认评审通过，上报开发流程结束 |
-| 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent |
-| 有意见，count = 5 | 汇总分歧上报主控 |
-| count = -1（主控决断） | 执行决断 → 更新代码 → 上报开发流程结束 |
-
-### 处理测试失败反馈（修复功能bug）
-**输入**：测试失败反馈
-**输出**：修复后的代码
-**处理**：
-1. **理解** 测试失败的原因，明确是功能问题而非测试代码问题
-2. **修复** 功能代码中的bug
-3. **请求** 主控 dispatch
 
 ---
 

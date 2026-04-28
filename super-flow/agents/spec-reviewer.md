@@ -21,17 +21,16 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 - 验证翻译忠实度，不是设计质量
 - 检查创意方向/用户需求是否完整呈现，不是检查你会不会写得不同
 
+## 依赖文档
+- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- Creative Brief文档：`docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
+
 ---
 
 ## 工作流
 
 ### 处理SPEC评审
-**输入**：Creative Brief（创意模式）、brainstorming对话上下文（产品模式）、SPEC.md
-**输出**：SPEC审查报告
-**处理**：
-1. **读取源文档**：
-   - Creative Mode：阅读Creative Brief全文
-   - Product Mode：阅读brainstorming对话上下文
+1. **读取需求源**：阅读Creative Brief全文（若有） 和 brainstorming对话上下文
 2. **读取SPEC.md**
 3. **创建覆盖矩阵**：
    ```
@@ -42,14 +41,6 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 4. **识别缺口和错位**
 5. **记录发现**（带具体引用）
 6. **反馈** 评审意见
-
-### 处理产品Agent的修复/反驳意见
-**输入**：产品Agent的修复/反驳意见
-**输出**：更新后的评审意见
-**处理**：
-- **已修复** → 重新评审 SPEC
-- **接受反驳** → 更新评审意见
-- **不接受反驳** → 提供维持原意见的具体理由
 
 ---
 

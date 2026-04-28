@@ -99,14 +99,11 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 用户输入主题
     │
     ▼
-主控dispatch创意Agent（magenta）← count=0（阶段一：创意流程开始）
-    │ 输入：用户需求/主题（可为空）
-    ▼
-创意Agent输出Creative Brief
+主控dispatch创意Agent(生成Creative Brief) ← count=0（阶段一：创意流程开始）
     │
     ▼
-创意Agent请求主控dispatch创意评审团（magenta）← count+1
-    │ 输入：Creative Brief
+创意Agent请求主控dispatch创意评审团(Creative Brief评审) ← count+1
+    │
     ├──不通过 → 评审结果返回创意Agent修复（附带count，循环）
     │       │
     │       ├──循环5次内 → 继续循环
@@ -116,21 +113,15 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──通过 → 评审结果返回创意Agent → 创意Agent上报"流程结束"
                   │
                   ▼
-    主控dispatch产品Agent（orange）← count=0（阶段二：产品流程开始）
-              │ 输入：Creative Brief
-              ▼
-          产品Agent与创意Agent进行brainstorming（主控传话，一次全问；SPEC brainstorming ≠ SPEC确认）
+    主控dispatch产品Agent(基于Creative Brief生成SPEC) ← count=0（阶段二：产品流程开始）
               │
               ▼
-          产品Agent生成SPEC.md
-              │
-              ▼
-          主控展示SPEC给创意Agent确认
+          产品Agent请求主控dispatch创意Agent确认SPEC
               │
               ├──创意Agent有修改意见 → 主控传话给产品Agent修改SPEC（循环）
               │       │
               │       ▼
-              │   产品Agent修改后重新展示SPEC给创意Agent确认
+              │   产品Agent修改后重新请求dispatch创意Agent确认
               │
               └──创意Agent确认通过（主控传话）
                       │
@@ -138,15 +129,15 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                   确认结果返回产品Agent
               │
               ▼
-          产品Agent请求主控dispatch SPEC审查Agent（orange）
-              │ 输入：Creative Brief + brainstorming对话上下文 + SPEC.md
+          产品Agent请求主控dispatch SPEC评审Agent（SPEC评审）
+              │ 输入：brainstorming对话上下文
               ├──不通过 → 评审结果返回产品Agent修复（附带count，循环）
               │       │
               │       ├──循环5次内 → 继续循环
               │       │
               │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch产品Agent执行决断（附带count=-1）
               │
-              └──通过 → 评审结果返回产品Agent → 上报"流程结束"
+              └──通过 → 评审结果返回产品Agent（生成用户指南） → 上报"流程结束"
                       │
                       ▼
                   进入阶段三：架构流程
@@ -158,21 +149,15 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 用户输入需求（阶段一：用户输入）
     │
     ▼
-主控dispatch产品Agent（orange）← count=0（阶段二：产品流程开始）
-    │ 输入：用户需求
-    ▼
-产品Agent与用户进行brainstorming（主控传话，一次一问，循环到所有问题已确认；SPEC brainstorming ≠ SPEC确认）
+主控dispatch产品Agent（基于用户需求生成SPEC） ← count=0（阶段二：产品流程开始）
     │
     ▼
-产品Agent生成SPEC.md
-    │
-    ▼
-主控展示SPEC给用户确认（确认 ≠ 评审）
+产品Agent请求主控展示SPEC给用户确认（确认 ≠ 评审）
     │
     ├──用户有修改意见 → 主控传话给产品Agent修改SPEC（循环）
     │       │
     │       ▼
-    │   产品Agent修改后重新展示SPEC给用户确认
+    │   产品Agent修改后重新请求主控展示SPEC给用户确认
     │
     └──用户确认通过（主控传话）
             │
@@ -181,15 +166,15 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
         ⚠️ **重要**：SPEC确认后，后续所有流程（架构→设计→开发→测试→评审）均为全自动，无需用户参与
     │
     ▼
-产品Agent请求主控dispatch SPEC审查Agent（orange）
-    │ 输入：brainstorming对话上下文 + SPEC.md
+产品Agent请求主控dispatch SPEC评审Agent（SPEC评审）
+    │ 输入：brainstorming对话上下文
     ├──不通过 → 评审结果返回产品Agent修复（附带count，循环）
     │       │
     │       ├──循环5次内 → 继续循环
     │       │
     │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch产品Agent执行决断（附带count=-1）
     │
-    └──通过 → 评审结果返回产品Agent → 上报"流程结束"
+    └──通过 → 评审结果返回产品Agent（生成用户指南） → 上报"流程结束"
             │
             ▼
         进入阶段三：架构流程
@@ -198,8 +183,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 阶段三：架构流程
 
 ```
-主控dispatch架构Agent（cyan） ← count=0（阶段三：架构流程开始）
-    │ 输入：SPEC.md
+主控dispatch架构Agent（编写实现计划） ← count=0（阶段三：架构流程开始）
+    │
     ▼
 架构Agent评估SPEC可实现性
     │
@@ -207,7 +192,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     │       │
     │       ▼
     │   主控dispatch产品Agent修复SPEC
-    │       │ 输入：技术问题和修改建议
+    │       │
     │       ▼
     │   产品Agent修复后重新传入SPEC
     │       │
@@ -217,8 +202,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──可实现 → 输出实现计划
                 │
                 ▼
-    架构Agent请求主控dispatch计划评审Agent（cyan）← count+1
-        │ 输入：SPEC.md + 实现计划文档
+    架构Agent请求主控dispatch计划评审Agent（实现计划评审） ← count+1
+        │
         ├──不通过 → 评审结果返回架构Agent修复（附带count，循环）
         │       │
         │       ├──循环5次内 → 继续循环
@@ -234,14 +219,11 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 阶段四：设计流程
 
 ```
-主控dispatch设计Agent（purple） ← count=0（阶段四：设计流程开始）
-    │ 输入：SPEC.md + 实现计划文档
-    ▼
-设计Agent基于需求和架构设计UX/UI方案
+主控dispatch设计Agent（设计UX/UI方案） ← count=0（阶段四：设计流程开始）
     │
     ▼
-设计Agent请求主控dispatch设计评审Agent（purple）← count+1
-    │ 输入：设计文档 + SPEC.md + 实现计划文档
+设计Agent请求主控dispatch设计评审Agent（UX/UI设计方案评审）← count+1
+    │
     ├──不通过 → 评审结果返回设计Agent修复（附带count，循环）
     │       │
     │       ├──循环5次内 → 继续循环
@@ -257,14 +239,11 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 阶段五：开发流程
 
 ```
-主控dispatch开发Agent（green） ← count=0（阶段五：开发流程开始）
-    │ 输入：SPEC.md + 实现计划文档 + UX/UI设计文档
-    ▼
-开发Agent输出代码实现
+主控dispatch开发Agent（编写实现代码） ← count=0（阶段五：开发流程开始）
     │
     ▼
-开发Agent请求主控dispatch实现评审团（green）← count+1
-    │ 输入：代码实现 + SPEC.md + UX/UI设计文档
+开发Agent请求主控dispatch实现评审团（代码实现评审）← count+1
+    │
     ├──不通过 → 评审结果返回开发Agent修复（附带count，循环）
     │       │
     │       ├──循环5次内 → 继续循环
@@ -280,26 +259,20 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 阶段六：测试流程
 
 ```
-主控dispatch测试Agent（yellow） ← count=0（阶段六：测试流程开始）
-    │ 输入：SPEC.md + UX/UI设计文档
-    ▼
-测试Agent生成测试用例文档
+主控dispatch测试Agent（生成测试用例文档） ← count=0（阶段六：测试流程开始）
     │
     ▼
-测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段一评审：测试用例评审）
-    │ 输入：SPEC.md + UX/UI设计文档 + 单元测试用例文档 + 平台测试用例文档 + 验收测试用例文档
+测试Agent请求主控dispatch测试评审Agent（测试用例文档评审）← count+1（测试阶段一评审：测试用例评审）
+    │
     ├──不通过 → 评审结果返回测试Agent修复（附带count，循环）
     │       │
     │       ├──循环5次内 → 继续循环
     │       │
     │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch测试Agent执行决断（附带count=-1）
     │
-    └──通过 → 评审结果返回测试Agent
+    └──通过 → 主控dispatch测试Agent（测试代码及报告编写）
             │
             ▼
-测试Agent编写测试代码及报告（测试阶段二：测试代码及报告编写）
-    │
-    ▼
 执行测试
     │
     ├──测试代码有误（语法错误/运行错误）
@@ -314,7 +287,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     │       │
     │       ▼
     │   主控dispatch开发Agent修复
-    │       │ 输入：测试失败反馈
+    │       │
     │       ▼
     │   开发Agent修复后重新传入代码
     │       │
@@ -324,8 +297,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──测试通过
             │
             ▼
-测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段二评审：测试代码及报告评审）
-    │ 输入：单元测试用例文档 + 平台测试用例文档 + 单元测试代码 + 平台测试代码 + 测试报告
+测试Agent请求主控dispatch测试评审Agent（测试代码及报告评审）← count+1（测试阶段二评审：测试代码及报告评审）
+    │
     ├──不通过 → 评审结果返回测试Agent修复（附带count，循环）
     │       │
     │       ├──循环5次内 → 继续循环

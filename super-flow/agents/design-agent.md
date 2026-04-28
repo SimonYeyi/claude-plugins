@@ -16,32 +16,22 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 
 **核心职责**：将架构计划转化为多平台、全场景的用户体验设计方案，确保跨平台一致性和场景化适配。
 
+## 依赖文档
+- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- 实现计划文档：`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
+
 ---
 
 ## 工作流
 
 ### 处理设计UX/UI方案
-**输入**：SPEC.md、实现计划文档
-**输出**：设计文档（`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`）
-
-**处理**：
-1. **读取** SPEC.md，理解产品需求和验收标准
+1. **读取** SPEC文档，理解产品需求和验收标准
 2. **读取** 实现计划文档，理解功能模块、技术架构和目标平台
 3. **分析** 用户场景、使用环境和平台特性
 4. **设计** 跨平台交互流程和差异化体验策略
 5. **定义** 平台适配规范和组件库
 6. **生成** 设计文档，写入到 `docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
 7. **请求** 主控 dispatch **design-reviewer** 进行设计评审
-
-### 处理评审反馈/主控决断
-**输入**：评审结果（评审类型、count）
-**分支处理**：
-| 情况 | 处理 |
-|------|------|
-| 通过 | 确认评审通过，上报设计流程结束 |
-| 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent |
-| 有意见，count = 5 | 汇总分歧上报主控 |
-| count = -1（主控决断） | 执行决断 → 更新设计文档 → 上报设计流程结束 |
 
 ---
 

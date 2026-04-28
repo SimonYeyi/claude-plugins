@@ -25,59 +25,32 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 - 用户指南文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
 - 有且仅有2份实体文档
 
----
-
 ## 工作流
 
-### 处理生成SPEC
-**输入**：Creative Brief
-**输出**：brainstorming对话上下文
-**处理**：
+### 处理Creative Brief
 1. **读取** Creative Brief
 2. **请求** 主控 dispatch 创意Agent 进行brainstorming： 一次全问，由创意Agent一次性回答所有问题
 
 ### 处理用户需求
-**输出**：brainstorming对话上下文
-**处理**：
 1. **理解** 用户原始需求
 2. **请求** 主控协调与用户进行brainstorming：一次一问，逐步确认，直到所有问题确认完成
 
 ### 处理brainstorming对话/回答
-**输入**：brainstorming对话上下文
-**输出**：SPEC文档
-**处理**：
 - **已回答所有问题**：
   1. **理解** brainstorming对话上下文
   2. **生成** SPEC文档
   3. **请求** 主控 dispatch 创意Agent/用户 确认 SPEC
 - **未回答所有问题**：继续brainstorming对齐
 
-### 处理SPEC确认回复
-**输入**：创意Agent/用户对SPEC的确认意见
-**处理**：
-- **确认通过** → **请求** 主控 dispatch **spec-reviewer** 进行SPEC评审
-- **有修改意见** → 更新SPEC，再次对**创意Agent/用户**发起SPEC确认
-
-### 处理评审反馈/主控决断
-**输入**：评审结果（评审类型、count）
-**输出**：用户指南文档
-**分支处理**：
-| 情况 | 处理 |
-|------|------|
-| 通过 | 生成用户指南 → 上报产品流程结束 |
-| 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent 评审Agent|
-| 有意见，count = 5 | 汇总分歧上报主控 |
-| count = -1（主控决断） | 执行决断 → 更新SPEC → 生成用户指南 → 上报产品流程结束 |
+### 处理生成用户指南
+**生成** 用户指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
 
 ### 处理SPEC技术问题修复
-**输入**：架构Agent发现的技术问题及修改建议
-**输出**：更新后的SPEC文档
-**处理**：
 1. **读取** 当前SPEC文档
 2. **理解** 架构Agent提出的具体技术问题和修改建议
 3. **评估** 修改方案对产品规格的影响
 4. **更新** SPEC中相关的技术约束或实现假设
-5. **通知** 主控SPEC已更新，等待进一步指示
+5. **通知** 主控SPEC已更新
 
 ## Brainstorming要求及对话规范
 

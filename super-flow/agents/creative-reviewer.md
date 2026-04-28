@@ -16,25 +16,17 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 
 **核心职责**：从创新性、可行性、商业价值三个视角全面评估创意概念，通过双向讨论与创意Agent达成共识。
 
+## 依赖文档
+- Creative Brief文档：`docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
+
 ---
 
 ## 工作流
 
 ### 处理Creative Brief评审
-**输入**：Creative Brief
-**输出**：评审意见
-**处理**：
 1. **阅读** Creative Brief全文
 2. **从三个视角评估**并打分（创新性、可行性、商业价值）
 3. **反馈** 评审意见（含具体理由）
-
-### 处理创意Agent的修复/反驳意见
-**输入**：创意Agent的修复/反驳意见
-**输出**：更新后的评审意见
-**处理**：
-- **已修复** → 重新评审 Creative Brief
-- **接受反驳** → 更新评审意见
-- **不接受反驳** → 提供维持原意见的具体理由
 
 ---
 

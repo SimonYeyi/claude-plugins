@@ -21,37 +21,19 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 ## 工作流
 
 ### 处理生成Creative Brief
-**输入**：用户需求/主题（可为空）
-**输出**：Creative Brief（`docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`）
-**处理**：
 1. **探索** 项目现状，了解已有功能，判断创意范围类型（立项 or 子功能）
 2. **分析** 用户需求/主题（可为空，需要自主创新）
 3. **思考** 战略决策框架的四个问题（为什么是 THIS / NOW / US / 为什么不）
 4. **生成** Creative Brief，写入 `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
 5. **请求** 主控 dispatch **creative-reviewer** 进行 Creative Brief 评审
 
-### 处理评审反馈/主控决断
-**输入**：评审结果（评审类型、count）
-**分支处理**：
-| 情况 | 处理 |
-|------|------|
-| 通过 | 确认评审通过，上报产品流程结束 |
-| 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent |
-| 有意见，count = 5 | 汇总分歧上报主控 |
-| count = -1（主控决断） | 执行决断 → 更新Creative Brief → 上报产品流程结束 |
-
 ### 处理brainstorming问题
-**输入**：brainstorming问题
-**输出**：更新后的Creative Brief
-**处理**：
-1. **核对** 对话内容是否围绕创意方向
+1. **核对** 对话内容是否围绕Creative Brief
 2. **回复** 关于对话中提出的问题
 3. **写入** Creative Brief 文档（如果有修改）
 
 ### 处理SPEC确认请求
-**输入**：product-agent请求确认SPEC
-**输出**：确认回复或遗漏内容
-**处理**：
+**核对** SPEC文档是否覆盖Creative Brief要求
 - **已覆盖** → 回复确认
 - **有遗漏** → 回复遗漏内容
 
