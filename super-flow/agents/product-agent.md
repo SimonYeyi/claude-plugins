@@ -25,8 +25,6 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 - 用户指南文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
 - 有且仅有2份实体文档
 
-**用户指南生成要求**：上报产品流程结束前，生成用户指南文档到输出路径
-
 ---
 
 ## 工作流
@@ -66,10 +64,10 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 **分支处理**：
 | 情况 | 处理 |
 |------|------|
-| 通过 | 上报产品流程结束 |
+| 通过 | 生成用户指南 → 上报产品流程结束 |
 | 有意见，count < 5 | 修复/反驳评审意见 → **请求** 主控重新 dispatch 评审Agent 评审Agent|
 | 有意见，count = 5 | 汇总分歧上报主控 |
-| count = -1（主控决断） | 执行决断 → 更新SPEC → 上报产品流程结束 |
+| count = -1（主控决断） | 执行决断 → 更新SPEC → 生成用户指南 → 上报产品流程结束 |
 
 ### 处理SPEC技术问题修复
 **输入**：架构Agent发现的技术问题及修改建议

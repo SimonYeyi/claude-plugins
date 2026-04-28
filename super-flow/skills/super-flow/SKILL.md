@@ -119,7 +119,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     主控dispatch产品Agent（orange）← count=0（阶段二：产品流程开始）
               │ 输入：Creative Brief
               ▼
-          产品Agent与创意Agent进行brainstorming（主控传话，一次全问）
+          产品Agent与创意Agent进行brainstorming（主控传话，一次全问；SPEC brainstorming ≠ SPEC确认）
               │
               ▼
           产品Agent生成SPEC.md
@@ -146,7 +146,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
               │       │
               │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch产品Agent执行决断（附带count=-1）
               │
-              └──通过 → 评审结果返回产品Agent → 产品Agent生成user-guide.md → 上报"流程结束"
+              └──通过 → 评审结果返回产品Agent → 上报"流程结束"
                       │
                       ▼
                   进入阶段三：架构流程
@@ -161,7 +161,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 主控dispatch产品Agent（orange）← count=0（阶段二：产品流程开始）
     │ 输入：用户需求
     ▼
-产品Agent与用户进行brainstorming（主控传话，一次一问，循环到所有问题已确认）
+产品Agent与用户进行brainstorming（主控传话，一次一问，循环到所有问题已确认；SPEC brainstorming ≠ SPEC确认）
     │
     ▼
 产品Agent生成SPEC.md
@@ -189,7 +189,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     │       │
     │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch产品Agent执行决断（附带count=-1）
     │
-    └──通过 → 评审结果返回产品Agent → 产品Agent生成user-guide.md → 上报"流程结束"
+    └──通过 → 评审结果返回产品Agent → 上报"流程结束"
             │
             ▼
         进入阶段三：架构流程
@@ -283,7 +283,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 主控dispatch测试Agent（yellow） ← count=0（阶段六：测试流程开始）
     │ 输入：SPEC.md + UX/UI设计文档
     ▼
-测试Agent生成测试用例文档（测试阶段一：只写测试用例文档，不写测试代码）
+测试Agent生成测试用例文档
     │
     ▼
 测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段一评审：测试用例评审）
@@ -297,7 +297,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──通过 → 评审结果返回测试Agent
             │
             ▼
-测试Agent编写测试代码（测试阶段二：测试代码编写）
+测试Agent编写测试代码及报告（测试阶段二：测试代码及报告编写）
     │
     ▼
 执行测试
@@ -324,15 +324,15 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──测试通过
             │
             ▼
-测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段二评审：测试代码评审）
-    │ 输入：单元测试用例文档 + 平台测试用例文档 + 单元测试代码 + 平台测试代码
+测试Agent请求主控dispatch测试评审Agent（yellow）← count+1（测试阶段二评审：测试代码及报告评审）
+    │ 输入：单元测试用例文档 + 平台测试用例文档 + 单元测试代码 + 平台测试代码 + 测试报告
     ├──不通过 → 评审结果返回测试Agent修复（附带count，循环）
     │       │
     │       ├──循环5次内 → 继续循环
     │       │
     │       └──5次后仍不通过 → 主控决断（count=-1）→ dispatch测试Agent执行决断（附带count=-1）
     │
-    └──通过 → 评审结果返回测试Agent → 测试Agent生成测试报告 → 测试Agent上报"流程结束"
+    └──通过 → 评审结果返回测试Agent → 测试Agent上报"流程结束"
             │
             ▼
 主控确认所有产出物
@@ -373,7 +373,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                                 └──5次后主控决断
 ```
 
-**count值追踪机制**：
+**count值含义**：
 | count值 | 含义 | 主控操作 |
 |---------|------|---------|
 | 0 | 阶段开始 | 不显示 |
@@ -407,18 +407,61 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - **count计数**：阶段开始count=0，dispatch评审时count+1，主控决断后count=-1
 - **主控决断**：当主干Agent明确表示无法决定时，必须做出决断
 - **禁止主控自行dispatch评审Agent**：必须由主干Agent明确请求后才可dispatch
-- **核对产出物清单**：
-    - Creative Brief（仅创意模式）
-    - SPEC.md
-    - user-guide.md
-    - 实现计划
-    - **UX/UI 设计文档**
-    - 代码实现
-    - 测试用例文档 + 单元测试代码
-    - **测试报告**
-    - 所有产出物已保存至对应目录（不多也不少）
+- **核对产出物清单** 是否符合产物验收规范
+- **报告流程完成**：测试Agent上报流程结束，产出测试报告，确认流程完成
 
-**报告流程完成**：全部问题修复，所有主干 Agent 汇报流程结束，测试Agent产出测试报告，确认流程完成。
+## 产物验收规范
+
+### 产物目录结构
+
+所有产出文件统一放在项目根目录的 `docs/superflow/` 下：
+
+```
+docs/superflow/
+├── specs/              # SPEC 文档
+│   └── YYYY-MM-DD-feature-name-spec.md
+├── plans/              # 实现计划
+│   └── YYYY-MM-DD-feature-name-plan.md
+├── designs/            # UX/UI 设计文档
+│   └── YYYY-MM-DD-feature-name-design.md
+├── creatives/         # 创意文档
+│   └── YYYY-MM-DD-feature-name-creative.md
+├── tests/              # 测试用例
+│   ├── YYYY-MM-DD-feature-name-unit-tests.md       # 单元测试用例
+│   ├── YYYY-MM-DD-feature-name-platform-tests.md # 平台测试用例
+│   ├── YYYY-MM-DD-feature-name-acceptance-tests.md # 验收测试用例
+│   └── YYYY-MM-DD-feature-name-test-report.md     # 测试报告
+```
+
+### feature-name 命名规则
+
+**核心原则**：以SPEC文档的feature-name为唯一基准，所有其他文档必须使用相同的feature-name。
+
+**重命名规则**：
+1. 以SPEC文档的feature-name的命名为基准
+2. 如发现其他文档使用了不同的feature-name，主控需执行重命名操作
+3. **只重命名文件，不修改文件内容**
+
+**示例**：
+```
+SPEC文档：2026-04-28-user-authentication-spec.md
+                    ↓ feature-name = "user-authentication"
+
+所有其他文档必须使用相同的 feature-name：
+✓ 2026-04-28-user-authentication-plan.md
+✓ 2026-04-28-user-authentication-design.md
+✓ 2026-04-28-user-authentication-unit-tests.md
+✗ 2026-04-28-auth-plan.md  （错误：feature-name不一致）
+```
+
+### 清理多余产物规则
+
+**核心原则**：确保产出物清单的准确性，只保留当前流程生成的必要文件。
+
+**清理规则**：
+1. 主控在核对产出物清单时，需检查是否存在不属于当前流程的多余产物文件
+2. 如发现多余产物文件（如旧版本的文档、测试过程中产生的临时文件等），主控需将其清理删除
+3. 清理操作应在流程完成前执行，确保最终交付的产物清单准确无误
 
 ## 主控决断原则
 
@@ -486,29 +529,3 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - **`../agents/implementation-reviewer.md`** — 实现评审Agent
 - **`../agents/tester-agent.md`** — 测试Agent
 - **`../agents/test-reviewer.md`** — 测试评审Agent
-
-## 产物路径
-
-产出文件统一放在项目根目录的 `docs/superflow/` 下：
-
-**feature-name命名规则**：
-- 创意模式：由创意Agent决定
-- 产品模式：由产品Agent决定
-- 所有文档使用**同一个** feature-name，便于关联
-
-```
-docs/superflow/
-├── specs/              # SPEC 文档
-│   └── YYYY-MM-DD-feature-name-spec.md
-├── plans/              # 实现计划
-│   └── YYYY-MM-DD-feature-name-plan.md
-├── designs/            # UX/UI 设计文档
-│   └── YYYY-MM-DD-feature-name-design.md
-├── creatives/         # 创意文档
-│   └── YYYY-MM-DD-feature-name-creative.md
-├── tests/              # 测试用例
-│   ├── YYYY-MM-DD-feature-name-unit-tests.md       # 单元测试用例
-│   ├── YYYY-MM-DD-feature-name-platform-tests.md # 平台测试用例
-│   ├── YYYY-MM-DD-feature-name-acceptance-tests.md # 验收测试用例
-│   └── YYYY-MM-DD-feature-name-test-report.md     # 测试报告
-```
