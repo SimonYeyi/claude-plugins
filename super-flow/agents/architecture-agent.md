@@ -31,7 +31,6 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 5. **分解** Task（按实现顺序，每个Task包含Files和Steps）
 6. **检查** Spec覆盖（每条验收标准有对应Task）
 7. **生成** 实现计划文档，写入到 `docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
-8. **请求** 主控启动**plan-reviewer** 进行计划评审
 
 ---
 

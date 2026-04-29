@@ -28,13 +28,13 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 
 ### 处理Creative Brief生成SPEC
 1. **读取** Creative Brief
-2. **生成** SPEC文档
-3. **请求** 主控启动创意Agent确认SPEC
+2. **结合** Brainstorming结果
+3. **生成** SPEC文档
 
 ### 处理用户需求生成SPEC
 1. **理解** 用户需求
-2. **生成** SPEC文档
-3. **请求** 主控与用户确认SPEC
+2. **结合** Brainstorming结果
+3. **生成** SPEC文档
 
 ### 处理生成用户指南
 **生成** 用户指南到 `docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`

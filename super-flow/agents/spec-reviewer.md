@@ -111,7 +111,16 @@ tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 
 ## 质量标准
 
-- 具体说明覆盖了什么、缺少了什么
-- 如果Creative Brief模糊，记录这限制了审查
-- 如果SPEC添加了价值（Creative Brief中没有的好添加），作为建议记录
-- 不要标记你会写得不同的设计选择 — 只标记执行缺口
+- **具体说明覆盖了什么、缺少了什么**
+  - ✓ 正确: "SPEC第3章覆盖了Creative Brief的'用户登录'需求，但缺少'忘记密码'功能"
+  - ✗ 错误: "SPEC写得不够好"（太模糊）
+
+- **如果Creative Brief模糊，记录这限制了审查**
+  - 示例: "Creative Brief未明确搜索性能要求，无法验证SPEC中的响应时间是否达标"
+
+- **如果SPEC添加了Creative Brief中未提及但有价值的内容，作为建议记录**
+  - 示例: "SPEC增加了邮箱验证和密码强度检查（Creative Brief未要求），提升了安全性，建议保留"
+
+- **只检查SPEC是否遗漏了Creative Brief的要求，不要评价设计方案的好坏**
+  - ✓ 应该标记: "SPEC缺失Creative Brief要求的订单列表功能"（执行缺口）
+  - ✗ 不应标记: "我觉得用卡片布局比表格更好"（个人偏好）
