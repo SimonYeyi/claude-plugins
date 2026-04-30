@@ -20,14 +20,14 @@ color: green
 
 ## 依赖文档
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-- 设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+- UX/UI设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
 
 ---
 
 ## 工作流
 
 ### 处理代码实现评审
-1. **阅读** 实现文件及SPEC.md、设计文档
+1. **阅读** 实现文件及SPEC文档、UX/UI设计文档
 2. **从四个视角应用** 审查标准
 3. **用文件:行引用** 记录所有发现
 4. **按严重性分类**：

@@ -20,7 +20,7 @@ color: orange
 
 **文档输出路径说明**
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-- 用户指南文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- 用户指南文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`
 
 ## 工作流
 

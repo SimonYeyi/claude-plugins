@@ -19,14 +19,14 @@ color: green
 ## 依赖文档
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
 - 实现计划文档：`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
-- 设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+- UX/UI设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
 
 ---
 
 ## 工作流
 
 ### 处理编写实现代码（执行实现计划）
-1. **读取** SPEC.md，理解功能需求和验收标准
+1. **读取** SPEC文档，理解功能需求和验收标准
 2. **读取** 实现计划文档，了解技术架构和 Task 分解
 3. **读取** UX/UI 设计文档，理解交互规范和视觉标准
 4. **按Task顺序执行** 每个Task的代码实现
