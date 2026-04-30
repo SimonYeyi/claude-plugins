@@ -7,7 +7,6 @@ description: |
 
 model: inherit
 color: magenta
-tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 ---
 
 # 创意评审 Agent (Creative Reviewer)

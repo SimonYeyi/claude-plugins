@@ -7,7 +7,6 @@ description: |
 
 model: inherit
 color: green
-tools: [ "Read", "Grep", "Glob", "Bash", "Agent" ]
 ---
 
 # 实现评审 Agent (Implementation Reviewer)

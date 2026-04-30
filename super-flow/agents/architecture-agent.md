@@ -7,7 +7,6 @@ description: |
 
 model: inherit
 color: cyan
-tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 ---
 
 # 架构 Agent (Architecture Agent)

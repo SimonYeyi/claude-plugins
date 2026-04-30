@@ -15,9 +15,9 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 | `/superflow <有明确主题主题但细节不明确>`       | 询问选择：创意模式 / 产品模式 |
 | `/superflow <有明确主题且细节丰富> 或 <无法识别主题>` | 直接进入**产品模式** |
 
-**主控决断的最高原则**：
+**模式定位**（切记）：
 - **创意模式**：全自动生产线，**无论何时**都不能把问题抛给用户，必须自行决断确保流程继续
-- **产品模式**：半自动生产线，仅「产品 Agent 与用户 Brainstorming」和「请求用户确认 SPEC」允许用户参与，其余情况必须自行决断确保流程继续
+- **产品模式**：半自动生产线，仅「与用户 Brainstorming」和「与用户确认 SPEC」允许用户参与，其余情况必须自行决断确保流程继续
 
 **主控询问固定格式**：
 当需要询问用户选择模式时，主控应使用以下格式：
@@ -41,13 +41,31 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 ### 阶段流程
 
+#### 初始流程（创意模式 & 产品模式 ← 通用流程）
+
+```
+用户需求 ← 阶段一：初始流程开始
+    │
+    ▼
+探索项目现状（读取项目结构 + docs/superflow/specs/ + 代码仓库）
+    │
+    ▼
+判断与需求的重叠程度
+    │
+    ├── 完全重复 → 告知用户功能已存在，建议直接使用（流程结束）
+    │
+    ├── 部分重叠 → 标注重叠情况（互补/替代/增强） ──┐
+    │                                               │
+    └── 无重叠 ─────────────────────────────────────┘
+    │
+    ▼
+进入阶段一（正确选择创意模式或产品模式流程）
+```
+
 #### 创意模式流程
 
 ```
-用户需求
-    │
-    ▼
-启动创意Agent(任务：生成Creative Brief) （阶段一：创意流程开始）
+阶段一：启动创意Agent(任务：生成Creative Brief；传入：项目现状分析 + 重叠情况标注) ← 阶段一：创意流程开始
     │
     ▼
 启动创意评审Agent（任务：Creative Brief评审）
@@ -61,13 +79,13 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──通过
         │
         ▼
-读取创意Agent生成的Creative Brief找出所有疑问点
+读取创意Agent生成的Creative Brief找出所有需要澄清的疑问点
         │
         ▼
-启动创意Agent（任务：Brainstorming问答 ← @references/brainstorming.md）
+启动创意Agent（任务：处理Brainstorming问题 ← @references/brainstorming.md）
         │
         ▼
-启动产品Agent(任务：基于Creative Brief生成SPEC；传入：brainstorming结果) （阶段二：产品流程开始）
+启动产品Agent(任务：基于Creative Brief生成SPEC；传入：brainstorming结果) ← 阶段二：产品流程开始
         │
         ▼
 启动创意Agent确认SPEC（确认 ≠ 评审）
@@ -97,13 +115,10 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 产品模式流程
 
 ```
-用户需求
+阶段一：与用户澄清需求（Brainstorming问答 ← @references/brainstorming.md） ← 阶段一：需求澄清流程开始
     │
     ▼
-与用户澄清需求（阶段一：Brainstorming问答 ← @references/brainstorming.md）
-    │
-    ▼
-启动产品Agent（任务：基于用户需求生成SPEC；传入：brainstorming结果） （阶段二：产品流程开始）
+启动产品Agent（任务：基于用户需求生成SPEC；传入：brainstorming结果 + 项目现状分析 + 重叠情况标注） ← 阶段二：产品流程开始
     │
     ▼
 展示SPEC给用户确认（确认 ≠ 评审）
@@ -114,7 +129,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     │   产品Agent修改后重新展示SPEC给用户确认
     │
     └──用户确认通过
-            │ ⚠️ **重要**：SPEC确认后，后续所有流程（架构→设计→开发→测试→评审）均为全自动，无需用户参与
+            │ ⚠️ **重要**：SPEC确认后，后续所有流程（SPEC评审→架构→设计→开发→测试→评审）均为全自动，无需用户参与
             ▼
     启动SPEC评审Agent（任务：SPEC评审）
         │
@@ -133,40 +148,36 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 阶段三：架构流程
 
 ```
-启动架构Agent（任务：编写实现计划） （阶段三：架构流程开始）
-    │
-    ▼
-架构Agent评估SPEC可实现性
-    │
-    ├──发现问题（技术不可行/需求矛盾/依赖缺失）
-    │       │
-    │       ▼
-    │   启动产品Agent修复SPEC
-    │       │
-    │       ▼
-    │   启动架构Agent继续评估（循环）
-    │
-    └──可实现 → 输出实现计划后自然退出
-            │
-            ▼
-    启动计划评审Agent（任务：实现计划评审）
+启动架构Agent（任务：编写实现计划） ← 阶段三：架构流程开始
         │
-        ├──不通过 → 启动架构Agent修复（循环）
-        │       │
-        │       ├──循环5次内 → 继续循环
-        │       │
-        │       └──5次后仍不通过 → 主控决断
         │
-        └──通过
-            │
-            ▼
-        进入阶段四：设计流程
+        ├──发现问题（技术不可行/需求矛盾/依赖缺失）
+        │       │
+        │       ▼
+        │   启动产品Agent（任务：处理SPEC技术问题）
+        │       │
+        │       ▼
+        │   启动架构Agent继续评估（循环）
+        │
+        ▼
+启动计划评审Agent（任务：实现计划评审）
+    │
+    ├──不通过 → 启动架构Agent修复（循环）
+    │       │
+    │       ├──循环5次内 → 继续循环
+    │       │
+    │       └──5次后仍不通过 → 主控决断
+    │
+    └──通过
+        │
+        ▼
+    进入阶段四：设计流程
 ```
 
 #### 阶段四：设计流程
 
 ```
-启动设计Agent（任务：设计UX/UI方案） （阶段四：设计流程开始）
+启动设计Agent（任务：设计UX/UI方案） ← 阶段四：设计流程开始
     │
     ▼
 主动启动设计评审Agent（任务：UX/UI设计方案评审）
@@ -186,7 +197,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 阶段五：开发流程
 
 ```
-启动开发Agent（任务：编写实现代码） （阶段五：开发流程开始）
+启动开发Agent（任务：编写实现代码） ← 阶段五：开发流程开始
     │
     ▼
 启动实现评审Agent（任务：代码实现评审）
@@ -206,7 +217,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 阶段六：测试流程
 
 ```
-启动测试Agent（任务：生成测试用例文档） （阶段六：测试流程开始）
+启动测试Agent（任务：生成测试用例文档） ← 阶段六：测试流程开始
     │
     ▼
 启动测试评审Agent（任务：测试用例文档评审）（一阶段评审：测试用例评审）
@@ -219,9 +230,6 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     │
     └──通过 → 启动测试Agent（任务：编写测试代码及报告）
                 │
-                ▼
-            执行测试
-                │
                 ├──测试代码有误（语法错误/运行错误）
                 │       │
                 │       ▼
@@ -233,7 +241,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                 ├──测试失败（功能问题）
                 │       │
                 │       ▼
-                │   启动开发Agent修复
+                │   启动开发Agent（任务：处理功能BUG修复）
                 │       │
                 │       ▼
                 │   启动测试Agent重新执行测试（循环）
@@ -241,7 +249,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                 └──测试通过
                       │
                       ▼
-                  主控主动启动测试评审Agent（任务：测试代码及报告评审）（二阶段评审：测试代码及报告评审）
+                  启动测试评审Agent（任务：测试代码及报告评审）（二阶段评审：测试代码及报告评审）
                       │
                       ├──不通过 → 启动测试Agent修复（循环）
                       │       │
@@ -252,10 +260,10 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
                       └──通过
                           │
                           ▼
-                      主控确认所有产出物
+                根据产物验收规范核对产物清单
                           │
                           ▼
-                        流程完成
+                      报告流程完成
 ```
 
 ---
@@ -309,12 +317,11 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 - 格式：`主控：`、`创意Agent：`、`产品Agent：`、`架构Agent：`、`开发Agent：`、`XX评审Agent：`等
 
 **核心职责**：
-- 按顺序启动各主干Agent
+- 严格按流程顺序执行步骤，不可只说不做，导致流程停滞；也不可跳步执行，导致流程混乱
 - **启动主干Agent**：阶段启动、评审意见、决断意见等必须启动对应主干Agent处理
 - **发起brainstorming**：直接与创意Agent/用户进行brainstorming，使用references/brainstorming.md规范，完成后将结果传递给产品Agent
 - **转达SPEC确认的请求与回复**：启动创意Agent确认/与用户确认 → 确认结果给产品Agent（双向启动，不需要主控决断）
 - **主控决断**：当循环5次但评审仍不通过时，必须做出决断
-- **主动发起评审**：主干Agent任务完成后自然退出，主控主动发起评审Agent进行评审
 - **报告流程完成**：测试代码及报告评审通过，根据产物验收规范核对产出物清单，确认流程完成
 
 ## 主控决断原则
@@ -342,7 +349,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 2. 主控主动发起评审Agent进行评审
 3. 主控解析评审结果
 4. 不通过 → 主控启动主干Agent修复（循环）
-5. 通过 → 进入下一阶段
+5. 通过 → 下一步
 
 **循环规则**：
 - 评审不通过 → 必须进入主干Agent修复（不决断）
@@ -357,8 +364,9 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 ```
 docs/superflow/
-├── specs/              # SPEC 文档
-│   └── YYYY-MM-DD-feature-name-spec.md
+├── specs/             
+│   ├── YYYY-MM-DD-feature-name-spec.md         # SPEC文档
+│   └── YYYY-MM-DD-feature-name-user-guide.md   # 用户指南
 ├── plans/              # 实现计划
 │   └── YYYY-MM-DD-feature-name-plan.md
 ├── designs/            # UX/UI 设计文档

@@ -8,7 +8,6 @@ description: |
 
 model: inherit
 color: yellow
-tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 ---
 
 # 测试 Agent (Tester Agent)
@@ -26,7 +25,6 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 - 平台测试用例文档：`docs/superflow/tests/YYYY-MM-DD-feature-name-platform-tests.md`
 - 验收测试用例文档：`docs/superflow/tests/YYYY-MM-DD-feature-name-acceptance-tests.md`
 - 测试报告文档：`docs/superflow/tests/YYYY-MM-DD-feature-name-test-report.md`
-- 有且仅有4份实体文档
 
 ---
 
@@ -187,9 +185,11 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 - 强调业务全流程贯通，而非孤立功能点
 - 关键路径和核心业务场景优先
 
-**覆盖要求**：
-- 单元测试 + 平台测试必须100%覆盖SPEC的验收标准
-- 验收场景（SC）必须覆盖所有验收标准（AC），通过场景串联实现端到端验证
+### 覆盖要求
+验收测试是核心流程验证的**备用方案**，不是主要测试手段
+- **单元测试 + 平台测试必须100%覆盖SPEC的验收标准**（强制要求）
+- 验收场景（SC）用于人工验证核心业务流程，作为自动化测试的补充
+- 验收测试不替代单元/平台测试的完整性要求
 
 ---
 
@@ -411,7 +411,7 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 ## 边界情况
 
 - SPEC模糊：报告给主控，在写测试前与产品Agent协调澄清
-- 实现无可测试逻辑：记录此情况，仅进行平台测试或标记为需人工验证
+- 实现无可测试逻辑：记录此情况，仅进行平台测试
 - 测试首次失败：不要修改测试使其通过 — 报告失败给开发Agent
 - 实现重大变更：重新对照SPEC检查，需求变更则更新测试用例
 - 重新验证期间添加新测试用例：保持连续编号，更新覆盖表

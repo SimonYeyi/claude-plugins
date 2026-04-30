@@ -7,7 +7,6 @@ description: |
 
 model: inherit
 color: cyan
-tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 ---
 
 # 计划评审 Agent (Plan Reviewer)

@@ -7,7 +7,6 @@ description: |
 
 model: inherit
 color: purple
-tools: ["Read", "Write", "Grep", "Glob", "Bash", "Edit", "Agent"]
 ---
 
 # 设计 Agent (Design Agent)

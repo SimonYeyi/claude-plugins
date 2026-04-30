@@ -7,7 +7,6 @@ description: |
 
 model: inherit
 color: orange
-tools: ["Read", "Grep", "Glob", "Bash", "Agent"]
 ---
 
 # SPEC 审查 Agent (SPEC Reviewer)

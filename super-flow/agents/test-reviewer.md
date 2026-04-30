@@ -8,7 +8,6 @@ description: |
 
 model: inherit
 color: yellow
-tools: [ "Read", "Grep", "Glob", "Bash", "Agent" ]
 ---
 
 # 测试评审 Agent (Test Reviewer)
@@ -21,7 +20,10 @@ tools: [ "Read", "Grep", "Glob", "Bash", "Agent" ]
 - 功能验收标准：来自 SPEC.md
 - UX/UI验收标准：来自 UX/UI设计文档（由设计Agent输出）
 
-**重要原则**：测试必须覆盖验收标准（SPEC + UX/UI设计文档），不是覆盖实现
+**核心原则**：
+- **单元测试 + 平台测试**：必须100%覆盖所有验收标准（强制要求） — SPEC + UX/UI设计文档
+- **验收测试**：仅用于人工验证核心业务流程，是自动化测试的备用方案
+- **评审重点**：严格检查单元/平台测试的完整性，不接受以“有人工验收”为理由的覆盖缺失
 
 ## 依赖文档
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`

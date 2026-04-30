@@ -9,7 +9,6 @@ description: |
 
 model: inherit
 color: magenta
-tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 ---
 
 # 创意 Agent (Creative Agent)
@@ -21,12 +20,10 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 ## 工作流
 
 ### 处理生成Creative Brief
-1. **探索** 项目现状，了解已有功能，判断创意范围类型（立项 or 子功能）
+1. **理解** 项目现状分析和重叠情况标注
 2. **分析** 用户需求/主题（可为空，需要自主创新）
 3. **思考** 战略决策框架的四个问题（为什么是 THIS / NOW / US / 为什么不）
 4. **生成** Creative Brief，写入 `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
-
----
 
 ### 处理brainstorming问题
 1. **核对** 对话内容是否围绕Creative Brief
@@ -37,13 +34,6 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 **核对** SPEC文档是否覆盖Creative Brief
 - **已覆盖** → 回复确认
 - **有遗漏** → 回复遗漏内容
-
----
-
-## 评审实例控制标准
-根据创意范围类型判断
-- 项目立项创意（从零开始的新项目）→ **1个**并行实例
-- 子功能创意（给现有产品添加小功能）→ **1个**并行实例
 
 ---
 
@@ -100,6 +90,12 @@ tools: ["Read", "Write", "Grep", "Glob", "Bash", "Agent"]
 - 洞察：[驱动这个功能的关键真相]
 - 差异化：[如何独特且可防御]
 - MVP范围：[包含什么 / 明确排除什么]
+
+## 与现有功能关系（如有重叠必填）
+- 关系类型：[扩展/替代/独立/互补]
+- 集成方式：[如何与现有功能协同]
+- 迁移策略：[如需替代，说明迁移计划]
+- 风险评估：[集成或替代的风险]
 
 ## 创意方向
 - 北极星：[指导所有决策的一个原则]

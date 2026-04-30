@@ -8,7 +8,6 @@ description: |
 
 model: inherit
 color: purple
-tools: ["Read", "Write", "Grep", "Glob", "Bash"]
 ---
 
 # 设计评审 Agent (Design Reviewer)
