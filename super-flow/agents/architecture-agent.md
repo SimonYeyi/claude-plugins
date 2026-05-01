@@ -17,6 +17,7 @@ color: cyan
 
 ## 依赖文档
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- UX/UI设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
 
 ---
 
@@ -24,8 +25,8 @@ color: cyan
 
 ### 处理编写实现计划
 1. **读取** SPEC文档，理解所有验收标准
-2. **评估** SPEC可实现性（技术可行性、复杂度、依赖、风险）
-3. **技术选型**：基于评估结果选择合适的技术栈（前端/后端/数据库/部署等）
+2. **读取** UX/UI设计文档，理解设计意图和交互方案
+3. **技术选型**：基于对SPEC、UX/UI设计的理解，选择合适的技术栈（前端/后端/数据库/部署等）
 4. **设计** 架构方案（模块划分、接口设计、数据流、设计模式）
 5. **分解** Task（按实现顺序，每个Task包含Files和Steps）
 6. **检查** Spec覆盖（每条验收标准有对应Task）

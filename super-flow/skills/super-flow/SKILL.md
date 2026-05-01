@@ -114,7 +114,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
             └──通过 → 启动产品Agent（任务：生成用户指南）
                         │
                         ▼
-                    进入阶段三：架构流程
+                    进入阶段三：设计流程
 ```
 
 #### 产品模式流程
@@ -134,7 +134,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     │   产品Agent修改后重新展示SPEC给用户确认
     │
     └──用户确认通过
-            │ ⚠️ **重要**：SPEC确认后，后续所有流程（SPEC评审→架构→设计→开发→测试→评审）均为全自动，无需用户参与
+            │ ⚠️ **重要**：SPEC确认后，后续所有流程（SPEC评审→设计→架构→开发→测试→评审）均为全自动，无需用户参与
             ▼
     启动SPEC评审Agent（任务：SPEC评审；传入：brainstorming结果）
         │
@@ -147,27 +147,18 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
         └──通过 → 启动产品Agent（任务：生成用户指南）
                     │
                     ▼
-                进入阶段三：架构流程
+                进入阶段三：设计流程
 ```
 
-#### 阶段三：架构流程
+#### 阶段三：设计流程
 
 ```
-启动架构Agent（任务：编写实现计划） ← 阶段三：架构流程开始
-        │
-        │
-        ├──发现问题（技术不可行/需求矛盾/依赖缺失）
-        │       │
-        │       ▼
-        │   启动产品Agent（任务：处理SPEC技术问题）
-        │       │
-        │       ▼
-        │   启动架构Agent继续评估（循环）
-        │
-        ▼
-启动计划评审Agent（任务：实现计划评审）
+启动设计Agent（任务：设计UX/UI方案） ← 阶段三：设计流程开始
     │
-    ├──不通过 → 启动架构Agent修复（循环）
+    ▼
+主动启动设计评审Agent（任务：UX/UI设计方案评审）
+    │
+    ├──不通过 → 启动设计Agent修复（循环）
     │       │
     │       ├──循环5次内 → 继续循环
     │       │
@@ -176,18 +167,40 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──通过
         │
         ▼
-    进入阶段四：设计流程
+    进入阶段四：架构流程
 ```
 
-#### 阶段四：设计流程
+#### 阶段四：架构流程
 
 ```
-启动设计Agent（任务：设计UX/UI方案） ← 阶段四：设计流程开始
+启动架构Agent评估技术可行性 ← 阶段四：架构流程开始
+    │
+    ├──发现问题（技术不可行/需求矛盾/依赖缺失/风险）
+    │       │
+    │       ▼
+    │   启动产品Agent（任务：处理SPEC技术问题）
+    │       │
+    │       ▼
+    │   启动架构Agent继续评估可行性（循环）
+    │       │
+    │       ▼
+    │   启动架构Agent检查UX/UI设计是否符合SPEC的改动
+    │       │
+    │       ├──发现差异（设计不符合SPEC改动）
+    │       │       │
+    │       │       ▼
+    │       │   启动设计Agent修复
+    │       │       │
+    │       │       ▼
+    │       │   启动架构Agent继续检查设计（循环）
+    │◀──────┘
+    ▼       
+启动架构Agent（任务：编写实现计划）
     │
     ▼
-主动启动设计评审Agent（任务：UX/UI设计方案评审）
+启动计划评审Agent（任务：实现计划评审）
     │
-    ├──不通过 → 启动设计Agent修复（循环）
+    ├──不通过 → 启动架构Agent修复（循环）
     │       │
     │       ├──循环5次内 → 继续循环
     │       │

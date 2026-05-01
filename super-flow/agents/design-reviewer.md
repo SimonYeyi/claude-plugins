@@ -19,7 +19,6 @@ color: purple
 ## 依赖文档
 - UX/UI设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-- 实现计划文档：`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
 
 ---
 
@@ -28,10 +27,9 @@ color: purple
 ### 处理UX/UI设计方案评审
 1. **阅读** UX/UI设计文档全文
 2. **阅读** SPEC文档，理解产品需求和验收标准
-3. **阅读** 实现计划文档，理解功能模块和技术架构
-4. **按评审维度** 逐项检查设计是否与SPEC和实现计划一致
-5. **分类问题**：阻塞性/建议性/可选性
-6. **反馈** 评审意见
+3. **按评审维度** 逐项检查设计是否与SPEC一致
+4. **分类问题**：阻塞性/建议性/可选性
+5. **反馈** 评审意见
 
 ---
 

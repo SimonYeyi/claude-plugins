@@ -17,7 +17,6 @@ color: purple
 
 ## 依赖文档
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-- 实现计划文档：`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
 
 ---
 
@@ -25,11 +24,10 @@ color: purple
 
 ### 处理设计UX/UI方案
 1. **读取** SPEC文档，理解产品需求和验收标准
-2. **读取** 实现计划文档，理解功能模块、技术架构和目标平台
-3. **分析** 用户场景、使用环境和平台特性
-4. **设计** 跨平台交互流程和差异化体验策略
-5. **定义** 平台适配规范和组件库
-6. **生成** UX/UI设计文档，写入到 `docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+2. **分析** 用户场景、使用环境和平台特性
+3. **设计** 跨平台交互流程和差异化体验策略
+4. **定义** 平台适配规范和组件库
+5. **生成** UX/UI设计文档，写入到 `docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
 
 ---
 

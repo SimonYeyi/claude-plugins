@@ -22,6 +22,7 @@ color: cyan
 
 ## 依赖文档
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- UX/UI设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
 - 实现计划文档：`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
 
 ---
@@ -30,18 +31,21 @@ color: cyan
 
 ### 处理实现计划评审
 1. **读取SPEC文档** — 所有验收标准和需求
-2. **读取实现计划**
-3. **创建SPEC-to-Task映射**：
+2. **读取UX/UI设计文档** — 设计意图和交互方案
+3. **读取实现计划**
+4. **创建SPEC-to-Task映射**：
    ```
    | AC | Tasks | Coverage |
    |----|-------|----------|
    | AC-1 | Task 2, Task 3 | ✓ |
    | AC-2 | — | ✗ Missing |
    ```
-4. **评估架构决策**
-5. **检查task定义的清晰度和完整性**
-6. **记录发现**
-7. **反馈** 评审意见
+5. **检查架构是否实现了设计意图**
+6. **检查设计是否符合SPEC**
+7. **评估架构决策**
+8. **检查task定义的清晰度和完整性**
+9. **记录发现**
+10. **反馈** 评审意见
 
 ---
 
@@ -75,11 +79,11 @@ color: cyan
 - 复用决策是否有理由？
 - 如果跳过复用，是否有记录的原因？
 
-### 5. SPEC可实现性
+### 5. 设计一致性
 
-- 架构设计是否真正解决了SPEC需求
-- 实现计划是否在技术上可行
-- 是否存在遗漏的可行性风险
+- UX/UI设计是否真正覆盖了SPEC的所有验收标准？
+- UX/UI设计与SPEC之间是否有差异或遗漏？
+- 架构是否实现了UX/UI设计意图？
 
 ### 6. 测试框架配置
 
