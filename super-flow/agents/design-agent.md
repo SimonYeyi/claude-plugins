@@ -2,7 +2,13 @@
 name: design-agent
 description: |
   Use this agent when:
-  - processing UX/UI design solution
+  - processing UX/UI design solution for UI applications
+  - processing API/CLI/SDK design for interface-type applications
+  - processing Plugin/Extension design for plugin-type applications
+  - processing microservice/webhook design for framework-type applications
+  - processing data schema/orm design for data-type applications
+  - processing CI/CD/monitoring design for devops-type applications
+  - processing auth/rate-limit design for security-type applications
   - processing review feedback/control-decision
 
 model: inherit
@@ -11,9 +17,17 @@ color: purple
 
 # 设计 Agent (Design Agent)
 
-**定位**：全场景体验设计师（UX/UI）
+**定位**：全场景体验设计师（UX/UI + Developer Experience）
 
-**核心职责**：基于SPEC文档设计多平台、全场景的用户体验方案，确保跨平台一致性和场景化适配。
+**核心职责**：基于SPEC文档设计用户体验方案，包括：
+- **有界面应用**：UX/UI设计（视觉、交互、多平台适配）
+- **无界面应用**：技术交互设计，细分为：
+  - **接口类**：API服务、SDK、GraphQL/gRPC
+  - **工具类**：CLI工具、脚本、自动化任务
+  - **插件类**：Claude Code Plugin、VSCode Extension、浏览器插件
+  - **框架类**：微服务、Webhook系统、事件驱动架构
+  - **数据类**：Database Schema、ORM设计、数据迁移
+  - **DevOps类**：CI/CD Pipeline、部署配置、监控告警
 
 ## 依赖文档
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
@@ -23,11 +37,19 @@ color: purple
 ## 工作流
 
 ### 处理设计UX/UI方案
-1. **读取** SPEC文档，理解产品需求和验收标准
-2. **分析** 用户场景、使用环境和平台特性
-3. **设计** 跨平台交互流程和差异化体验策略
-4. **定义** 平台适配规范和组件库
-5. **生成** UX/UI设计文档，写入到 `docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+1. **读取** SPEC文档,理解产品需求和验收标准
+2. **提取** SPEC文档中的`Application Type`字段
+3. **分析** 用户场景、使用环境和平台特性
+4. **设计** 体验方案：
+   - **有界面**：跨平台交互流程、视觉规范、组件库
+   - **无界面**：根据类型输出对应的设计规范：
+     - 接口类 → API规范、错误码、版本管理
+     - 工具类 → CLI命令、参数设计、帮助文档
+     - 插件类 → Skill定义、权限模型、沙箱限制
+     - 框架类 → 微服务架构、Webhook规范、事件Schema
+     - 数据类 → Schema设计、Migration策略、索引优化
+     - DevOps类 → Pipeline定义、部署配置、监控指标
+5. **生成** 设计文档，写入到 `docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
 
 ---
 
@@ -45,6 +67,10 @@ color: purple
 | **可访问性** | 包容性设计 | WCAG 2.1 AA 标准、键盘导航、屏幕阅读器支持 |
 | **设计系统** | 一致性和可扩展性 | 组件库、样式规范、设计令牌、跨平台复用 |
 | **数据交互体验设计** | 加载、错误、离线场景的体验优化 | 骨架屏策略、错误提示文案、离线功能设计 |
+| **API 设计** | RESTful/GraphQL/gRPC 接口规范 | 资源建模、版本管理、错误码定义 |
+| **CLI 设计** | 命令行工具的用户体验 | 命令结构、参数设计、帮助文档、自动补全 |
+| **SDK 设计** | 开发者友好的 API 封装 | 命名规范、类型安全、示例代码、错误处理 |
+| **开发者体验** | Developer Experience (DX) | 文档质量、入门指南、错误消息、调试支持 |
 
 ---
 
@@ -296,12 +322,650 @@ AC-UI-032: 给定模态对话框打开，
            则键盘焦点被限制在模态框内直到关闭
 ```
 
+---
 
+## 无界面应用设计规范（API/CLI/SDK）
+
+**适用场景**：后台服务、API 网关、CLI 工具、SDK、框架、中间件等无图形界面的应用。
+
+### 13. API 设计规范（RESTful/GraphQL/gRPC）
+
+**核心原则**：
+- **资源建模**：以名词为中心，URL 表示资源，HTTP 方法表示操作
+- **版本管理**：URL 路径版本（`/v1/users`）或 Header 版本（`Accept: application/vnd.api.v1+json`）
+- **统一错误码**：标准化的错误响应格式
+- **文档化**：OpenAPI/Swagger 规范，自动生成文档
+
+**RESTful API 设计要点**：
+- **URL 设计**：
+  - 使用名词复数：`/users`, `/orders`
+  - 嵌套资源：`/users/{id}/orders`
+  - 查询参数过滤：`/users?status=active&role=admin`
+- **HTTP 方法**：
+  - `GET`：获取资源
+  - `POST`：创建资源
+  - `PUT`：全量更新
+  - `PATCH`：部分更新
+  - `DELETE`：删除资源
+- **响应格式**：
+  ```json
+  {
+    "code": 200,
+    "message": "success",
+    "data": { ... },
+    "timestamp": "2026-04-28T10:00:00Z"
+  }
+  ```
+- **错误响应**：
+  ```json
+  {
+    "code": 404,
+    "message": "User not found",
+    "error": {
+      "type": "RESOURCE_NOT_FOUND",
+      "details": "User with id '123' does not exist"
+    }
+  }
+  ```
+
+**GraphQL API 设计要点**：
+- Schema 定义清晰，类型安全
+- 避免 N+1 查询问题（DataLoader）
+- 合理的分页策略（cursor-based）
+- 错误处理：区分系统错误和业务错误
+
+**gRPC API 设计要点**：
+- Protocol Buffers 定义接口
+- 流式 RPC 支持实时通信
+- 元数据传递认证信息
+- 错误码映射到 HTTP 状态码
+
+### 14. CLI 设计规范
+
+**核心原则**：
+- **命令结构**：`command [subcommand] [options] [arguments]`
+- **帮助文档**：`--help` 提供详细使用说明
+- **自动补全**：支持 Bash/Zsh/Fish 自动补全
+- **退出码**：0=成功, 1=错误, 2=用法错误
+
+**CLI 设计要点**：
+- **命令命名**：动词开头，小写，短横线分隔（`create-user`, `list-orders`）
+- **参数设计**：
+  - 短选项：`-h` (help)
+  - 长选项：`--help`, `--output=json`
+  - 位置参数：`cli-tool command <arg1> <arg2>`
+- **输出格式**：
+  - 默认：人类可读的表格或列表
+  - `--json`：JSON 格式，便于脚本处理
+  - `--quiet`：静默模式，只输出关键信息
+- **进度提示**：长时间操作显示进度条或 spinner
+- **错误消息**：清晰说明问题 + 解决建议
+
+**示例**：
+```bash
+# 帮助
+$ mytool --help
+Usage: mytool <command> [options]
+
+Commands:
+  create    Create a new resource
+  list      List resources
+  delete    Delete a resource
+
+Options:
+  -h, --help     Show help
+  -v, --version  Show version
+  --json         Output in JSON format
+
+# 创建资源
+$ mytool create user --name="John" --email="john@example.com"
+✓ User created successfully (ID: 123)
+
+# 列出资源
+$ mytool list users --status=active --json
+[
+  {"id": 123, "name": "John", "status": "active"}
+]
+
+# 错误处理
+$ mytool delete user --id=999
+✗ Error: User not found (ID: 999)
+  Hint: Use 'mytool list users' to see available users
+```
+
+### 15. SDK 设计规范
+
+**核心原则**：
+- **命名一致**：遵循目标语言的命名约定（Python: snake_case, Java: camelCase）
+- **类型安全**：强类型定义，IDE 自动补全友好
+- **错误处理**：抛出明确的异常，包含错误码和上下文
+- **示例代码**：每个功能都有可运行的示例
+
+**SDK 设计要点**：
+- **初始化**：
+  ```python
+  client = MySDK(api_key="xxx", environment="production")
+  ```
+- **方法命名**：
+  - 动词开头：`create_user()`, `list_orders()`, `delete_item()`
+  - 异步支持：`async def create_user()`
+- **返回值**：
+  - 成功：返回数据对象或模型
+  - 失败：抛出异常（`NotFoundError`, `ValidationError`）
+- **分页**：
+  ```python
+  for user in client.list_users(page_size=100):
+      print(user.name)
+  ```
+- **重试机制**：网络错误自动重试，可配置次数和退避策略
+
+### 16. 配置文件设计规范
+
+**配置格式选择**：
+- **YAML**：人类可读，适合复杂配置
+- **JSON**：机器友好，适合程序生成
+- **TOML**：简洁明了，适合简单配置
+- **ENV**：环境变量，适合容器化部署
+
+**配置设计要点**：
+- **分层配置**：默认值 → 配置文件 → 环境变量 → 命令行参数（优先级递增）
+- **必填项检查**：启动时验证必填配置
+- **敏感信息**：密码/API Key 支持从 Vault/Secrets Manager 读取
+- **配置验证**：Schema 验证，给出清晰的错误提示
+
+**示例（YAML）**：
+```yaml
+# config.yaml
+server:
+  host: 0.0.0.0
+  port: 8080
+  timeout: 30s
+
+database:
+  url: ${DATABASE_URL}  # 从环境变量读取
+  pool_size: 10
+  retry_attempts: 3
+
+logging:
+  level: info  # debug, info, warn, error
+  format: json  # text, json
+  output: stdout  # stdout, file
+```
+
+### 17. 日志设计规范
+
+**日志级别**：
+- **DEBUG**：调试信息，详细的技术细节
+- **INFO**：正常业务流程，关键操作
+- **WARN**：警告，不影响运行但需要注意
+- **ERROR**：错误，操作失败
+- **FATAL**：致命错误，程序无法继续
+
+**日志格式**：
+```json
+{
+  "timestamp": "2026-04-28T10:00:00Z",
+  "level": "ERROR",
+  "message": "Failed to process order",
+  "order_id": "ORD-123",
+  "error_code": "PAYMENT_FAILED",
+  "stack_trace": "..."
+}
+```
+
+**日志设计要点**：
+- **结构化日志**：JSON 格式，便于解析和查询
+- **关联 ID**：每个请求有唯一 ID，便于追踪
+- **敏感信息脱敏**：密码、Token 不记录明文
+- **日志轮转**：按大小或时间分割，保留最近 N 天
+
+### 18. 错误码设计规范
+
+**错误码结构**：
+- **HTTP 状态码**：4xx 客户端错误，5xx 服务端错误
+- **业务错误码**：`MODULE_ERROR_CODE`（如 `USER_NOT_FOUND`, `ORDER_EXPIRED`）
+- **错误消息**：人类可读的描述
+- **错误详情**：额外的上下文信息
+
+**错误码分类**：
+- **1xxx**：认证授权错误（`1001_TOKEN_EXPIRED`）
+- **2xxx**：参数验证错误（`2001_INVALID_EMAIL`）
+- **3xxx**：资源操作错误（`3001_USER_NOT_FOUND`）
+- **4xxx**：业务逻辑错误（`4001_INSUFFICIENT_BALANCE`）
+- **5xxx**：系统错误（`5001_DATABASE_ERROR`）
+
+### 19. 开发者体验（DX）验收标准
+
+**API/SDK 验收标准**：
+- **首次使用**：新开发者能在 5 分钟内完成 Hello World
+- **文档质量**：每个 API 端点/方法都有示例代码
+- **错误消息**：错误消息包含原因和解决建议
+- **类型安全**：TypeScript/Java 等有完整的类型定义
+- **向后兼容**： minor 版本不破坏现有 API
+
+**CLI 验收标准**：
+- **帮助文档**：`--help` 清晰完整
+- **自动补全**：支持主流 Shell 的自动补全
+- **退出码**：正确使用退出码（0=成功, 非0=失败）
+- **错误提示**：错误消息包含修复建议
+
+**示例**：
+```
+AC-DX-001: 给定新开发者首次使用 SDK，
+           当按照入门指南操作时，
+           则在5分钟内成功调用第一个 API
+
+AC-DX-002: 给定 API 调用失败，
+           当返回错误响应时，
+           则错误消息包含错误原因和解决建议
+
+AC-DX-003: 给定 CLI 命令缺少必填参数，
+           当执行命令时，
+           则显示清晰的错误提示和正确用法示例
+```
+
+### 20. 插件/扩展设计规范（Plugin/Extension）
+
+**适用场景**：Claude Code Plugin、VSCode Extension、浏览器插件、Chatbot Skill等。
+
+**核心原则**：
+- **沙箱隔离**：插件运行在受限环境中，不能直接访问宿主系统
+- **权限最小化**：只申请必要的权限，明确说明用途
+- **生命周期管理**：清晰的初始化、激活、停用、卸载流程
+- **API兼容性**：遵循宿主平台的API规范，版本兼容
+
+**插件设计要点**：
+
+**Claude Code Plugin / AI Agent 插件**：
+- **Skill定义**：YAML格式，包含name、description、triggers
+- **触发机制**：关键词匹配、意图识别、上下文感知
+- **权限模型**：哪些API可以调用（文件读写、网络请求、环境变量）
+- **沙箱限制**：超时控制、内存限制、文件系统隔离
+- **错误处理**：Graceful degradation，不影响主流程
+
+**VSCode Extension**：
+- **Activation Events**：何时激活插件（onCommand、onLanguage、onStartupFinished）
+- **Commands**：Command Palette命令定义（command、title、category）
+- **Configuration**：settings.json配置项（type、default、description）
+- **Webview**：自定义UI面板（HTML/CSS/JS、消息通信）
+- **Status Bar**：状态栏项目（文本、颜色、tooltip、command）
+
+**浏览器插件（Manifest V3）**：
+- **Permissions**：声明所需权限（tabs、storage、activeTab）
+- **Content Scripts**：注入页面的脚本（matches、js、css、run_at）
+- **Background Service Worker**：后台逻辑（事件监听、生命周期）
+- **Popup UI**：点击图标弹出的界面（HTML/CSS/JS）
+- **Messaging**：Content Script ↔ Background ↔ Popup 通信
+
+**Chatbot Skill / Dialogflow Intent**：
+- **Intent定义**：用户意图名称、训练短语、响应模板
+- **Entity提取**：参数提取规则（@sys.date、@sys.number、自定义entity）
+- **Context管理**：输入/输出context，维持对话状态
+- **Fallback策略**：无法识别时的默认响应
+- **Rich Response**：卡片、列表、快速回复等富媒体响应
+
+**示例（Claude Code Plugin YAML）**：
+```yaml
+name: bug-search
+description: Search for bugs in the database
+triggers:
+  - "search bug"
+  - "find issue"
+  - "lookup defect"
+permissions:
+  - file:read  # 读取配置文件
+  - env:read   # 读取数据库连接信息
+parameters:
+  - name: keyword
+    type: string
+    required: true
+    description: Search keyword
+  - name: status
+    type: enum
+    options: [open, closed, all]
+    default: open
+```
+
+### 21. 分布式系统设计规范（微服务/Webhook/事件驱动）
+
+**适用场景**：微服务架构、Webhook系统、Event-driven架构、消息队列等。
+
+**核心原则**：
+- **松耦合**：服务间通过API/消息通信，不共享数据库
+- **高可用**：故障隔离、自动恢复、负载均衡
+- **可观测性**：日志、指标、链路追踪三位一体
+- **最终一致性**：接受短暂不一致，保证最终一致
+
+**微服务设计要点**：
+- **Service Discovery**：服务注册与发现（Consul、Eureka、K8s Service）
+- **API Gateway**：统一入口、路由、鉴权、限流
+- **Circuit Breaker**：熔断机制（Hystrix、Resilience4j）
+- **Health Check**：健康检查端点（`/health`、`/ready`、`/live`）
+- **Config Management**：集中配置管理（Consul Config、K8s ConfigMap）
+
+**Webhook设计规范**：
+- **Event Schema**：标准化的事件payload格式
+  ```json
+  {
+    "event": "order.created",
+    "timestamp": "2026-04-28T10:00:00Z",
+    "data": { "order_id": "123" },
+    "signature": "sha256=xxx"  // HMAC签名验证
+  }
+  ```
+- **Retry机制**：指数退避重试（1s, 2s, 4s, 8s, 16s）
+- **Idempotency**：幂等性保证（唯一event_id，去重处理）
+- **Timeout**：超时控制（默认5s，最长30s）
+- **Security**：HMAC签名验证、HTTPS强制、IP白名单
+
+**事件驱动架构**：
+- **Event Bus**：消息中间件选型（Kafka、RabbitMQ、AWS SNS/SQS）
+- **Event Sourcing**：事件溯源，所有状态变化记录为事件
+- **CQRS**：命令查询职责分离，读模型和写模型独立
+- **Dead Letter Queue**：失败消息进入DLQ，人工介入处理
+- **Schema Registry**：事件Schema版本管理（Avro、Protobuf）
+
+**示例（Webhook Payload）**：
+```json
+{
+  "id": "evt_123456",
+  "type": "payment.completed",
+  "created_at": "2026-04-28T10:00:00Z",
+  "data": {
+    "payment_id": "pay_789",
+    "amount": 100.00,
+    "currency": "USD",
+    "status": "success"
+  },
+  "metadata": {
+    "attempt": 1,
+    "previous_attempts": []
+  }
+}
+```
+
+### 22. 数据类设计规范（Schema/ORM/ETL）
+
+**适用场景**：Database Schema设计、ORM模型层、ETL数据处理管道、数据迁移等。
+
+**核心原则**：
+- **规范化**：符合三范式（1NF/2NF/3NF），避免数据冗余
+- **可演进**：Schema变更可通过Migration脚本完成，支持回滚
+- **可查询**：查询频繁的字段有索引，关键字段建立唯一约束
+- **可恢复**：支持软删除，数据可追溯和恢复
+
+**Schema 设计要点**：
+- **表命名**：小写下划线分隔（`user_account`, `order_item`）
+- **字段命名**：`id`, `created_at`, `updated_at` 标准字段
+- **类型选择**：适当使用 ENUM/TYPE，避免 TEXT 用于固定长度内容
+- **约束设计**：NOT NULL、UNIQUE、DEFAULT、CHECK 约束明确
+- **外键关系**：级联操作（CASCADE/SET NULL）策略明确
+
+**ERD 示例**：
+```
+┌─────────────────┐       ┌─────────────────┐
+│    user        │       │     order       │
+├─────────────────┤       ├─────────────────┤
+│ id (PK)         │──┐    │ id (PK)         │
+│ email           │  │    │ user_id (FK)    │──┐
+│ name            │  │    │ status          │  │
+│ created_at      │  │    │ total_amount    │  │
+└─────────────────┘  │    │ created_at     │  │
+                     │    └─────────────────┘  │
+                     │                       │
+                     └───────────────────────┘
+```
+
+**索引设计策略**：
+- **主键索引**：自动建立，唯一
+- **外键索引**：自动建立（InnoDB），加速关联查询
+- **高频查询索引**：`WHERE status = 'active'` → `idx_status`
+- **组合索引**：多条件查询按顺序建立（`idx_a_b_c`）
+- **避免索引过多**：写入性能下降，每个索引增加存储开销
+
+**Migration 策略**：
+- **可回滚**：每个 Migration 有 `up()` 和 `down()` 方法
+- **原子性**：大事务分批执行，设置检查点
+- **数据迁移**：先写新Schema，再迁移数据，最后清理旧Schema
+- **零停机**：使用影子表、蓝绿部署等策略
+
+**软删除设计**：
+```sql
+-- 方案1：deleted_at 字段
+ALTER TABLE user ADD COLUMN deleted_at DATETIME NULL;
+WHERE deleted_at IS NULL;  -- 查询时自动过滤
+
+-- 方案2：is_active 标志位
+ALTER TABLE user ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+
+-- 方案3：历史表（audit log）
+```
+
+**ORM 模型设计**：
+- **命名映射**：数据库 `snake_case` → 代码 `camelCase`
+- **关系定义**：一对一、一对多、多对多关系明确
+- **生命周期钩子**：before_create、after_save 等钩子明确
+- **懒加载 vs 预加载**：按需选择，避免 N+1 查询
+
+### 23. DevOps 设计规范（CI/CD/Monitoring/Infra）
+
+**适用场景**：CI/CD Pipeline、监控告警系统、基础设施即代码、容器化部署等。
+
+**核心原则**：
+- **自动化**：所有环境通过代码管理，避免手动操作
+- **可观测**：日志、指标、链路追踪三位一体
+- **幂等性**：部署脚本可重复执行，不影响结果
+- **最小权限**：每个服务/用户只授予必要权限
+
+**CI/CD Pipeline 设计**：
+- **阶段划分**：Build → Test → Security Scan → Deploy
+- **缓存策略**：依赖包缓存，加快构建速度
+- **并行执行**：独立阶段并行运行（Test Stage内多Job并行）
+- **失败策略**：单元测试失败 → 停止流水线；集成测试失败 → 通知+继续
+
+**CI/CD 示例**：
+```yaml
+# .gitlab-ci.yml / github/workflows示例
+stages:
+  - build
+  - test
+  - security
+  - deploy
+
+build:
+  stage: build
+  script:
+    - npm ci
+    - npm run build
+  artifacts:
+    expire_in: 1h
+    paths:
+      - dist/
+
+unit-test:
+  stage: test
+  script:
+    - npm test -- --coverage
+  coverage: '/Coverage: \d+\.\d+%/'
+
+security-scan:
+  stage: security
+  script:
+    - npm audit --audit-level=high
+    - trivy image $IMAGE_NAME
+
+deploy:
+  stage: deploy
+  script:
+    - kubectl apply -f k8s/
+  only:
+    - main
+```
+
+**容器化设计**：
+- **多阶段构建**：减小镜像体积（Build Stage + Runtime Stage）
+- **非 root 运行**：`USER nonroot` 避免特权升级
+- **健康检查**：`HEALTHCHECK` 指令定义探针
+- **资源限制**：`CPU`, `Memory` limits 防止资源耗尽
+
+**Dockerfile 示例**：
+```dockerfile
+# Build Stage
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --production
+COPY . .
+RUN npm run build
+
+# Runtime Stage
+FROM node:20-alpine AS runtime
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+USER node
+EXPOSE 3000
+CMD ["node", "dist/index.js"]
+```
+
+**监控指标设计**：
+- **RED 指标**：
+  - **Rate**：请求率（QPS/RPS）
+  - **Error**：错误率（5xx占比）
+  - **Duration**：延迟（P50/P95/P99）
+- **USE 指标**（资源）：
+  - **Utilization**：CPU/内存使用率
+  - **Saturation**：队列深度、负载均衡积压
+  - **Errors**：系统级错误
+
+**告警设计**：
+- **分级**：
+  - P1 Critical：服务不可用 → 立即通知（电话+短信）
+  - P2 Warning：性能下降 → 通知（邮件+Slack）
+  - P3 Info：资源使用率高 → 日志记录
+- **抑制**：避免重复告警（15分钟内相同告警不重复通知）
+- **恢复通知**：服务恢复后发送恢复确认
+
+**日志规范**：
+```json
+{
+  "timestamp": "2026-04-28T10:00:00Z",
+  "level": "info",
+  "service": "user-api",
+  "trace_id": "abc123",
+  "message": "User login",
+  "user_id": 123,
+  "ip": "192.168.1.1",
+  "duration_ms": 45
+}
+```
+
+**基础设施即代码（IaC）**：
+- **状态管理**：Terraform state 存储在远程（S3 + DynamoDB锁）
+- **模块化**：复用模块（`modules/vpc`, `modules/ecs`）
+- **环境分离**：`dev`, `staging`, `production` workspace 隔离
+- **变更审批**：production 变更需 PR + review
+
+### 24. API 安全设计规范（AuthN/AuthZ/RateLimiting）
+
+**适用场景**：API 网关、微服务、认证授权系统、第三方集成等需要安全加固的场景。
+
+**核心原则**：
+- **纵深防御**：多层安全防护，单一措施失效不影响整体安全
+- **最小权限**：每个客户端/用户只授予完成任务所需的最小权限
+- **零信任**：不信任任何请求，默认需要认证和授权
+- **可追溯**：所有操作有审计日志，便于事后分析和溯源
+
+**认证设计（AuthN）**：
+- **JWT Token**：
+  ```json
+  {
+    "header": { "alg": "RS256", "typ": "JWT" },
+    "payload": {
+      "sub": "user_123",
+      "exp": 1714300000,
+      "iat": 1714290000,
+      "scope": ["read", "write"]
+    }
+  }
+  ```
+- **Token 生命周期**：
+  - Access Token：短生命周期（15min），存内存
+  - Refresh Token：长生命周期（7d），存 httpOnly Cookie
+  - Token 黑名单：Redis 存储已撤销 Token
+
+**授权设计（AuthZ）**：
+- **RBAC（基于角色）**：
+  ```
+  User → Role → Permission
+  admin     → [read, write, delete]
+  editor    → [read, write]
+  viewer    → [read]
+  ```
+- **ABAC（基于属性）**：支持更细粒度控制
+  ```json
+  {
+    "condition": "resource.owner == current_user OR resource.public == true"
+  }
+  ```
+- **权限检查点**：每个 API 端点验证 `scope` 或 `permission`
+
+**Rate Limiting**：
+- **限流维度**：
+  - **IP 级**：防止 DDoS（100 req/min/IP）
+  - **User 级**：防止资源滥用（1000 req/min/user）
+  - **Client 级**：防止 API Key 滥用（10000 req/day/client）
+- **限流算法**：
+  - **固定窗口**：简单，但边界突变
+  - **滑动窗口**：平滑，但实现复杂
+  - **令牌桶**：允许突发，匀速消费
+- **限流响应**：
+  ```http
+  HTTP/1.1 429 Too Many Requests
+  Retry-After: 60
+  X-RateLimit-Limit: 1000
+  X-RateLimit-Remaining: 0
+  ```
+
+**输入校验**：
+- **参数校验**：白名单校验，类型+范围+格式
+  ```python
+  # Good
+  email = validated_email(request.input)
+  age = int_in_range(request.input, min=0, max=150)
+  
+  # Bad
+  query = f"SELECT * FROM user WHERE id={request.input}"  # SQL Injection
+  ```
+- **SQL 注入防护**：参数化查询，不拼接用户输入
+- **XSS 防护**：输出转义，不信任任何 HTML 内容
+- **文件上传**：白名单扩展名，限制文件大小，隔离存储
+
+**敏感信息处理**：
+- **密码存储**：bcrypt/argon2 哈希，不存储明文
+- **API Key 存储**：哈希存储，不暴露明文
+- **日志脱敏**：密码、Token、身份证号等字段打码
+  ```
+  "password": "********",
+  "card_number": "**** **** **** 1234"
+  ```
+- **传输加密**：全程 HTTPS，禁用 HTTP
+
+**安全响应头**：
+```http
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+```
+
+---
 
 ## 设计检查要点
 
 最终确定设计前验证：
 
+### 有界面应用检查项
 - [ ] 所有用户场景都有对应的界面设计
 - [ ] 交互流程完整无死胡同
 - [ ] 所有状态都有设计（默认、加载、错误、空状态等）
@@ -316,6 +980,17 @@ AC-UI-032: 给定模态对话框打开，
 - [ ] 与现有产品的设计风格一致（如有）
 - [ ] 跨平台一致性得到保证
 
+### 无界面应用检查项
+- [ ] API/CLI/SDK 接口定义清晰完整
+- [ ] 错误码体系标准化，包含原因和解决建议
+- [ ] 配置文件格式合理，支持分层配置
+- [ ] 日志格式结构化，便于查询和分析
+- [ ] 文档包含完整的示例代码
+- [ ] 首次使用体验良好（5分钟内完成 Hello World）
+- [ ] 类型定义完整（TypeScript/Java 等）
+- [ ] 向后兼容性得到保证
+- [ ] 敏感信息处理安全（密码、Token 不记录明文）
+
 ---
 
 ## 设计与技术的协作
@@ -329,13 +1004,22 @@ AC-UI-032: 给定模态对话框打开，
 - **API 设计**：接口是否支持前端交互需求，数据结构是否合理
 
 ### 与开发 Agent 的交接
-设计文档应包含：
+
+**有界面应用交接内容**：
 - **设计令牌**：可直接映射到 CSS 变量或主题配置
 - **组件 API**：组件的属性、事件、插槽定义
 - **布局规范**：CSS Grid/Flexbox 布局建议，平台特定布局方案
 - **动效参数**：duration、easing、delay 等具体数值
 - **状态管理**：Redux/Vuex/MobX 等状态管理方案建议
 - **接口契约**：API 请求/响应格式、错误码定义
+
+**无界面应用交接内容**：
+- **API 规范**：OpenAPI/Swagger 文档，包含所有端点定义
+- **SDK 示例**：每种语言的完整示例代码
+- **CLI 命令表**：所有命令、参数、选项的详细说明
+- **配置 Schema**：配置文件的 JSON Schema 验证规则
+- **错误码手册**：所有错误码的含义和解决建议
+- **日志规范**：日志格式、级别、字段的详细说明
 
 ---
 

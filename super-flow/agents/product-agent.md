@@ -88,6 +88,7 @@ color: orange
 
 | 章节 | 必须包含 | 质量标准   |
 |------|----------|--------|
+| **Application Type（应用类型）** | **必填，从标准枚举值中选择** | **影响后续设计流程** |
 | Overview（概述） | What + Why + Who | 最多2句话  |
 | Relationship with Existing Features（与现有功能关系） | 关系类型 + 集成方式 + 风险评估 | 如有重叠必填 |
 | User Stories（用户故事） | Role + Action + Outcome | 可测试    |
@@ -96,6 +97,113 @@ color: orange
 | Edge Cases（边界情况） | Boundary + Error + Invalid | 每个"假设" |
 | Data Model（数据模型） | Entities + Relationships | CRUD操作清晰 |
 | Out of Scope（不在范围内） | 明确排除 | 防止范围蔓延 |
+
+---
+
+## 应用类型填写规范（必填）
+
+**Product Agent职责**: 在生成SPEC时,**必须**在文档开头明确标注应用类型。这是Design Agent和Design Reviewer的核心输入,
+不能由下游Agent猜测。
+
+### 标准枚举值（选择其一）
+
+#### 有界面应用 (UI Applications)
+- `ui-web`: Web应用（浏览器访问的前端应用）
+- `ui-ios`: iOS原生应用（Swift/Objective-C）
+- `ui-android`: Android原生应用（Kotlin/Java）
+- `ui-desktop`: 桌面应用（Electron/Tauri/Qt等）
+- `ui-miniprogram`: 小程序（微信/支付宝/抖音等平台）
+
+#### 无界面应用 - 接口类 (API/SDK)
+- `api-rest`: RESTful API服务（HTTP JSON接口）
+- `api-graphql`: GraphQL API服务（单一端点查询）
+- `sdk-client`: 客户端SDK库（供其他应用集成的代码库）
+
+#### 无界面应用 - 工具类 (Tools)
+- `tool-cli`: CLI命令行工具（终端交互的工具）
+- `tool-script`: 自动化脚本集合（批处理/定时任务）
+
+#### 无界面应用 - 插件类 (Plugins/Extensions)
+- `plugin-claude`: Claude Code Plugin（扩展Claude能力）
+- `plugin-vscode`: VSCode Extension（编辑器插件）
+- `plugin-browser`: 浏览器扩展（Chrome/Firefox插件）
+
+#### 无界面应用 - 框架类 (Frameworks/Infrastructure)
+- `framework-microservice`: 微服务架构（多个独立服务）
+- `framework-webhook`: Webhook事件系统（接收外部事件通知）
+- `framework-auth`: 认证授权系统（OAuth/JWT等）
+
+#### 无界面应用 - 安全类 (Security)
+- `security-auth`: 身份认证系统（OAuth/JWT/SAML等）
+- `security-api-gateway`: API网关（认证/鉴权/限流）
+- `security-secrets`: 密钥管理系统（Vault/HSM）
+
+#### 无界面应用 - 数据类 (Data/Storage)
+- `data-schema`: Database Schema设计（表结构/迁移脚本）
+- `data-etl`: ETL数据处理管道（抽取-转换-加载）
+- `data-orm`: ORM模型层（数据库对象映射）
+
+#### 无界面应用 - DevOps类
+- `devops-cicd`: CI/CD Pipeline（自动化构建/部署）
+- `devops-monitoring`: 监控告警系统（日志/指标/追踪）
+- `devops-infra`: 基础设施即代码（Terraform/K8s配置）
+
+#### 混合应用 (Hybrid)
+- `hybrid-ui-api`: 带管理后台的API服务（前端+后端）
+- `hybrid-fullstack`: 全栈Web应用（前后端一体）
+
+### 填写示例
+
+**示例1 - Web应用**:
+```markdown
+# Application Type
+
+**类型**: `ui-web`
+**说明**: 基于React的Web管理后台，通过浏览器访问，需要响应式设计支持桌面和平板。
+```
+
+**示例2 - API服务**:
+```markdown
+# Application Type
+
+**类型**: `api-rest`
+**说明**: 纯后端RESTful API服务，提供用户管理和订单处理的HTTP接口，无前端界面。
+```
+
+**示例3 - CLI工具**:
+```markdown
+# Application Type
+
+**类型**: `tool-cli`
+**说明**: 命令行文件处理工具，通过终端命令执行图片批量压缩和格式转换。
+```
+
+**示例4 - 混合应用**:
+```markdown
+# Application Type
+
+**类型**: `hybrid-ui-api`
+**说明**: 包含RESTful API后端和React管理后台的全栈应用，前端用于配置和管理后端服务。
+```
+
+### 判断依据（Product Agent参考）
+
+根据创意Brief和需求描述，判断应用类型的核心问题：
+
+1. **是否有用户界面？**
+   - 是 → 选择 `ui-*` 类别（考虑目标平台：Web/iOS/Android/桌面/小程序）
+   - 否 → 继续判断功能形态
+
+2. **主要功能是什么？**
+   - 提供数据接口 → `api-*` 或 `sdk-*`
+   - 命令行操作 → `tool-cli`
+   - 扩展其他软件 → `plugin-*`
+   - 数据处理 → `data-*`
+   - 基础设施 → `devops-*` 或 `framework-*`
+
+3. **是否同时包含前端和后端？**
+   - 是 → 选择 `hybrid-*` 类别
+   - 否 → 选择单一类别
 
 ---
 
