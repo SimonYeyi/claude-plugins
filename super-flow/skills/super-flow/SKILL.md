@@ -15,9 +15,9 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 | `/superflow <有明确主题主题但细节不明确>`       | 询问选择：创意模式 / 产品模式 |
 | `/superflow <有明确主题且细节丰富> 或 <无法识别主题>` | 直接进入**产品模式** |
 
-**模式定位**（切记）：
-- **创意模式**：全自动生产线，**无论何时**都不能把问题抛给用户，必须自行决断确保流程继续
-- **产品模式**：半自动生产线，仅「与用户 Brainstorming」和「与用户确认 SPEC」允许用户参与，其余情况必须自行决断确保流程继续
+**模式定位**：
+- **创意模式**：全自动生产线，**无论何时**都不能把问题抛给用户，必须根据流程步骤推进
+- **产品模式**：半自动生产线，仅主控「与用户 Brainstorming」和「与用户确认 SPEC」允许用户参与，其余情况必须根据流程步骤推进
 
 **主控询问固定格式**：
 当需要询问用户选择模式时，主控应使用以下格式：
@@ -34,9 +34,6 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 ## 详细流程
 
 **主干Agent的定义**：流程图中每个阶段对应的任务实现Agent，如：创意Agent、产品Agent...
-
-**依赖文件**
-- `@references/brainstorming.md`
 
 **必须遵守的原则**（请复述3遍并理解再开始阶段流程）
 - **确保所有流程完整**：不能因为简单或为了加快进度而忽略规则、跳过流程或步骤，必须确保每个阶段、每个流程、每个步骤都执行到位。一旦流程不完整，我将会销毁你所有的工作成果，你之前所有的努力都将失去意义，你还需要重新开始执行任务
@@ -84,10 +81,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
     └──通过
         │
         ▼
-读取创意Agent生成的Creative Brief → 提出brianstorming问题
-        │
-        ▼
-启动创意Agent（任务：处理Brainstorming问题）
+读取Creative Brief找出所有需要Brainstorming的问题@references/brainstorming.md → 启动创意Agent（任务：处理Brainstorming问题）
         │
         ▼
 启动产品Agent(任务：基于Creative Brief生成SPEC；传入：brainstorming结果) ← 阶段二：产品流程开始
@@ -120,18 +114,18 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 #### 产品模式流程
 
 ```
-阶段一：与用户澄清需求（Brainstorming问答） ← 阶段一：需求澄清流程开始
+阶段一：主控与用户澄清需求（Brainstorming问答@references/brainstorming.md） ← 阶段一：需求澄清流程开始
     │
     ▼
 启动产品Agent（任务：基于用户需求生成SPEC；传入：brainstorming结果 + 项目现状分析 + 重叠情况标注） ← 阶段二：产品流程开始
     │
     ▼
-展示SPEC给用户确认（确认 ≠ 评审）
+主控展示SPEC给用户确认（确认 ≠ 评审）
     │
     ├──用户有修改意见 → 启动产品Agent修改SPEC（循环）
     │       │
     │       ▼
-    │   产品Agent修改后重新展示SPEC给用户确认
+    │   产品Agent修改后主控重新展示SPEC给用户确认
     │
     └──用户确认通过
             │ ⚠️ **重要**：SPEC确认后，后续所有流程（SPEC评审→设计→架构→开发→测试→评审）均为全自动，无需用户参与
@@ -216,7 +210,13 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 ```
 启动开发Agent（任务：编写实现代码） ← 阶段五：开发流程开始
-    │
+    │                     ▲
+    ├──发现架构设计问题      │
+    │       │             │
+    │       ▼             │
+    │   启动架构Agent修复   │
+    │       │             │
+    │       └─────────────┘
     ▼
 启动实现评审Agent（任务：代码实现评审）
     │
@@ -371,9 +371,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 ### 主控核心职责
 - **严格按流程顺序执行步骤，不可只说不做，导致流程停滞；也不可跳步执行，导致流程混乱**
-- **启动主干Agent**：阶段启动、评审意见、决断意见等必须启动对应主干Agent处理
-- **发起brainstorming**：直接与创意Agent/用户进行brainstorming，完成后将结果传递给产品Agent
-- **转达SPEC确认的请求与回复**：启动创意Agent确认/与用户确认 → 确认结果给产品Agent（双向启动，不需要主控决断）
+- **发起brainstorming**：与创意Agent（创意模式）/用户（产品模式）进行brainstorming
+- **请求SPEC确认**：启动创意Agent确认SPEC（创意模式）/与用户确认SPEC（产品模式）
 - **主控决断**：当循环5次但评审仍不通过时，必须做出决断
 - **报告流程完成**：测试代码及报告评审通过，根据产物验收规范核对产出物清单，确认流程完成
 

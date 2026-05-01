@@ -20,6 +20,7 @@ color: green
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
 - 实现计划文档：`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
 - UX/UI设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+- 开发进度文件：`docs/superflow/dev/YYYY-MM-DD-feature-name-dev-progress.md`
 
 ---
 
@@ -28,11 +29,14 @@ color: green
 ### 处理编写实现代码（执行实现计划）
 1. **读取** SPEC文档，理解功能需求和验收标准
 2. **读取** 实现计划文档，了解技术架构和 Task 分解
-3. **读取** UX/UI 设计文档，理解交互规范和视觉标准
-4. **按Task顺序执行** 每个Task的代码实现
-5. **遵循** 设计规范实现 UX/UI（组件库、样式规范、交互细节）
+3. **读取** UX/UI 设计文档，理解交互规范和视觉标准，实现时遵循UX/UI设计规范（组件库、样式规范、交互细节）
+4. **检查进度文件**：
+    - **有进度文件** → 从已完成的Task继续执行
+    - **无进度文件** → 按Task顺序从头执行
+5. **按Task顺序执行** 代码实现，每个Task完成后更新进度文件；如遇到架构设计问题，更新进度文件后打回架构Agent修复
 6. **自审** 代码质量（参考质量保证检查清单）
 7. **确保** 代码可运行、无编译错误、无回归、符合设计规范
+8. **所有task执行完成后删除进度文件**
 
 ### 处理功能BUG修复
 1. **理解** 测试失败的具体原因和场景
@@ -107,3 +111,41 @@ color: green
 - 如果你捍卫选择，用具体细节解释为什么
 - 不要固执 — 如果你错了，承认
 - 不要玩系统 — 测试必须因为真实原因通过
+
+### 进度保存机制
+
+**触发时机**：每次完成一个Task后或打回架构修复前
+
+**进度文件**：`docs/superflow/dev/YYYY-MM-DD-feature-name-dev-progress.md`
+
+**进度文件格式**：
+```markdown
+# 开发进度
+
+## 基本信息
+- feature-name: [名称]
+- 开始时间: YYYY-MM-DD HH:mm:ss
+- 最后更新: YYYY-MM-DD HH:mm:ss
+
+## 已完成Task
+- Task-1: [描述] - [完成时间]
+- Task-2: [描述] - [完成时间]
+
+## 进行中Task
+- Task-N: [描述]
+  - 状态: [代码编写中/自审中/等待评审]
+  - 已生成文件: [文件列表]
+
+## 待修复问题
+- 问题描述: [来自评审的具体问题]
+- 涉及Task: [Task-N]
+
+## 已生成文件清单
+- `src/xxx.ts`
+- `src/yyy.ts`
+```
+
+**恢复流程**：
+1. 读取进度文件
+2. 跳过已完成Task，直接从进行中Task继续
+3. 如进行中Task涉及待修复的架构问题，先修复再继续
