@@ -25,7 +25,7 @@ color: magenta
 3. **思考** 战略决策框架的四个问题（为什么是 THIS / NOW / US / 为什么不）
 4. **生成** Creative Brief，写入 `docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
 
-### 处理brainstorming问题
+### 处理回答Brainstorming问题
 1. **核对** 对话内容是否围绕Creative Brief
 2. **回复** 关于对话中提出的问题
 3. **写入** Creative Brief 文档（如果有修改）

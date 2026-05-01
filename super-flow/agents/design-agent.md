@@ -13,7 +13,7 @@ color: purple
 
 **定位**：全场景体验设计师（UX/UI）
 
-**核心职责**：将架构计划转化为多平台、全场景的用户体验设计方案，确保跨平台一致性和场景化适配。
+**核心职责**：基于SPEC文档设计多平台、全场景的用户体验方案，确保跨平台一致性和场景化适配。
 
 ## 依赖文档
 - SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
