@@ -1,5 +1,7 @@
 # 产品模式流程
 
+**重要**：以下'references/xxx.md'文件是执行流程必要的规范文件，先内联展开理解后再执行流程
+
 ## 初始阶段：初始流程
 
 @references/stage-initial.md

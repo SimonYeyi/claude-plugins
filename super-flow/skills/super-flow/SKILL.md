@@ -30,7 +30,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 | 2 | 产品模式 | 需求明确、有参考实现、渐进式功能 |
 ```
 
-## 详细流程
+## 执行流程 — 必须
 
 **主干Agent的定义**：流程图中每个阶段对应的任务实现Agent，如：创意Agent、产品Agent...
 
@@ -40,8 +40,8 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 
 **流程入口**
 先确定流程模式，再进行流程选择，必须且只能二选一
-- **创意模式** → 走创意流程，详见：references/creative-mode-flow.md
-- **产品模式** → 走产品流程，详见：references/product-mode-flow.md
+- **创意模式** → 读取 references/creative-mode-flow.md
+- **产品模式** → 读取 references/product-mode-flow.md
 
 ## 主控的职责与权力
 
@@ -64,6 +64,7 @@ description: "SuperFlow — full-stack autonomous development workflow. MUST use
 |---------|---------|---------|
 | 实现方案 | "采用手动测试方案" | 让Agent自行决定测试方案 |
 | 解决方案 | "用Jest框架测试" | 让Agent根据自身规范选择 |
+| 技术选型 | "用Canvas API实现" | 让Agent自行评估技术可行性 |
 | 具体实现细节 | "AC-001对应这个测试用例" | 让Agent自行映射 |
 | 预设答案 | "因为HTML5单文件所以XXX" | 只传任务，不传方案 |
 
