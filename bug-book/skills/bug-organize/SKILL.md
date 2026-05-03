@@ -152,6 +152,16 @@ DEFAULT_WEIGHTS = {
 - **更新分数**：`increment_score(bug_id, dimension, delta)` — 累加出现次数等维度
 - **验证 bug**：`update_bug(bug_id, verified=True, verified_at="CURRENT_TIMESTAMP", verified_by="User")`
 
+**重要：整理完成后，必须记录整理时间！**
+
+```python
+from scripts.bug_ops import set_last_organize_time
+
+# 在所有整理操作执行完毕后
+set_last_organize_time()
+print("✅ 整理完成！已更新最后整理时间。")
+```
+
 **用户确认后的执行示例：**
 
 ```python
@@ -187,6 +197,7 @@ print("✅ 整理完成！共执行 4 项操作")
 - ✅ 删除 Bug #7（与 #3 合并）
 - ✅ 验证 Bug #8
 - ✅ 累加 Bug #3 出现次数
+- ✅ **记录最后整理时间**
 
 当前状态：
 - 总记录数：14（减少 1 条）

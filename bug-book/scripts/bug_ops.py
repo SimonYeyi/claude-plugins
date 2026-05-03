@@ -107,7 +107,7 @@ _px_conn = threading.local()
 
 
 def get_conn(timeout: float = 5.0) -> sqlite3.Connection:
-    """获取线程本地连接，带超时控制。"""
+    """获取线程本地连接，带超时控制。首次使用时自动初始化数据库。"""
     if not hasattr(_px_conn, "conn") or _px_conn.conn is None:
         with _conn_lock:
             if not DB_PATH.exists():
@@ -212,6 +212,93 @@ def _match_path(file_path: str, pattern: str) -> bool:
     if len(pat_segs) == 1:
         return pat_segs[0] in file_segs
     return all(p == f for p, f in zip(pat_segs, file_segs))
+
+
+# ---------------------------------------------------------------------------
+# 元数据管理
+# ---------------------------------------------------------------------------
+def get_metadata(key: str) -> Optional[str]:
+    """获取元数据值。"""
+    with get_conn_ctx() as conn:
+        row = conn.execute(
+            "SELECT value FROM bug_metadata WHERE key = ?", (key,)
+        ).fetchone()
+        return row[0] if row else None
+
+
+def set_metadata(key: str, value: str) -> None:
+    """设置元数据值。"""
+    _logger.info("set_metadata: key=%s value=%s", key, value)
+    with get_conn_ctx() as conn:
+        conn.execute(
+            "INSERT INTO bug_metadata (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) "
+            "ON CONFLICT(key) DO UPDATE SET value = ?, updated_at = CURRENT_TIMESTAMP",
+            (key, value, value),
+        )
+        conn.commit()
+
+
+def get_last_organize_time() -> Optional[str]:
+    """获取最后整理时间。"""
+    return get_metadata("last_organize_time")
+
+
+def set_last_organize_time() -> None:
+    """设置最后整理时间为当前时间。"""
+    from datetime import datetime
+    now = datetime.now().isoformat()
+    set_metadata("last_organize_time", now)
+
+
+def check_organize_reminder(days_threshold: int = 30) -> dict[str, any]:
+    """检查是否需要提醒整理。
+    
+    Returns:
+        {
+            "should_remind": bool,
+            "last_organize_time": str or None,
+            "days_since": int or None
+        }
+    """
+    from datetime import datetime
+    
+    last_time_str = get_last_organize_time()
+    
+    if not last_time_str:
+        # 从未整理过
+        return {
+            "should_remind": True,
+            "last_organize_time": None,
+            "days_since": None,
+            "message": "错题集从未整理过，建议执行一次整理以优化记录质量。"
+        }
+    
+    try:
+        last_time = datetime.fromisoformat(last_time_str)
+        days_since = (datetime.now() - last_time).days
+        
+        if days_since >= days_threshold:
+            return {
+                "should_remind": True,
+                "last_organize_time": last_time_str,
+                "days_since": days_since,
+                "message": f"距离上次整理已过去 {days_since} 天（超过 {days_threshold} 天），建议整理错题集。"
+            }
+        else:
+            return {
+                "should_remind": False,
+                "last_organize_time": last_time_str,
+                "days_since": days_since,
+                "message": None
+            }
+    except Exception as e:
+        _logger.error(f"解析最后整理时间失败: {e}")
+        return {
+            "should_remind": False,
+            "last_organize_time": last_time_str,
+            "days_since": None,
+            "message": None
+        }
 
 
 # ---------------------------------------------------------------------------

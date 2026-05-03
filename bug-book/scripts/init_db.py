@@ -64,6 +64,12 @@ CREATE TABLE IF NOT EXISTS bug_recalls (
     FOREIGN KEY (bug_id) REFERENCES bugs(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS bug_metadata (
+    key         TEXT PRIMARY KEY,
+    value       TEXT NOT NULL,
+    updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX IF NOT EXISTS idx_bugs_score ON bugs(score DESC);
 CREATE INDEX IF NOT EXISTS idx_bugs_status ON bugs(status);
 CREATE INDEX IF NOT EXISTS idx_bugs_verified ON bugs(verified);
