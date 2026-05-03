@@ -27,7 +27,7 @@ from scripts.bug_ops import list_bugs
 
 ```python
 THRESHOLD_HIGH_SCORE = 30       # 高分阈值（需明确确认）
-THRESHOLD_AUTO_VERIFY = 20      # 自动验证阈值（<此值可自动验证，>=此值需审核）
+THRESHOLD_AUTO_VERIFY = 30      # 自动验证阈值（<此值可自动验证，>=此值需审核）
 THRESHOLD_OLD_BUGS_DAYS = 30     # 未验证提醒天数
 ```
 

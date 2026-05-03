@@ -86,7 +86,7 @@ AI 在改代码前主动查询相关 bug，主动预防而非事后补救。
 
 | 阈值常量 | 值 | 说明 |
 |---------|-----|------|
-| `THRESHOLD_AUTO_VERIFY` | 20 | 预估分 < 此值自动验证，>= 此值需审核 |
+| `THRESHOLD_AUTO_VERIFY` | 30 | 预估分 < 此值自动验证，>= 此值需审核 |
 | `THRESHOLD_HIGH_SCORE` | 30 | 高分阈值，需明确确认 |
 | `THRESHOLD_OLD_BUGS_DAYS` | 30 | 未验证提醒天数 |
 

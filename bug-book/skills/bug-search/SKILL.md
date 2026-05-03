@@ -1,6 +1,6 @@
 ---
 name: Bug Search
-description: 当需要搜索错题集时触发。触发条件：用户询问有没有相关的 bug 记录、搜索特定关键词、查找某个文件的 bug 历史、查询某个功能的问题。
+description: 当需要搜索和召回历史 Bug 记录。核心触发场景：1. 用户主动搜索 Bug；2. **AI 准备修改代码前，必须调用此技能进行路径召回（recall_by_path）以检查历史报错**；3. 查询特定模块的已知缺陷。
 ---
 
 # Bug Search Skill

@@ -55,7 +55,7 @@ else:
 
 # 魔法数字常量
 THRESHOLD_HIGH_SCORE = 30
-THRESHOLD_AUTO_VERIFY = 20
+THRESHOLD_AUTO_VERIFY = 30
 THRESHOLD_OLD_BUGS_DAYS = 30
 DEFAULT_LIST_LIMIT = 50
 SEARCH_LIMIT = 20
@@ -272,12 +272,42 @@ def update_bug(
     verified_at: Optional[str] = None,
     verified_by: Optional[str] = None,
 ) -> None:
-    """更新 bug 记录。"""
+    """更新 bug 记录。
+    
+    自动同步规则：
+    - verified=True 且 status='active' → 自动设置 status='resolved'
+    - verified=False 且 status='resolved' → 自动设置 status='active'（复发场景）
+    """
     _logger.info("update_bug: id=%d", bug_id)
     if status is not None and status not in ("active", "resolved", "invalid"):
         raise ValidationError(f"无效的 status: {status}")
 
     with get_conn_ctx() as conn:
+        # 获取当前状态，用于自动同步
+        current = conn.execute(
+            "SELECT verified, status FROM bugs WHERE id = ?", (bug_id,)
+        ).fetchone()
+        
+        if current:
+            current_verified = bool(current[0])
+            current_status = current[1]
+            
+            # 确定最终要设置的值
+            final_verified = verified if verified is not None else current_verified
+            final_status = status if status is not None else current_status
+            
+            # 自动同步逻辑
+            if final_verified and final_status == 'active':
+                # 验证通过 → 标记为已解决
+                final_status = 'resolved'
+                if status is None:  # 用户未显式指定 status
+                    status = 'resolved'
+            elif not final_verified and final_status == 'resolved':
+                # 验证被撤销 → 重新激活（复发场景）
+                final_status = 'active'
+                if status is None:
+                    status = 'active'
+
         updates: list[str] = []
         params: list[Any] = []
 
