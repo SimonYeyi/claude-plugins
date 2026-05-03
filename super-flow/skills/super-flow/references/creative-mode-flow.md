@@ -27,10 +27,7 @@
     └──通过
         │
         ▼
-读取Creative Brief找出所有需要Brainstorming的问题
-        │
-        ▼
-启动创意Agent（任务：回答Brainstorming问题）
+启动创意Agent（任务：回答Brainstorming问题；输入：从Creative Brief中识别出的Brainstorming问题列表）
         │
         ▼
 启动产品Agent(任务：基于Creative Brief生成SPEC；传入：brainstorming结果) ← 阶段二：产品流程开始

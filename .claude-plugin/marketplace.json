@@ -11,6 +11,12 @@
       "description": "通过智能工作流生成专业分享 PPT 的插件。将简略材料转换为可用于团队分享的专业演示文稿。",
       "version": "0.1.0",
       "source": "./pptx-plus"
+    },
+    {
+      "name": "bug-book",
+      "description": "AI 错题集：让 AI 记住历史问题的现象、根因、解决方案，防止重复犯错。",
+      "version": "0.1.0",
+      "source": "./bug-book"
     }
   ]
 }

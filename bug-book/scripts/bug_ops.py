@@ -608,6 +608,148 @@ def check_path_valid(path: str, root: Optional[Path] = None) -> bool:
     return abs_path.exists()
 
 
+def search_by_tag(tag: str, limit: int = SEARCH_LIMIT) -> list[dict[str, Any]]:
+    """按标签搜索 bug。"""
+    _logger.info("search_by_tag: tag=%s limit=%d", tag, limit)
+    with get_conn_ctx() as conn:
+        rows = conn.execute(
+            """
+            SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status
+            FROM bugs b
+            INNER JOIN bug_tags t ON b.id = t.bug_id
+            WHERE t.tag LIKE ?
+            ORDER BY b.score DESC
+            LIMIT ?
+            """,
+            (f"%{tag}%", limit),
+        ).fetchall()
+        return [_row_to_dict(r) for r in rows]
+
+
+def search_recent(days: int = 7, limit: int = SEARCH_LIMIT) -> list[dict[str, Any]]:
+    """搜索最近创建的 bugs。"""
+    _logger.info("search_recent: days=%d limit=%d", days, limit)
+    with get_conn_ctx() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, title, phenomenon, score, status, created_at
+            FROM bugs
+            WHERE created_at >= datetime('now', '-' || ? || ' days')
+            ORDER BY created_at DESC
+            LIMIT ?
+            """,
+            (days, limit),
+        ).fetchall()
+        cols = ["id", "title", "phenomenon", "score", "status", "created_at"]
+        return [dict(zip(cols, r)) for r in rows]
+
+
+def search_high_score(min_score: float = 30.0, limit: int = SEARCH_LIMIT) -> list[dict[str, Any]]:
+    """搜索高分 bugs（需要重点关注）。"""
+    _logger.info("search_high_score: min_score=%.1f limit=%d", min_score, limit)
+    with get_conn_ctx() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, title, phenomenon, score, status, verified
+            FROM bugs
+            WHERE score >= ? AND status = 'active'
+            ORDER BY score DESC
+            LIMIT ?
+            """,
+            (min_score, limit),
+        ).fetchall()
+        cols = ["id", "title", "phenomenon", "score", "status", "verified"]
+        return [dict(zip(cols, r)) for r in rows]
+
+
+def search_top_critical(limit: int = 20) -> list[dict[str, Any]]:
+    """搜索最严重的前 N 个 bugs（高分 + 未验证）。"""
+    _logger.info("search_top_critical: limit=%d", limit)
+    with get_conn_ctx() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, title, phenomenon, score, status, verified, created_at
+            FROM bugs
+            WHERE status = 'active' AND verified = 0
+            ORDER BY score DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+        cols = ["id", "title", "phenomenon", "score", "status", "verified", "created_at"]
+        return [dict(zip(cols, r)) for r in rows]
+
+
+def search_recent_unverified(days: int = 7, limit: int = SEARCH_LIMIT) -> list[dict[str, Any]]:
+    """搜索最近创建但未验证的 bugs。"""
+    _logger.info("search_recent_unverified: days=%d limit=%d", days, limit)
+    with get_conn_ctx() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, title, phenomenon, score, status, verified, created_at
+            FROM bugs
+            WHERE status = 'active'
+              AND verified = 0
+              AND created_at >= datetime('now', '-' || ? || ' days')
+            ORDER BY score DESC
+            LIMIT ?
+            """,
+            (days, limit),
+        ).fetchall()
+        cols = ["id", "title", "phenomenon", "score", "status", "verified", "created_at"]
+        return [dict(zip(cols, r)) for r in rows]
+
+
+def search_by_status_and_score(
+    status: str = "active",
+    min_score: float = 0.0,
+    max_score: Optional[float] = None,
+    verified: Optional[bool] = None,
+    order_by: str = "score",
+    limit: int = SEARCH_LIMIT,
+) -> list[dict[str, Any]]:
+    """按状态和分数范围组合搜索 bugs。
+    
+    Args:
+        status: bug 状态（active/invalid/resolved）
+        min_score: 最低分数
+        max_score: 最高分数（None 表示无上限）
+        verified: 是否已验证（None 表示不限制）
+        order_by: 排序字段（score/created_at）
+        limit: 返回数量
+    """
+    _logger.info(
+        "search_by_status_and_score: status=%s min_score=%.1f max_score=%s verified=%s",
+        status, min_score, max_score, verified,
+    )
+    
+    with get_conn_ctx() as conn:
+        query = "SELECT id, title, phenomenon, score, status, verified, created_at FROM bugs WHERE status = ?"
+        params: list[Any] = [status]
+        
+        if min_score > 0:
+            query += " AND score >= ?"
+            params.append(min_score)
+        
+        if max_score is not None:
+            query += " AND score <= ?"
+            params.append(max_score)
+        
+        if verified is not None:
+            query += " AND verified = ?"
+            params.append(1 if verified else 0)
+        
+        # ORDER BY 字段来自白名单，直接拼接（安全）
+        if order_by not in ALLOWED_ORDER_BY:
+            order_by = "score"
+        query += f" ORDER BY {order_by} DESC LIMIT ?"
+        params.append(limit)
+        
+        rows = conn.execute(query, params).fetchall()
+        cols = ["id", "title", "phenomenon", "score", "status", "verified", "created_at"]
+        return [dict(zip(cols, r)) for r in rows]
+
+
 # ---------------------------------------------------------------------------
 # 入口
 # ---------------------------------------------------------------------------
