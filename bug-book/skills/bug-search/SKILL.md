@@ -37,8 +37,79 @@ from scripts.bug_ops import search_by_keyword, recall_by_path, get_impacted_bugs
 ```python
 from scripts.bug_ops import search_by_keyword
 
+# 单关键词搜索
 results = search_by_keyword("session", limit=20)
+
+# ✅ 多关键词搜索（推荐）：一次性传入多个等效关键词，OR 逻辑
+results = search_by_keyword("登录 auth session 会话", limit=20)
 ```
+
+**多关键词搜索优势：**
+- ✅ **一次查询**：不需要逐个尝试，直接传入所有等效关键词
+- ✅ **OR 逻辑**：匹配任意一个关键词即可返回结果
+- ✅ **提高效率**：减少数据库查询次数
+
+**关键词提取策略：**
+
+当用户描述问题时，采用**渐进式搜索策略**：
+
+### 步骤 1：关键词搜索（首选）
+
+从上下文中提取关键词进行搜索：
+
+```python
+# 用户说：“用户表单添加有问题”
+keywords = "用户 表单 添加 user form add"
+results = search_by_keyword(keywords, limit=20)
+
+if results:
+    # 找到结果，直接返回
+    return results
+```
+
+### 步骤 2：路径推断 + 路径召回（备选）
+
+如果步骤 1 没有结果，根据用户的搜索提示词**推断相关文件路径**，再进行路径召回：
+
+```python
+# 用户说：“用户表单添加有问题”，但关键词搜不到
+# AI 推断可能的文件路径：
+# - "用户表单" → user_form.vue, user_form.tsx, UserForm.java
+# - "用户" + "表单" → components/UserForm.vue, pages/user/form.vue
+
+# 尝试路径召回
+possible_paths = ["user_form.vue", "UserForm.vue", "user/form.vue"]
+all_path_results = []
+
+for path in possible_paths:
+    path_results = recall_by_path(path, limit=10)
+    all_path_results.extend(path_results)
+```
+
+### 步骤 3：相关性筛选（关键）
+
+从路径召回的大量结果中，**AI 需要理解用户的搜索意图，判断哪些 bug 是相关的**：
+
+```python
+# 用户原始需求：“查询无法增加用户信息的问题”
+# 路径召回可能返回很多 user_form.vue 相关的 bug：
+# - Bug #1: 用户表单添加失败
+# - Bug #2: 用户表单删除按钮错位
+# - Bug #3: 用户表单查询超时
+# - Bug #4: 用户表单新增字段验证
+
+# AI 需要理解用户需求，筛选出相关的：
+# ✅ 保留：Bug #1（添加失败）、Bug #4（新增字段）
+# ❌ 排除：Bug #2（删除）、Bug #3（查询）
+
+relevant_bugs = ai_filter_by_intent(all_path_results, user_query="用户表单添加有问题")
+return relevant_bugs
+```
+
+**优势：**
+- ✅ **精准优先**：先用关键词快速定位
+- ✅ **智能 fallback**：关键词失败时，通过路径召回兜底
+- ✅ **人工筛选**：AI 根据用户意图从大量结果中识别相关 bug
 
 ### 2. 按路径召回
 

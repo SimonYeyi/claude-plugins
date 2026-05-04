@@ -543,6 +543,48 @@ def test_recall_by_simple_name():
 
 
 # ============================================================
+# TC-F01 ~ TC-F03：search_by_keyword 关键词搜索
+# ============================================================
+
+def test_search_single_keyword():
+    """TC-F01: 单关键词搜索"""
+    bug_id, _ = add_bug(
+        title="登录问题",
+        phenomenon="",
+        verified=True,
+        keywords=["login", "auth", "session"],
+    )
+    results = search_by_keyword("login", limit=20)
+    assert any(r["id"] == bug_id for r in results)
+
+
+def test_search_multi_keywords():
+    """TC-F02: 多关键词搜索（OR 逻辑）"""
+    bug_id, _ = add_bug(
+        title="认证会话bug",
+        phenomenon="",
+        verified=True,
+        keywords=["login", "auth", "session", "认证", "会话"],
+    )
+    # 一次性传入多个关键词，匹配任意一个即可
+    results = search_by_keyword("登录 auth session", limit=20)
+    assert any(r["id"] == bug_id for r in results)
+
+
+def test_search_multi_keywords_no_match():
+    """TC-F03: 多关键词搜索无匹配"""
+    add_bug(
+        title="数据库bug",
+        phenomenon="",
+        verified=True,
+        keywords=["database", "MySQL", "connection"],
+    )
+    # 搜索不相关的关键词
+    results = search_by_keyword("登录 auth session", limit=20)
+    assert not any(r["title"] == "数据库bug" for r in results)
+
+
+# ============================================================
 # TC-I01 ~ TC-I05: get_bug_detail
 # ============================================================
 

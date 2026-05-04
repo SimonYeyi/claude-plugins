@@ -532,25 +532,54 @@ def add_recall(bug_id: int, pattern: str) -> None:
 # 搜索与召回
 # ---------------------------------------------------------------------------
 def search_by_keyword(keyword: str, limit: int = SEARCH_LIMIT) -> list[dict[str, Any]]:
-    """按关键词搜索 bug（LIKE 扫描，FTS5 可选启用）。"""
+    """按关键词搜索 bug（LIKE 扫描，FTS5 可选启用）。
+    
+    Args:
+        keyword: 单个关键词或多个关键词（用空格分隔）
+        limit: 返回结果数量限制
+    
+    Returns:
+        匹配的 bug 列表
+    
+    Examples:
+        >>> search_by_keyword("session")  # 单关键词
+        >>> search_by_keyword("登录 auth session")  # 多关键词（OR 逻辑）
+    """
     _logger.info("search_by_keyword: keyword=%s limit=%d", keyword, limit)
-    like_pattern = f"%{keyword}%"
+    
+    # 支持多关键词：用空格分隔，OR 逻辑
+    keywords = [k.strip() for k in keyword.split() if k.strip()]
+    if not keywords:
+        return []
+    
     with get_conn_ctx() as conn:
-        rows = conn.execute(
-            """
+        # 构建 OR 条件的 WHERE 子句
+        conditions = []
+        params = []
+        
+        for kw in keywords:
+            like_pattern = f"%{kw}%"
+            conditions.append(
+                "(b.title LIKE ? OR b.phenomenon LIKE ? "
+                "OR b.root_cause LIKE ? OR b.solution LIKE ? "
+                "OR k.keyword LIKE ? OR t.tag LIKE ?)"
+            )
+            params.extend([like_pattern] * 6)
+        
+        where_clause = " OR ".join(conditions)
+        
+        query = f"""
             SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status
             FROM bugs b
             LEFT JOIN bug_keywords k ON b.id = k.bug_id
             LEFT JOIN bug_tags t ON b.id = t.bug_id
-            WHERE b.title LIKE ? OR b.phenomenon LIKE ?
-              OR b.root_cause LIKE ? OR b.solution LIKE ?
-              OR k.keyword LIKE ? OR t.tag LIKE ?
+            WHERE {where_clause}
             ORDER BY b.score DESC
             LIMIT ?
-            """,
-            (like_pattern, like_pattern, like_pattern, like_pattern,
-             like_pattern, like_pattern, limit),
-        ).fetchall()
+        """
+        params.append(limit)
+        
+        rows = conn.execute(query, params).fetchall()
         return [_row_to_dict(r) for r in rows]
 
 
