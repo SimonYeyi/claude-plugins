@@ -1,6 +1,6 @@
 ---
 name: bug-organize
-description: 当需要整理错题集时触发。触发条件：用户要求整理错题集、清理失效条目、归类重复问题、按重要性重排、用户要求查看整理建议。
+description: 当需要整理错题集时触发。触发条件：用户要求整理错题集、清理失效条目、归类重复问题、按重要性重排、用户要求查看整理建议、**代码重构完成后自动执行路径迁移**。
 ---
 
 # Bug Organize Skill
@@ -37,6 +37,7 @@ THRESHOLD_OLD_BUGS_DAYS = 30     # 未验证提醒天数
 - 手动整理周期到了（建议每周一次）
 - 用户要求"清理失效条目"
 - 用户要求"归类相似问题"
+- **代码重构完成后**（文件重命名、目录移动后必须立即执行路径迁移）
 
 ## 整理流程
 
@@ -174,7 +175,7 @@ patterns = analyze_impact_patterns(limit=10)
 
 **在整理报告中添加影响分析章节：**
 
-```markdown
+```
 ### 📊 影响分析报告
 
 #### 高风险模块 Top 5
@@ -312,7 +313,7 @@ print("✅ 整理完成！共执行 4 项操作")
 
 当用户对某项操作有疑问时，AI 应该主动提供详细信息：
 
-```python
+```
 # 用户问：“#3 和 #7 为什么可以合并？”
 from scripts.bug_ops import get_bug_detail
 
@@ -349,6 +350,84 @@ print(f"""
 - “#3 和 #7 不能合并，它们不一样” → 跳过该项操作
 - “全部执行” → 执行所有待确认操作
 - “只执行第 1 和第 3 项” → 选择性执行
+
+## 重构后自动路径迁移（独立触发流程）
+
+**触发条件**：当 AI 完成代码重构（文件重命名、目录移动）后，必须立即执行此流程。
+
+**执行原则**：**静默执行，无需用户确认**
+
+**检测逻辑**：
+```python
+from pathlib import Path
+from scripts.bug_ops import get_bug_detail, update_bug_paths, update_bug_recalls, recall_by_path
+
+def auto_migrate_paths_after_refactor(old_paths: list[str], new_paths_map: dict[str, str]):
+    """
+    重构后自动迁移路径和 autoRecall patterns
+    
+    Args:
+        old_paths: 本次重构涉及的旧路径列表
+        new_paths_map: 旧路径到新路径的映射 {old_path: new_path}
+    """
+    migrated_bugs = []
+    
+    for old_path in old_paths:
+        # 查找所有受影响的 Bug
+        affected_bugs = recall_by_path(old_path)
+        
+        if affected_bugs and old_path in new_paths_map:
+            new_path = new_paths_map[old_path]
+            
+            for bug in affected_bugs:
+                bug_id = bug["id"]
+                detail = get_bug_detail(bug_id)
+                
+                if detail:
+                    # 1. 更新该 Bug 的路径
+                    current_paths = detail.get("paths", [])
+                    updated_paths = [
+                        new_path if p == old_path else p
+                        for p in current_paths
+                    ]
+                    update_bug_paths(bug_id, updated_paths)
+                    
+                    # 2. 更新该 Bug 的 autoRecall patterns
+                    current_recalls = detail.get("recalls", [])
+                    updated_recalls = [
+                        new_path if r == old_path else r
+                        for r in current_recalls
+                    ]
+                    update_bug_recalls(bug_id, updated_recalls)
+                    
+                    migrated_bugs.append(bug_id)
+    
+    return list(set(migrated_bugs))  # 去重
+```
+
+**使用示例**：
+```python
+# AI 完成了重构：src/auth/ → src/modules/auth/
+old_paths = ["src/auth/session.ts", "src/auth/middleware.ts"]
+new_paths_map = {
+    "src/auth/session.ts": "src/modules/auth/session.ts",
+    "src/auth/middleware.ts": "src/modules/auth/middleware.ts",
+}
+
+migrated_bug_ids = auto_migrate_paths_after_refactor(old_paths, new_paths_map)
+print(f"✅ 已自动更新 {len(migrated_bug_ids)} 个 Bug 的路径：{', '.join([f'#{bid}' for bid in migrated_bug_ids])}")
+```
+
+**输出格式**：
+```
+✅ 检测到重构：src/auth/ → src/modules/auth/
+✅ 已自动更新 3 个 Bug 的路径：#42, #38, #15
+```
+
+**注意事项**：
+- ⚠️ 此流程**仅在重构完成后自动执行**，不需要用户确认
+- ⚠️ AI 需要自己识别本次重构涉及的路径变更
+- ⚠️ 如果同一文件有多个匹配，AI 应该根据重构上下文确定正确的新路径
 
 ## 注意事项
 

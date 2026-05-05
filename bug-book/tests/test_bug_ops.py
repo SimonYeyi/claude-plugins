@@ -14,7 +14,8 @@ from bug_ops import (
     update_bug,
     delete_bug,
     increment_score,
-    add_path,
+    update_bug_paths,
+    update_bug_recalls,
     add_recall,
     search_by_keyword,
     recall_by_path,
@@ -286,23 +287,26 @@ def test_increment_score_multiple():
 
 
 # ============================================================
-# TC-E01 ~ TC-E03: add_path / add_recall
+# TC-E01 ~ TC-E03: update_bug_paths / add_recall
 # ============================================================
 
-def test_add_path():
-    """TC-E01: 添加路径"""
-    bug_id, _ = add_bug(title="加路径", phenomenon="", verified=True)
-    add_path(bug_id, "src/auth.ts")
+def test_update_bug_paths():
+    """TC-E01: 批量更新路径"""
+    bug_id, _ = add_bug(title="更新路径", phenomenon="", verified=True, paths=["src/old.ts"])
+    update_bug_paths(bug_id, ["src/new1.ts", "src/new2.ts"])
     detail = get_bug_detail(bug_id)
-    assert "src/auth.ts" in detail["paths"]
+    assert "src/old.ts" not in detail["paths"]
+    assert "src/new1.ts" in detail["paths"]
+    assert "src/new2.ts" in detail["paths"]
+    assert len(detail["paths"]) == 2
 
 
-def test_add_path_old():
-    """TC-E02: 添加 is_old=True 路径"""
-    bug_id, _ = add_bug(title="旧路径", phenomenon="", verified=True)
-    add_path(bug_id, "old/Auth.ts", is_old=True)
+def test_update_bug_paths_empty():
+    """TC-E02: 清空所有路径"""
+    bug_id, _ = add_bug(title="清空路径", phenomenon="", verified=True, paths=["src/a.ts", "src/b.ts"])
+    update_bug_paths(bug_id, [])
     detail = get_bug_detail(bug_id)
-    assert "old/Auth.ts" in detail["old_paths"]
+    assert len(detail["paths"]) == 0
 
 
 def test_add_recall():
@@ -865,3 +869,99 @@ def test_analyze_impact_patterns():
     cart_pattern = next((p for p in patterns if p["path"] == "src/cart/"), None)
     assert cart_pattern is not None
     assert cart_pattern["impact_count"] == 2
+
+
+# ============================================================
+# TC-N01 ~ TC-N05：路径和 recalls 管理
+# ============================================================
+
+def test_update_bug_paths():
+    """TC-N01: 批量更新 bug 的路径"""
+    bug_id, _ = add_bug(
+        title="路径测试",
+        phenomenon="",
+        paths=["old/path.ts", "other/path.ts"],
+        verified=True,
+    )
+    
+    # 更新路径：替换 old/path.ts 为 new/path.ts
+    update_bug_paths(bug_id, ["new/path.ts", "other/path.ts"])
+    
+    detail = get_bug_detail(bug_id)
+    assert "new/path.ts" in detail["paths"]
+    assert "old/path.ts" not in detail["paths"]
+    assert "other/path.ts" in detail["paths"]
+
+
+def test_add_recall():
+    """TC-N02: 添加单个 recall pattern"""
+    bug_id, _ = add_bug(title="recall测试", phenomenon="", verified=True)
+    
+    # 添加 recall pattern
+    add_recall(bug_id, "auth/*")
+    
+    detail = get_bug_detail(bug_id)
+    assert "auth/*" in detail["recalls"]
+
+
+def test_update_bug_recalls():
+    """TC-N03: 批量更新 bug 的 recall patterns"""
+    bug_id, _ = add_bug(
+        title="recall更新测试",
+        phenomenon="",
+        recalls=["old_pattern.dart", "other_pattern.dart"],
+        verified=True,
+    )
+    
+    # 更新 recalls：替换 old_pattern.dart 为 new_pattern.dart
+    update_bug_recalls(bug_id, ["new_pattern.dart", "other_pattern.dart"])
+    
+    detail = get_bug_detail(bug_id)
+    assert "new_pattern.dart" in detail["recalls"]
+    assert "old_pattern.dart" not in detail["recalls"]
+    assert "other_pattern.dart" in detail["recalls"]
+
+
+def test_update_bug_recalls_empty():
+    """TC-N04: 清空所有 recall patterns"""
+    bug_id, _ = add_bug(
+        title="清空recall",
+        phenomenon="",
+        recalls=["pattern1", "pattern2"],
+        verified=True,
+    )
+    
+    # 清空所有 recalls
+    update_bug_recalls(bug_id, [])
+    
+    detail = get_bug_detail(bug_id)
+    assert detail["recalls"] == []
+
+
+def test_recall_by_path_with_updated_recalls():
+    """TC-N05: 验证 recalls 更新后能正确召回"""
+    bug_id, _ = add_bug(
+        title="重构召回测试",
+        phenomenon="测试重构后的召回",
+        recalls=["old_file.dart"],
+        verified=True,
+    )
+    
+    # 初始状态：应该能通过 old_file.dart 召回
+    results = recall_by_path("old_file.dart")
+    assert any(r["id"] == bug_id for r in results)
+    
+    # 不应该通过 new_file.dart 召回
+    results = recall_by_path("new_file.dart")
+    assert not any(r["id"] == bug_id for r in results)
+    
+    # 更新 recall pattern（模拟重构）
+    update_bug_recalls(bug_id, ["new_file.dart"])
+    
+    # 现在应该能通过 new_file.dart 召回
+    results = recall_by_path("new_file.dart")
+    assert any(r["id"] == bug_id for r in results)
+    
+    # 不应该再通过 old_file.dart 召回
+    results = recall_by_path("old_file.dart")
+    assert not any(r["id"] == bug_id for r in results)

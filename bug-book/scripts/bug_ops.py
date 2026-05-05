@@ -204,19 +204,10 @@ def _match_path(file_path: str, pattern: str) -> bool:
     1. 目录通配符：auth/* → 匹配 auth/ 目录下的所有文件
     2. 单段匹配：auth → 匹配路径中包含 auth 段的文件
     3. 多段前缀：src/auth → 匹配以 src/auth 开头的路径
-    4. Simple name 匹配：如果 file_path 只是文件名，pattern 是完整路径，检查文件名是否在 pattern 中
     """
     file_path = _normalize_path(file_path)
     pattern = pattern.rstrip("/")
     file_segs = [s for s in file_path.split("/") if s]
-
-    # 特殊情况：file_path 只是文件名（无路径分隔符）
-    # 例如：file_path="user_form_page.dart", pattern="lib/pages/user_form_page.dart"
-    if len(file_segs) == 1 and "/" in pattern:
-        # 检查文件名是否在 pattern 的任意段中
-        pat_segs = [s for s in pattern.split("/") if s]
-        if file_segs[0] in pat_segs:
-            return True
 
     if pattern.endswith("/*"):
         base = pattern[:-2]
@@ -490,14 +481,51 @@ def increment_score(
         conn.commit()
 
 
-def add_path(bug_id: int, path: str, is_old: bool = False) -> None:
-    """添加路径。"""
-    _logger.info("add_path: id=%d path=%s", bug_id, path)
+def update_bug_paths(bug_id: int, new_paths: list[str]) -> None:
+    """批量更新 bug 的路径（删除旧路径，添加新路径）。
+    
+    Args:
+        bug_id: Bug ID
+        new_paths: 新的路径列表
+    """
+    _logger.info("update_bug_paths: id=%d paths=%s", bug_id, new_paths)
     with get_conn_ctx() as conn:
+        # 删除所有旧路径
+        conn.execute("DELETE FROM bug_paths WHERE bug_id = ?", (bug_id,))
+        
+        # 添加新路径
+        if new_paths:
+            conn.executemany(
+                "INSERT INTO bug_paths (bug_id, path, is_old) VALUES (?, ?, 0)",
+                [(bug_id, p) for p in new_paths]
+            )
+        
         conn.execute(
-            "INSERT INTO bug_paths (bug_id, path, is_old) VALUES (?, ?, ?)",
-            (bug_id, path, is_old),
+            "UPDATE bugs SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (bug_id,),
         )
+        conn.commit()
+
+
+def update_bug_recalls(bug_id: int, new_recalls: list[str]) -> None:
+    """批量更新 bug 的 autoRecall patterns（删除旧 patterns，添加新 patterns）。
+    
+    Args:
+        bug_id: Bug ID
+        new_recalls: 新的 recall patterns 列表
+    """
+    _logger.info("update_bug_recalls: id=%d recalls=%s", bug_id, new_recalls)
+    with get_conn_ctx() as conn:
+        # 删除所有旧 patterns
+        conn.execute("DELETE FROM bug_recalls WHERE bug_id = ?", (bug_id,))
+        
+        # 添加新 patterns
+        if new_recalls:
+            conn.executemany(
+                "INSERT INTO bug_recalls (bug_id, pattern) VALUES (?, ?)",
+                [(bug_id, p) for p in new_recalls]
+            )
+        
         conn.execute(
             "UPDATE bugs SET updated_at = CURRENT_TIMESTAMP WHERE id = ?",
             (bug_id,),
@@ -576,14 +604,17 @@ def search_by_keyword(keyword: str, limit: int = SEARCH_LIMIT) -> list[dict[str,
 
 
 def recall_by_path(file_path: str, limit: int = RECALL_LIMIT) -> list[dict[str, Any]]:
-    """根据文件路径召回相关 bug。"""
+    """根据文件路径召回相关 bug。
+    
+    注意：召回除 invalid 外的所有状态 Bug（active + resolved），因为已解决的 Bug 也有参考价值。
+    """
     _logger.info("recall_by_path: file_path=%s limit=%d", file_path, limit)
     with get_conn_ctx() as conn:
         rows = conn.execute(
             """
             SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status
             FROM bugs b
-            WHERE b.status = 'active'
+            WHERE b.status != 'invalid'
               AND (
                   EXISTS (SELECT 1 FROM bug_paths WHERE bug_id = b.id)
                   OR EXISTS (SELECT 1 FROM bug_recalls WHERE bug_id = b.id)
@@ -624,14 +655,17 @@ def _should_recall(file_path: str, bug_id: int, conn: sqlite3.Connection) -> boo
 
 
 def recall_by_pattern(pattern: str, limit: int = RECALL_LIMIT) -> list[dict[str, Any]]:
-    """根据 autoRecall pattern 召回相关 bug。"""
+    """根据 autoRecall pattern 召回相关 bug。
+    
+    注意：召回除 invalid 外的所有状态 Bug（active + resolved），因为已解决的 Bug 也有参考价值。
+    """
     _logger.info("recall_by_pattern: pattern=%s limit=%d", pattern, limit)
     with get_conn_ctx() as conn:
         rows = conn.execute(
             """
             SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status
             FROM bugs b
-            WHERE b.status = 'active'
+            WHERE b.status != 'invalid'
               AND EXISTS (SELECT 1 FROM bug_recalls WHERE bug_id = b.id)
             ORDER BY b.score DESC
             LIMIT ?
