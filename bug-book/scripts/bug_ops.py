@@ -605,14 +605,18 @@ def search_by_keyword(keyword: str, limit: int = SEARCH_LIMIT) -> list[dict[str,
 
 def recall_by_path(file_path: str, limit: int = RECALL_LIMIT) -> list[dict[str, Any]]:
     """根据文件路径召回相关 bug。
-    
+
     注意：召回除 invalid 外的所有状态 Bug（active + resolved），因为已解决的 Bug 也有参考价值。
+
+    返回信息包含：id, title, phenomenon, score, status, verified, created_at,
+    root_cause, solution, test_case
     """
     _logger.info("recall_by_path: file_path=%s limit=%d", file_path, limit)
     with get_conn_ctx() as conn:
         rows = conn.execute(
             """
-            SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status
+            SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status,
+                   b.verified, b.root_cause, b.solution, b.test_case
             FROM bugs b
             WHERE b.status != 'invalid'
               AND (
@@ -630,7 +634,21 @@ def recall_by_path(file_path: str, limit: int = RECALL_LIMIT) -> list[dict[str, 
             if _should_recall(file_path, r[0], conn):
                 matched.append(r)
 
-        return [_row_to_dict(r) for r in matched[:limit]]
+        # 构建完整结果
+        result = []
+        for r in matched[:limit]:
+            result.append({
+                "id": r[0],
+                "title": r[1],
+                "phenomenon": r[2],
+                "score": r[3],
+                "status": r[4],
+                "verified": r[5],
+                "root_cause": r[6] if len(r) > 6 else None,
+                "solution": r[7] if len(r) > 7 else None,
+                "test_case": r[8] if len(r) > 8 else None,
+            })
+        return result
 
 
 def _should_recall(file_path: str, bug_id: int, conn: sqlite3.Connection) -> bool:
