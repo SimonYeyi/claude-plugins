@@ -130,13 +130,71 @@ results = recall_by_path("src/auth/login.ts", limit=10)
 
 #### 2.2 按影响关系召回
 
+影响关系召回有两个使用场景：
+
+**场景 A：展示 Bug 的影响范围（主要场景）**
+
+当 AI 通过路径召回找到某个 Bug 时，应该查询该 Bug 曾影响过的其他模块，给出警告：
+
+```python
+from scripts.bug_ops import recall_by_path, get_bug_impacts
+
+# 1. 路径召回找到 Bug #42
+bugs = recall_by_path("src/auth/session.ts", limit=10)
+
+# 2. 对每个 Bug，查询其影响关系
+for bug in bugs:
+    impacts = get_bug_impacts(bug["id"])
+    if impacts:
+        # 3. 展示给用户
+        print(f"⚠️ Bug #{bug['id']} 的修复曾影响过以下模块：")
+        for impact in impacts:
+            print(f"  - {impact['impacted_path']} (严重度 {impact['severity']}/10)")
+            print(f"    描述：{impact['description']}")
+```
+
+**返回示例：**
+```python
+[
+    {
+        "impacted_path": "src/cart/",
+        "severity": 8,
+        "description": "修改 session 持久化导致购物车的用户状态判断失效"
+    },
+    {
+        "impacted_path": "src/order/checkout.ts",
+        "severity": 6,
+        "description": "session 过期时间调整导致订单结算页频繁登出"
+    }
+]
+```
+
+**展示格式：**
+```markdown
+⚠️ **历史 Bug 召回**
+
+- **Bug #42**: session 过期页面空白 (score: 56.5) ✅ 已验证
+  - 相关文件：src/auth/session.ts
+  - 🔴 **注意**：此 Bug 的修复曾导致以下模块出问题：
+    - src/cart/ (严重度 8/10)
+      - 描述：修改 session 持久化导致购物车的用户状态判断失效
+    - src/order/checkout.ts (严重度 6/10)
+      - 描述：session 过期时间调整导致订单结算页频繁登出
+
+💡 **建议**：修改时务必检查是否会影响 cart/ 和 order/ 模块的用户状态逻辑
+```
+
+---
+
+**场景 B：跨模块预警（次要场景）**
+
 当 AI 即将修改某个文件时，查询哪些历史 bug 的修复曾影响过该文件：
 
 ```python
 from scripts.bug_ops import get_impacted_bugs
 
-# 查询哪些 bug 的修复会影响 src/cart/checkout.ts
-impacted = get_impacted_bugs("src/cart/checkout.ts", limit=10)
+# 查询哪些 bug 的修复会影响 src/cart/add_to_cart.ts
+impacted = get_impacted_bugs("src/cart/add_to_cart.ts", limit=10)
 ```
 
 **返回示例：**
@@ -148,10 +206,12 @@ impacted = get_impacted_bugs("src/cart/checkout.ts", limit=10)
         "phenomenon": "登录30分钟后刷新页面显示空白",
         "score": 56.5,
         "status": "resolved",
-        "impacted_path": "src/cart/add_to_cart.ts",
-        "impact_type": "regression",
-        "description": "修改 session 持久化导致购物车的用户状态判断失效",
+        "verified": True,
+        "root_cause": "session cookie 未设置 maxAge",
+        "solution": "添加 cookie: { maxAge: 30 * 60 * 1000 }",
+        "test_case": "登录后等待30分钟再刷新",
         "severity": 8,
+        "description": "修改 session 持久化导致购物车的用户状态判断失效",
     }
 ]
 ```
@@ -169,7 +229,7 @@ impacted = get_impacted_bugs("src/cart/checkout.ts", limit=10)
 - **Bug #42**: session 过期页面空白 (score: 56.5) ✅ 已验证
   - ⚠️ 该 bug 的修复曾导致购物车模块出现问题！
   - 影响路径：src/cart/add_to_cart.ts
-  - 影响类型：回归问题（严重度 8/10）
+  - 严重度：8/10
   - 描述：修改 session 持久化导致购物车的用户状态判断失效
 
 💡 **建议**：修改时务必检查与 auth/session 的交互逻辑

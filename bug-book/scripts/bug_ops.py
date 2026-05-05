@@ -1039,23 +1039,39 @@ def get_impacted_bugs(file_path: str, limit: int = RECALL_LIMIT) -> list[dict[st
     file_path = _normalize_path(file_path)
     
     with get_conn_ctx() as conn:
+        # 先通过 impacted_path 的前缀进行初步过滤（利用索引）
+        # 提取文件路径的各个层级作为候选前缀
+        path_parts = file_path.split("/")
+        candidate_prefixes = []
+        for i in range(1, len(path_parts) + 1):
+            prefix = "/".join(path_parts[:i])
+            candidate_prefixes.append(prefix + "%")
+        
+        if not candidate_prefixes:
+            return []
+        
+        # 构建 OR 条件进行初步过滤
+        like_conditions = " OR ".join(["i.impacted_path LIKE ?"] * len(candidate_prefixes))
+        
         rows = conn.execute(
-            """
+            f"""
             SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status,
-                   i.impacted_path, i.impact_type, i.description, i.severity
+                   b.verified, b.root_cause, b.solution, b.test_case,
+                   i.impacted_path, i.severity, i.description
             FROM bugs b
             INNER JOIN bug_impacts i ON b.id = i.source_bug_id
-            WHERE b.status = 'active'
+            WHERE b.status != 'invalid'
+              AND ({like_conditions})
             ORDER BY i.severity DESC, b.score DESC
             LIMIT ?
             """,
-            (RECALL_BATCH_LIMIT,),
+            (*candidate_prefixes, RECALL_BATCH_LIMIT),
         ).fetchall()
         
-        # 过滤出真正匹配的文件
+        # 再用 _match_path 进行精确匹配（支持通配符等复杂逻辑）
         matched = []
         for r in rows:
-            bug_id, title, phenomenon, score, status, impacted_path, impact_type, description, severity = r
+            bug_id, title, phenomenon, score, status, verified, root_cause, solution, test_case, impacted_path, severity, description = r
             if _match_path(file_path, impacted_path):
                 matched.append({
                     "id": bug_id,
@@ -1063,10 +1079,12 @@ def get_impacted_bugs(file_path: str, limit: int = RECALL_LIMIT) -> list[dict[st
                     "phenomenon": phenomenon,
                     "score": score,
                     "status": status,
-                    "impacted_path": impacted_path,
-                    "impact_type": impact_type,
-                    "description": description,
+                    "verified": verified,
+                    "root_cause": root_cause,
+                    "solution": solution,
+                    "test_case": test_case,
                     "severity": severity,
+                    "description": description,
                 })
         
         return matched[:limit]
@@ -1086,22 +1104,19 @@ def get_bug_impacts(bug_id: int) -> list[dict[str, Any]]:
     with get_conn_ctx() as conn:
         rows = conn.execute(
             """
-            SELECT id, impacted_path, impact_type, description, severity, created_at
+            SELECT impacted_path, severity, description
             FROM bug_impacts
             WHERE source_bug_id = ?
-            ORDER BY severity DESC, created_at DESC
+            ORDER BY severity DESC
             """,
             (bug_id,),
         ).fetchall()
         
         return [
             {
-                "id": r[0],
-                "impacted_path": r[1],
-                "impact_type": r[2],
-                "description": r[3],
-                "severity": r[4],
-                "created_at": r[5],
+                "impacted_path": r[0],
+                "severity": r[1],
+                "description": r[2],
             }
             for r in rows
         ]
