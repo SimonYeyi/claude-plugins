@@ -360,7 +360,7 @@ print(f"""
 **检测逻辑**：
 ```python
 from pathlib import Path
-from scripts.bug_ops import get_bug_detail, update_bug_paths, update_bug_recalls, recall_by_path
+from scripts.bug_ops import get_bug_detail, update_bug_paths, update_bug_recalls, update_impacted_paths, recall_by_path
 
 def auto_migrate_paths_after_refactor(old_paths: list[str], new_paths_map: dict[str, str]):
     """
@@ -371,6 +371,7 @@ def auto_migrate_paths_after_refactor(old_paths: list[str], new_paths_map: dict[
         new_paths_map: 旧路径到新路径的映射 {old_path: new_path}
     """
     migrated_bugs = []
+    impacted_count = 0
     
     for old_path in old_paths:
         # 查找所有受影响的 Bug
@@ -401,8 +402,12 @@ def auto_migrate_paths_after_refactor(old_paths: list[str], new_paths_map: dict[
                     update_bug_recalls(bug_id, updated_recalls)
                     
                     migrated_bugs.append(bug_id)
+            
+            # 3. 更新影响关系中的 impacted_path
+            count = update_impacted_paths(old_path, new_path)
+            impacted_count += count
     
-    return list(set(migrated_bugs))  # 去重
+    return list(set(migrated_bugs)), impacted_count  # 去重
 ```
 
 **使用示例**：
@@ -414,14 +419,17 @@ new_paths_map = {
     "src/auth/middleware.ts": "src/modules/auth/middleware.ts",
 }
 
-migrated_bug_ids = auto_migrate_paths_after_refactor(old_paths, new_paths_map)
+migrated_bug_ids, impacted_count = auto_migrate_paths_after_refactor(old_paths, new_paths_map)
 print(f"✅ 已自动更新 {len(migrated_bug_ids)} 个 Bug 的路径：{', '.join([f'#{bid}' for bid in migrated_bug_ids])}")
+if impacted_count > 0:
+    print(f"✅ 已自动更新 {impacted_count} 条影响关系中的路径")
 ```
 
 **输出格式**：
 ```
 ✅ 检测到重构：src/auth/ → src/modules/auth/
 ✅ 已自动更新 3 个 Bug 的路径：#42, #38, #15
+✅ 已自动更新 2 条影响关系中的路径
 ```
 
 **注意事项**：

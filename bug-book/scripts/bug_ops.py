@@ -533,6 +533,26 @@ def update_bug_recalls(bug_id: int, new_recalls: list[str]) -> None:
         conn.commit()
 
 
+def update_impacted_paths(old_path: str, new_path: str) -> int:
+    """批量更新 bug_impacts 表中的 impacted_path。
+    
+    Args:
+        old_path: 旧路径
+        new_path: 新路径
+    
+    Returns:
+        更新的记录数
+    """
+    _logger.info("update_impacted_paths: old=%s new=%s", old_path, new_path)
+    with get_conn_ctx() as conn:
+        result = conn.execute(
+            "UPDATE bug_impacts SET impacted_path = ? WHERE impacted_path = ?",
+            (new_path, old_path),
+        )
+        conn.commit()
+        return result.rowcount
+
+
 def add_recall(bug_id: int, pattern: str) -> None:
     """添加 autoRecall 匹配模式。"""
     _logger.info("add_recall: id=%d pattern=%s", bug_id, pattern)

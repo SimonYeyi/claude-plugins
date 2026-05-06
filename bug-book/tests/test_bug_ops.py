@@ -877,6 +877,39 @@ def test_analyze_impact_patterns():
     assert cart_pattern["impact_count"] == 2
 
 
+def test_update_impacted_paths():
+    """TC-M09: 批量更新影响关系中的路径"""
+    bug_id, _ = add_bug(title="路径迁移测试", phenomenon="", verified=True)
+    
+    # 添加多个影响记录
+    add_impact(source_bug_id=bug_id, impacted_path="src/old/auth.ts", severity=8)
+    add_impact(source_bug_id=bug_id, impacted_path="src/old/session.ts", severity=7)
+    add_impact(source_bug_id=bug_id, impacted_path="src/other/file.ts", severity=5)
+    
+    # 更新路径：src/old/ → src/new/
+    count = update_impacted_paths("src/old/auth.ts", "src/new/auth.ts")
+    assert count == 1
+    
+    count = update_impacted_paths("src/old/session.ts", "src/new/session.ts")
+    assert count == 1
+    
+    # 验证更新结果
+    impacts = get_bug_impacts(bug_id)
+    paths = [imp["impacted_path"] for imp in impacts]
+    
+    assert "src/new/auth.ts" in paths
+    assert "src/new/session.ts" in paths
+    assert "src/other/file.ts" in paths
+    assert "src/old/auth.ts" not in paths
+    assert "src/old/session.ts" not in paths
+
+
+def test_update_impacted_paths_no_match():
+    """TC-M10: 更新不存在的路径"""
+    count = update_impacted_paths("nonexistent/path.ts", "new/path.ts")
+    assert count == 0
+
+
 # ============================================================
 # TC-N01 ~ TC-N05：路径和 recalls 管理
 # ============================================================
