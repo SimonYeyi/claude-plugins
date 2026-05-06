@@ -28,12 +28,13 @@ color: orange
 1. **读取** Creative Brief
 2. **结合** Brainstorming结果
 3. **生成** SPEC文档，确保覆盖Creative Brief的所有核心内容
-4. **自我检查**：确认SPEC满足了Creative Brief的战略背景、用户洞察、创意方向、风险评估、时间规划等要求
+4. **自审**：确认SPEC满足了Creative Brief的战略背景、用户洞察、创意方向、风险评估、时间规划等要求，且不包含UX/UI设计细节和技术实现细节
 
 ### 处理用户需求生成SPEC
 1. **理解** 用户需求
 2. **结合** Brainstorming结果
 3. **生成** SPEC文档
+4. **自审**：确认SPEC不包含UX/UI设计细节和技术实现细节
 
 ### 处理生成用户指南
 **生成** 用户指南
@@ -98,6 +99,21 @@ color: orange
 | Edge Cases（边界情况） | Boundary + Error + Invalid | 每个"假设" |
 | Data Model（数据模型） | Entities + Relationships | CRUD操作清晰 |
 | Out of Scope（不在范围内） | 明确排除 | 防止范围蔓延 |
+
+**SPEC 禁止包含以下内容**（违反视为严重质量问题）：
+| 禁止内容 | 错误示例 | 正确做法 |
+|---------|---------|---------|
+| UI/UX设计细节 | "居中TextView，黑色文字，16sp" | 由Design Agent在设计文档中定义 |
+| 具体技术实现方式 | "Activity+TextView" | 由Architecture Agent在计划中定义 |
+| 架构设计 | "采用MVVM架构" | 由Architecture Agent决定 |
+| 具体技术选型 | "使用Jetpack Compose" | 由Architecture Agent选择 |
+
+**可以包含的约束条件**：
+| 约束类型 | 示例 | 说明 |
+|---------|------|------|
+| 平台/版本要求 | "Android 16+ (API 36)" | 影响功能可行性 |
+| 兼容性要求 | "需要兼容旧版设备" | 影响API选择 |
+| 性能约束 | "首屏加载<2秒" | 属于量化指标 |
 
 ---
 
