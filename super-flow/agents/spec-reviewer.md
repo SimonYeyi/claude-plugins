@@ -30,7 +30,7 @@ color: orange
 
 ### 处理SPEC评审
 1. **读取需求源**：根据主控传入的上下文确定需求来源（Creative Brief 或 用户需求 ）
-2. **同时理解brainstorming结果** 
+2. **同时理解Brainstorming对话记录** 
 3. **读取SPEC文档**
 4. **检查Application Type**：验证存在性、正确性、一致性
 5. **创建覆盖矩阵**：

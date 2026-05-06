@@ -26,13 +26,13 @@ color: orange
 
 ### 处理Creative Brief生成SPEC
 1. **读取** Creative Brief
-2. **结合** Brainstorming结果
+2. **结合** Brainstorming对话记录
 3. **生成** SPEC文档，确保覆盖Creative Brief的所有核心内容
 4. **自审**：确认SPEC满足了Creative Brief的战略背景、用户洞察、创意方向、风险评估、时间规划等要求，且不包含UX/UI设计细节和技术实现细节
 
 ### 处理用户需求生成SPEC
 1. **理解** 用户需求
-2. **结合** Brainstorming结果
+2. **结合** Brainstorming对话记录
 3. **生成** SPEC文档
 4. **自审**：确认SPEC不包含UX/UI设计细节和技术实现细节
 

@@ -32,7 +32,7 @@
 启动创意Agent（任务：回答Brainstorming问题；输入：从Creative Brief中识别出的Brainstorming问题列表）
         │
         ▼
-启动产品Agent(任务：基于Creative Brief生成SPEC；传入：brainstorming结果) ← 阶段二：产品流程开始
+启动产品Agent(任务：基于Creative Brief生成SPEC；传入：Brainstorming对话记录) ← 阶段二：产品流程开始
         │
         ▼
 启动创意Agent确认SPEC（确认 ≠ 评审）
@@ -45,7 +45,7 @@
         └──创意Agent确认通过
                 │
                 ▼
-        启动SPEC评审Agent（任务：SPEC评审；传入：brainstorming结果）
+        启动SPEC评审Agent（任务：SPEC评审；传入：Brainstorming对话记录）
             │
             ├──不通过 → 启动产品Agent修复（循环）
             │       │

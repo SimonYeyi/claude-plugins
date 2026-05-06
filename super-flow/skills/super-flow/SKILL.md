@@ -51,7 +51,7 @@ description: "SuperFlow — full-stack autonomous development workflow. You MUST
 | 信息类型 | 示例 |
 |---------|------|
 | 任务目标 | "生成SPEC"、"评审代码"、"编写测试用例" |
-| 上下文 | 需要传入的上下文内容（如brainstorming结果、评审反馈的意见等） |
+| 上下文 | 需要传入的上下文内容（如Brainstorming对话记录、评审反馈的意见等） |
 | 文档路径 | 需要传入的文档路径（如`docs/superflow/user-authentication/spec/xxx-spec.md`） |
 
 **主控不得传递以下信息给Agent**：

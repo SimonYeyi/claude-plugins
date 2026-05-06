@@ -41,15 +41,11 @@ D. [选项D内容]
 
 ---
 
-## brainstorming对话加工
+## Brainstorming对话记录
 
-- 所有 brainstorming 对话必须记录（在上下文中交流，不写入文件）
-- 最终**转化为结构化需求统计结果**：
-  - 场景还原 → Overview（概述）+ User Stories（用户故事）
-  - 根因分析 → Overview 的 Why 部分
-  - 量化指标 → Acceptance Criteria（验收标准）
-  - 约束条件 → Technical Constraints（技术约束）或单独章节
-  - 成功标准 → Acceptance Criteria + Success Metrics（成功指标）
+- 所有 brainstorming 对话必须完整记录（在上下文中交流，不写入文件）
+- **保持原汁原味**：不加工、不转化，保留用户的原始表达和意图
+- 最终将完整的对话记录传递给 Product Agent，由 Product Agent 转化为结构化需求
 
 ---
 
