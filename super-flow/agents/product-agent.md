@@ -95,7 +95,7 @@ color: orange
 | Relationship with Existing Features（与现有功能关系） | 关系类型 + 集成方式 + 风险评估 | 如有重叠必填 |
 | User Stories（用户故事） | Role + Action + Outcome | 可测试    |
 | Acceptance Criteria（验收标准） | Given/When/Then | 具体+可测量 |
-| User Flows（用户流程） | Happy + Alternative + Error | 完整路径   |
+| User Flows（用户流程） | Happy + Alternative + Error + UX交互示意(ui-*) | 完整路径   |
 | Edge Cases（边界情况） | Boundary + Error + Invalid | 每个"假设" |
 | Data Model（数据模型） | Entities + Relationships | CRUD操作清晰 |
 | Out of Scope（不在范围内） | 明确排除 | 防止范围蔓延 |
@@ -103,7 +103,7 @@ color: orange
 **SPEC 禁止包含以下内容**（违反视为严重质量问题）：
 | 禁止内容 | 错误示例 | 正确做法 |
 |---------|---------|---------|
-| UI/UX设计细节 | "居中TextView，黑色文字，16sp" | 由Design Agent在设计文档中定义 |
+| UI细节（颜色、字号、间距等） | "居中TextView，黑色文字，16sp" | 由Design Agent在设计文档中定义 |
 | 具体技术实现方式 | "Activity+TextView" | 由Architecture Agent在计划中定义 |
 | 架构设计 | "采用MVVM架构" | 由Architecture Agent决定 |
 | 具体技术选型 | "使用Jetpack Compose" | 由Architecture Agent选择 |
@@ -269,11 +269,6 @@ AC-1: User should be able to checkout quickly
 ## 功能验收标准（确保核心流程可用）
 
 **核心原则**：每个功能的验收标准必须覆盖**完整用户旅程**，从入口到出口，确保程序可用。
-
-**重要区分**：SPEC只定义**功能和业务逻辑**的验收标准，**不包含UI/视觉设计细节**。
-- ✅ SPEC应该写："游戏结束时显示胜利界面，包含最终得分和重新开始按钮"
-- ❌ SPEC不应该写："胜利界面使用#4CAF50绿色背景，按钮圆角8px"
-- ✅ Design应该写："胜利界面居中显示，使用#4CAF50绿色背景，按钮圆角8px，点击有缩放动画"
 
 ### 强制检查清单（每个功能必须包含）
 
