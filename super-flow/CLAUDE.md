@@ -1,6 +1,50 @@
 # CLAUDE.md — super-flow
 
-> @`skills/super-flow/SKILL.md`
+## Git 提交规范
+
+**核心原则**：每次提交必须是原子性的，且描述清晰。
+
+**真实性要求**：Commit message 必须与实际修改内容存在真实映射关系。在生成 message 前，必须先核实 `git diff` 的实际变更，严禁仅凭过往记忆或推断编写 message。
+
+**重要限制**：**只提交不推送**（`git commit` 但不 `git push`），由用户决定何时推送。
+
+**提交格式**：
+```
+<type>: <subject>
+
+<body>
+```
+
+**Type 类型**：`feat`(新功能) | `fix`(Bug修复) | `docs`(文档) | `refactor`(重构) | `style`(格式) | `test`(测试) | `chore`(构建)
+
+**示例**：
+
+| 类型 | 正确示例 | 错误示例 |
+|------|----------|----------|
+| feat | `git commit -m "feat: 增加用户登录功能"` | `git commit -m "update"` |
+| fix | `git commit -m "fix: 修复支付流程中的空指针异常"` | `git commit -m "fix bug"` |
+| docs | `git commit -m "docs: 更新 API 文档中的参数说明"` | `git commit -m "修改了一些代码"` |
+| refactor | `git commit -m "refactor: 重构订单处理逻辑，提高可读性"` | - |
+
+**禁止操作**：`git push`（不要主动推送，由用户决定何时推送）
+
+**Body 可选**：对于复杂变更，在 subject 后空一行添加详细说明。
+
+---
+
+## 规范提取原则
+
+**核心规则**：发现可复用的功能、流程或模式时，主动询问用户是否写入规范。
+
+**适用场景**：
+- 重复出现的代码模式
+- 通用的业务流程
+- 常见的错误及解决方案
+- 最佳实践总结
+
+**规范要求**：言简意赅，只保留核心要点和必要示例，避免冗余描述。
+
+---
 
 ## 流程设计
 
