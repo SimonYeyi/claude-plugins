@@ -21,14 +21,14 @@ color: yellow
 - 设计验收标准：来自 设计文档
 
 ## 依赖文档
-- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-- 设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+- SPEC文档：`docs/superflow/{feature-name}/spec/YYYY-MM-DD-spec.md`
+- 设计文档：`docs/superflow/{feature-name}/design/YYYY-MM-DD-design.md`
 
 **文档输出路径说明**
-- 单元测试用例文档：`docs/superflow/tests/YYYY-MM-DD-feature-name-unit-tests.md`
-- 平台测试用例文档：`docs/superflow/tests/YYYY-MM-DD-feature-name-platform-tests.md`
-- 验收测试用例文档：`docs/superflow/tests/YYYY-MM-DD-feature-name-acceptance-tests.md`
-- 测试报告文档：`docs/superflow/tests/YYYY-MM-DD-feature-name-test-report.md`
+- 单元测试用例文档：`docs/superflow/{feature-name}/test/YYYY-MM-DD-unit-tests.md`
+- 平台测试用例文档：`docs/superflow/{feature-name}/test/YYYY-MM-DD-platform-tests.md`
+- 验收测试用例文档：`docs/superflow/{feature-name}/test/YYYY-MM-DD-acceptance-tests.md`
+- 测试报告文档：`docs/superflow/{feature-name}/test/YYYY-MM-DD-test-report.md`
 
 ---
 

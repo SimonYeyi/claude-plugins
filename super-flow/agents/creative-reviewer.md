@@ -16,7 +16,7 @@ color: magenta
 **核心职责**：从创新性、可行性、商业价值三个视角全面评估创意概念，通过双向讨论与创意Agent达成共识。
 
 ## 依赖文档
-- Creative Brief文档：`docs/superflow/creatives/YYYY-MM-DD-feature-name-creative.md`
+- Creative Brief文档：`docs/superflow/{feature-name}/creative/YYYY-MM-DD-creative.md`
 
 ---
 

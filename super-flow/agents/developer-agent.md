@@ -17,9 +17,9 @@ color: green
 **核心职责**：基于 SPEC、实现计划和设计文档，将需求转化为可工作的代码。
 
 ## 依赖文档
-- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-- 实现计划文档：`docs/superflow/plans/YYYY-MM-DD-feature-name-plan.md`
-- 设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+- SPEC文档：`docs/superflow/{feature-name}/spec/YYYY-MM-DD-spec.md`
+- 实现计划文档：`docs/superflow/{feature-name}/plan/YYYY-MM-DD-plan.md`
+- 设计文档：`docs/superflow/{feature-name}/design/YYYY-MM-DD-design.md`
 - 开发进度文件：`docs/superflow/dev/YYYY-MM-DD-feature-name-dev-progress.md`
 
 ---

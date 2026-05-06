@@ -52,7 +52,7 @@ description: "SuperFlow — full-stack autonomous development workflow. You MUST
 |---------|------|
 | 任务目标 | "生成SPEC"、"评审代码"、"编写测试用例" |
 | 上下文 | 需要传入的上下文内容（如brainstorming结果、评审反馈的意见等） |
-| 文档路径 | 需要传入的文档路径（如`docs/superflow/specs/xxx-spec.md`） |
+| 文档路径 | 需要传入的文档路径（如`docs/superflow/user-authentication/spec/xxx-spec.md`） |
 
 **主控不得传递以下信息给Agent**：
 | 禁止类型 | 错误示例 | 正确做法 |
@@ -68,7 +68,7 @@ description: "SuperFlow — full-stack autonomous development workflow. You MUST
 ```
 任务：[任务目标]
 上下文：[需要传入的上下文内容]
-文档路径：[需要传入的文档路径，如docs/superflow/specs/xxx-spec.md]
+文档路径：[需要传入的文档路径，如docs/superflow/user-authentication/spec/xxx-spec.md]
 ```
 
 **主控信息传递检查**
@@ -156,45 +156,45 @@ description: "SuperFlow — full-stack autonomous development workflow. You MUST
 
 ### 产物目录结构
 
-所有产出文件统一放在项目根目录的 `docs/superflow/` 下：
+所有产出文件统一放在项目根目录的 `docs/superflow/{feature-name}/` 下：
 
 ```
 docs/superflow/
-├── specs/             
-│   ├── YYYY-MM-DD-feature-name-spec.md         # SPEC文档
-│   └── YYYY-MM-DD-feature-name-user-guide.md   # 用户指南
-├── plans/              # 实现计划
-│   └── YYYY-MM-DD-feature-name-plan.md
-├── designs/            # UX/UI 设计文档
-│   └── YYYY-MM-DD-feature-name-design.md
-├── creatives/         # 创意文档
-│   └── YYYY-MM-DD-feature-name-creative.md
-├── tests/              # 测试用例
-│   ├── YYYY-MM-DD-feature-name-unit-tests.md       # 单元测试用例
-│   ├── YYYY-MM-DD-feature-name-platform-tests.md # 平台测试用例
-│   ├── YYYY-MM-DD-feature-name-acceptance-tests.md # 验收测试用例
-│   └── YYYY-MM-DD-feature-name-test-report.md     # 测试报告
+└── {feature-name}/              # 功能根目录（以SPEC的feature-name为准）
+    ├── spec/                    # SPEC文档
+    │   ├── YYYY-MM-DD-spec.md         # SPEC文档
+    │   └── YYYY-MM-DD-user-guide.md   # 用户指南
+    ├── plan/                    # 实现计划
+    │   └── YYYY-MM-DD-plan.md
+    ├── design/                  # UX/UI 设计文档
+    │   └── YYYY-MM-DD-design.md
+    ├── creative/                # 创意文档
+    │   └── YYYY-MM-DD-creative.md
+    └── test/                    # 测试用例
+        ├── YYYY-MM-DD-unit-tests.md       # 单元测试用例
+        ├── YYYY-MM-DD-platform-tests.md   # 平台测试用例
+        ├── YYYY-MM-DD-acceptance-tests.md # 验收测试用例
+        └── YYYY-MM-DD-test-report.md      # 测试报告
 ```
 
 ### feature-name 命名规则
 
-**核心原则**：以SPEC文档的feature-name为唯一基准，所有其他文档必须使用相同的feature-name。
+**核心原则**：以SPEC文档确定的feature-name为唯一基准，作为功能根目录名，所有相关文档都放在该目录下。
 
-**重命名规则**：
-1. 以SPEC文档的feature-name的命名为基准
-2. 如发现其他文档使用了不同的feature-name，主控需执行重命名操作
-3. **只重命名文件，不修改文件内容**
-
-**示例**：
+**目录结构示例**：
 ```
-SPEC文档：2026-04-28-user-authentication-spec.md
-                    ↓ feature-name = "user-authentication"
-
-所有其他文档必须使用相同的 feature-name：
-✓ 2026-04-28-user-authentication-plan.md
-✓ 2026-04-28-user-authentication-design.md
-✓ 2026-04-28-user-authentication-unit-tests.md
-✗ 2026-04-28-auth-plan.md  （错误：feature-name不一致）
+docs/superflow/
+└── user-authentication/          # feature-name = "user-authentication"
+    ├── spec/
+    │   ├── 2026-04-28-spec.md
+    │   └── 2026-04-28-user-guide.md
+    ├── plan/
+    │   └── 2026-04-28-plan.md
+    ├── design/
+    │   └── 2026-04-28-design.md
+    └── test/
+        ├── 2026-04-28-unit-tests.md
+        └── 2026-04-28-test-report.md
 ```
 
 ### 清理多余产物规则

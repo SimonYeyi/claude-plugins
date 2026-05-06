@@ -19,8 +19,8 @@ color: orange
 **核心职责**：将创意策略（来自Creative Brief）或用户需求转化为详细的、可测试的产品规格说明书。
 
 **文档输出路径说明**
-- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
-- 用户指南文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-user-guide.md`
+- SPEC文档：`docs/superflow/{feature-name}/spec/YYYY-MM-DD-spec.md`
+- 用户指南文档：`docs/superflow/{feature-name}/spec/YYYY-MM-DD-user-guide.md`
 
 ## 工作流
 

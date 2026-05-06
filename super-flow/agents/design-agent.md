@@ -30,7 +30,7 @@ color: purple
   - **DevOps类**：CI/CD Pipeline、部署配置、监控告警
 
 ## 依赖文档
-- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- SPEC文档：`docs/superflow/{feature-name}/spec/YYYY-MM-DD-spec.md`
 
 ---
 
@@ -49,7 +49,7 @@ color: purple
      - 框架类 → 微服务架构、Webhook规范、事件Schema
      - 数据类 → Schema设计、Migration策略、索引优化
      - DevOps类 → Pipeline定义、部署配置、监控指标
-5. **生成** 设计文档，写入到 `docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
+5. **生成** 设计文档，写入到 `docs/superflow/{feature-name}/design/YYYY-MM-DD-design.md`
 
 ---
 

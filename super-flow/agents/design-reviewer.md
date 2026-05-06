@@ -30,8 +30,8 @@ color: purple
   - **数据类**：ERD完整性、索引优化、Migration策略、数据验证
 
 ## 依赖文档
-- UX/UI设计文档：`docs/superflow/designs/YYYY-MM-DD-feature-name-design.md`
-- SPEC文档：`docs/superflow/specs/YYYY-MM-DD-feature-name-spec.md`
+- UX/UI设计文档：`docs/superflow/{feature-name}/design/YYYY-MM-DD-design.md`
+- SPEC文档：`docs/superflow/{feature-name}/spec/YYYY-MM-DD-spec.md`
 
 ---
 
