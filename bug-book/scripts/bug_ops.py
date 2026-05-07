@@ -1189,11 +1189,36 @@ def recall_by_path_full(file_path: str, limit: int = RECALL_LIMIT) -> dict[str, 
     
     # 反向：查询这个文件相关的 bugs
     related_bugs = recall_by_path(file_path, limit)
-    
-    # 为每个 bug 添加 impacts 字段
-    for bug in related_bugs:
-        bug["impacts"] = get_bug_impacts(bug["id"])
-    
+
+    # 批量查询所有 related_bugs 的 impacts（一次 IN 查询替代 N 次循环查询）
+    bug_ids = [bug["id"] for bug in related_bugs]
+    if bug_ids:
+        with get_conn_ctx() as conn:
+            rows = conn.execute(
+                """
+                SELECT source_bug_id, impacted_path, severity, description
+                FROM bug_impacts
+                WHERE source_bug_id IN ({})
+                ORDER BY severity DESC
+                """.format(",".join("?" * len(bug_ids))),
+                bug_ids,
+            ).fetchall()
+        impacts_map: dict[int, list[dict[str, Any]]] = {}
+        for row in rows:
+            bug_id = row[0]
+            if bug_id not in impacts_map:
+                impacts_map[bug_id] = []
+            impacts_map[bug_id].append({
+                "impacted_path": row[1],
+                "severity": row[2],
+                "description": row[3],
+            })
+        for bug in related_bugs:
+            bug["impacts"] = impacts_map.get(bug["id"], [])
+    else:
+        for bug in related_bugs:
+            bug["impacts"] = []
+
     return {
         "impacted_by": impacted_by,
         "related_bugs": related_bugs,
