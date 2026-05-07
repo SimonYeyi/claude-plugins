@@ -1144,6 +1144,41 @@ def get_bug_impacts(bug_id: int) -> list[dict[str, Any]]:
         ]
 
 
+def recall_by_path_full(file_path: str, limit: int = RECALL_LIMIT) -> dict[str, Any]:
+    """按路径召回完整的上下文信息（包括正向和反向影响）。
+    
+    一次性获取修改文件前需要的所有信息：
+    1. 哪些 bugs 曾影响过这个文件（避免重蹈覆辙）
+    2. 这个文件相关的 bugs 会影响哪些其他模块（预警连锁反应）
+    
+    Args:
+        file_path: 文件路径
+        limit: 返回数量限制
+    
+    Returns:
+        {
+            "impacted_by": [...],      # 正向：哪些 bugs 曾影响过这个文件
+            "related_bugs": [...]      # 反向：这个文件相关的 bugs 及其影响
+        }
+    """
+    _logger.info("recall_by_path_full: file_path=%s limit=%d", file_path, limit)
+    
+    # 正向：查询哪些 bugs 曾影响过这个文件
+    impacted_by = get_impacted_bugs(file_path, limit)
+    
+    # 反向：查询这个文件相关的 bugs
+    related_bugs = recall_by_path(file_path, limit)
+    
+    # 为每个 bug 添加 impacts 字段
+    for bug in related_bugs:
+        bug["impacts"] = get_bug_impacts(bug["id"])
+    
+    return {
+        "impacted_by": impacted_by,
+        "related_bugs": related_bugs,
+    }
+
+
 def delete_impact(impact_id: int) -> None:
     """删除影响记录。"""
     _logger.info("delete_impact: id=%d", impact_id)

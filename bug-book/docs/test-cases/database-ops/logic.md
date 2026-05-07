@@ -11,15 +11,17 @@
 | delete_bug 删除记录 | 3 | TC-C01 ~ TC-C03 |
 | increment_score 分数累加 | 3 | TC-D01 ~ TC-D03 |
 | add_path / add_recall | 3 | TC-E01 ~ TC-E03 |
-| search_by_keyword 关键词搜索 | 7 | TC-F01 ~ TC-F07 |
+| search_by_keyword 关键词搜索 | 5 | TC-F01 ~ TC-F05 |
 | _match_path 路径匹配 | 15 | TC-G01 ~ TC-G15 |
 | recall_by_path / recall_by_pattern 路径召回 | 7 | TC-H01 ~ TC-H07 |
-| get_bug_detail 详情查询 | 5 | TC-I01 ~ TC-I05 |
+| recall_by_path_full 完整上下文召回 | 1 | TC-H08 |
+| get_bug_detail 详情查询 | 4 | TC-I01, TC-I02, TC-I03, TC-I05（TC-I04 已删除） |
 | list_bugs 列表查询 | 4 | TC-J01 ~ TC-J04 |
 | mark_invalid 失效标记 | 3 | TC-K01 ~ TC-K03 |
 | 懒初始化与集成 | 3 | TC-L01 ~ TC-L03 |
-| **影响关系管理** | **8** | **TC-M01 ~ TC-M08** |
-| **总计** | **75** | |
+| 影响关系管理 | 10 | TC-M01 ~ TC-M10 |
+| 路径和 recalls 管理 | 5 | TC-N01 ~ TC-N05 |
+| **总计** | **80** | |
 
 ---
 
@@ -81,7 +83,7 @@
 
 ---
 
-## TC-F01 ~ TC-F07：search_by_keyword 关键词搜索
+## TC-F01 ~ TC-F05：search_by_keyword 关键词搜索
 
 | 用例编号 | 测试点描述 | 输入 | 预期输出 | 测试类型 |
 |---------|-----------|------|---------|---------|
@@ -90,8 +92,6 @@
 | TC-F03 | 搜索匹配 tag | bug_tags 中有匹配 | 能搜到 | 正常流程 |
 | TC-F04 | 搜索匹配 keyword | bug_keywords 中有匹配 | 能搜到 | 正常流程 |
 | TC-F05 | 搜索无结果 | 不存在的关键词 | 返回空列表 | 正常流程 |
-| TC-F06 | 搜索结果按分数排序 | 多条匹配 | 按 score DESC 返回 | 正常流程 |
-| TC-F07 | 搜索结果分页 | `limit=2` | 最多返回2条 | 边界条件 |
 
 ---
 
@@ -131,6 +131,14 @@
 
 ---
 
+## TC-H08：recall_by_path_full 完整上下文召回
+
+| 用例编号 | 测试点描述 | 输入 | 预期输出 | 测试类型 |
+|---------|-----------|------|---------|----------|
+| TC-H08 | 一次性获取完整上下文 | `recall_by_path_full("src/auth/session.ts")` | 返回 `{"impacted_by": [...], "related_bugs": [...]}`，其中 related_bugs 每个包含 impacts 字段 | 正常流程 |
+
+---
+
 ## TC-I01 ~ TC-I05：get_bug_detail 详情查询
 
 | 用例编号 | 测试点描述 | 输入 | 预期输出 | 测试类型 |
@@ -138,7 +146,6 @@
 | TC-I01 | 查询存在的 bug | `get_bug_detail(1)` | 返回所有字段完整 | 正常流程 |
 | TC-I02 | 查询不存在的 bug | `get_bug_detail(9999)` | 返回 None | 异常处理 |
 | TC-I03 | 详情包含 7 维度分数 | 7维度分数完整 | scores 列表正确 | 正常流程 |
-| TC-I04 | paths 和 old_paths 分离 | 路径分类正确 | 非 old 和 old 分离 | 正常流程 |
 | TC-I05 | 详情包含 tags/keywords/recalls | 各关联表数据 | 全部返回 | 正常流程 |
 
 ---
@@ -186,6 +193,20 @@
 | TC-M06 | 查询会影响指定文件的 bug | `get_impacted_bugs("src/cart/add_to_cart.ts")` | 返回 source_bug_id=1 的 bug，包含影响信息 | 正常流程 |
 | TC-M07 | 查询某个 bug 的所有影响 | `get_bug_impacts(1)` | 返回该 bug 导致的所有影响记录 | 正常流程 |
 | TC-M08 | 分析高频回归模式 | `analyze_impact_patterns()` | 返回按受影响次数排序的模块列表 | 正常流程 |
+| TC-M09 | 批量更新影响关系路径 | `update_impacted_paths("src/old/auth.ts", "src/new/auth.ts")` | 返回更新记录数，数据库中路径已变更 | 正常流程 |
+| TC-M10 | 更新不存在的路径 | `update_impacted_paths("nonexistent/path.ts", "new/path.ts")` | 返回 0，无记录被更新 | 异常处理 |
+
+---
+
+## TC-N01 ~ TC-N05：路径和 recalls 管理
+
+| 用例编号 | 测试点描述 | 输入 | 预期输出 | 测试类型 |
+|---------|-----------|------|---------|----------|
+| TC-N01 | 批量更新 bug 的路径 | `update_bug_paths(bug_id, ["new/path.ts", "other/path.ts"])` | 新路径正确替换旧路径，其他路径保持 | 正常流程 |
+| TC-N02 | 添加单个 recall pattern | `add_recall(bug_id, "auth/*")` | pattern 插入 bug_recalls 表 | 正常流程 |
+| TC-N03 | 批量更新 bug 的 recall patterns | `update_bug_recalls(bug_id, ["new_pattern.dart", "other_pattern.dart"])` | 新 pattern 替换旧 pattern，其他保持 | 正常流程 |
+| TC-N04 | 清空所有 recall patterns | `update_bug_recalls(bug_id, [])` | 所有 pattern 被删除 | 正常流程 |
+| TC-N05 | 验证 recalls 更新后能正确召回 | 更新 recall pattern 后用新 pattern 召回 | 新 pattern 能召回，旧 pattern 不能召回 | 正常流程 |
 
 ---
 

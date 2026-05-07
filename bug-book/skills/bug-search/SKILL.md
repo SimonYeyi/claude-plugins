@@ -113,91 +113,135 @@ return relevant_bugs
 
 ### 2. 按路径召回
 
-当 AI 即将修改某个文件时，自动查询该文件相关的历史 bugs：
-
-#### 2.1 按具体文件路径召回
+当 AI 即将修改某个文件时，使用 `recall_by_path_full()` 自动查询该文件相关的历史 bugs及影响关系：
 
 ```python
-from scripts.bug_ops import recall_by_path
+from scripts.bug_ops import recall_by_path_full
 
-# 查询 src/auth/login.ts 相关的 bugs
-results = recall_by_path("src/auth/login.ts", limit=10)
+# 查询 src/auth/session.ts 相关的历史 bugs及影响关系
+result = recall_by_path_full("src/auth/session.ts", limit=10)
 ```
 
-**匹配规则：**
-- 精确匹配：`src/auth/login.ts` → 匹配记录中 paths 包含该文件的 bugs
-- 模式匹配：`src/auth/*` → 匹配 autoRecall 中包含 `auth/*` 的 bugs
-
-#### 2.2 按影响关系召回
-
-影响关系召回有两个使用场景：
-
-**场景 A：展示 Bug 的影响范围（主要场景）**
-
-当 AI 通过路径召回找到某个 Bug 时，应该查询该 Bug 曾影响过的其他模块，给出警告：
-
+**返回结构：**
 ```python
-from scripts.bug_ops import recall_by_path, get_bug_impacts
-
-# 1. 路径召回找到 Bug #42
-bugs = recall_by_path("src/auth/session.ts", limit=10)
-
-# 2. 对每个 Bug，查询其影响关系
-for bug in bugs:
-    impacts = get_bug_impacts(bug["id"])
-    if impacts:
-        # 3. 展示给用户
-        print(f"⚠️ Bug #{bug['id']} 的修复曾影响过以下模块：")
-        for impact in impacts:
-            print(f"  - {impact['impacted_path']} (严重度 {impact['severity']}/10)")
-            print(f"    描述：{impact['description']}")
+{
+    "impacted_by": [      # 正向：哪些 bugs 的修复曾影响过这个文件
+        {
+            "id": 35,                      # 影响此文件的 Bug ID
+            "title": "购物车状态判断逻辑错误",  # Bug 标题
+            "phenomenon": "添加商品到购物车后显示数量为0",  # 问题现象
+            "score": 48.2,                 # Bug 评分
+            "status": "resolved",          # 状态
+            "verified": True,              # 是否已验证
+            "root_cause": "session 持久化修改导致用户状态获取时机错误",  # 根因
+            "solution": "调整 session 读取顺序，先获取用户信息再判断购物车",  # 解决方案
+            "test_case": "登录后添加商品到购物车，检查数量显示",  # 测试用例
+            "severity": 8,                 # 对此文件的影响严重度 (1-10)
+            "description": "修改 auth/session.ts 的持久化逻辑时，未考虑到 cart 模块依赖 session 的用户状态"  # 如何影响此文件的
+        }
+    ],
+    "related_bugs": [     # 反向：这个文件相关的 bugs 及其对其他模块的影响
+        {
+            "id": 42,                      # 与当前文件相关的 Bug ID
+            "title": "session 过期页面空白",
+            "phenomenon": "登录30分钟后刷新页面显示空白",
+            "score": 56.5,
+            "status": "resolved",
+            "verified": True,
+            "root_cause": "session cookie 未设置 maxAge",
+            "solution": "添加 cookie: { maxAge: 30 * 60 * 1000 }",
+            "test_case": "登录后等待30分钟再刷新",
+            "impacts": [  # 该 bug 曾影响的其他模块（预警连锁反应）
+                {
+                    "impacted_path": "src/cart/",  # 受影响的路径
+                    "severity": 8,                 # 影响严重度
+                    "description": "修改 session 持久化导致购物车的用户状态判断失效"
+                },
+                {
+                    "impacted_path": "src/order/checkout.ts",
+                    "severity": 6,
+                    "description": "session 过期时间调整导致订单结算页频繁登出"
+                }
+            ]
+        }
+    ]
+}
 ```
 
-**返回示例：**
-```python
-[
-    {
-        "impacted_path": "src/cart/",
-        "severity": 8,
-        "description": "修改 session 持久化导致购物车的用户状态判断失效"
-    },
-    {
-        "impacted_path": "src/order/checkout.ts",
-        "severity": 6,
-        "description": "session 过期时间调整导致订单结算页频繁登出"
-    }
-]
-```
+**字段使用说明：**
+
+**Bug 基础信息：**
+- `id`: Bug 唯一标识，用于引用和追踪历史记录
+- `title`: 简短标题，快速了解问题类型
+- `phenomenon`: 问题表现，帮助识别是否与当前问题相似
+- `score`: 综合评分（0-100+），基于重要性、复杂度、影响范围等，分数越高越需要关注
+- `status`: 
+  - `active`: 问题尚未解决，需谨慎参考
+  - `resolved`: 问题已修复，可参考解决方案
+  - `invalid`: 功能已移除或不是问题，可忽略
+- `verified`: 
+  - `True`: 用户已确认根因和方案正确，可信度高
+  - `False`: AI 预估的根因和方案，需人工验证，谨慎参考
+
+**Bug 详细信息：**
+- `root_cause`: 问题的根本原因，帮助理解问题本质，避免类似错误
+- `solution`: 具体的修复方案，可直接参考或借鉴思路
+- `test_case`: 验证修复的测试方法，确保修改后问题不再出现
+
+**影响关系信息：**
+- `severity`: 影响严重度 (1-10)，数值越大影响越严重，帮助评估修改风险
+- `description`: 详细描述该 bug 如何影响目标模块，理解影响机制
+- `impacted_path`: 受影响的文件路径，预警修改时可能需要检查的模块
 
 **展示格式：**
 ```markdown
-⚠️ **历史 Bug 召回**
+🔴 **历史 Bug 召回 - auth/session.ts**
 
+**1️⃣ 曾影响此文件的 Bugs：**
+- **Bug #35**: 购物车状态判断逻辑错误 (score: 48.2) ✅ 已验证
+  - ⚠️ 该 bug 的修复曾导致此文件出现问题！
+  - **现象**：添加商品到购物车后显示数量为0
+  - **根因**：session 持久化修改导致用户状态获取时机错误
+  - **解决**：调整 session 读取顺序，先获取用户信息再判断购物车
+  - **影响严重度**：8/10
+  - **影响描述**：修改 auth/session.ts 的持久化逻辑时，未考虑到 cart 模块依赖 session 的用户状态
+
+**2️⃣ 此文件相关 Bugs 的影响范围：**
 - **Bug #42**: session 过期页面空白 (score: 56.5) ✅ 已验证
-  - 相关文件：src/auth/session.ts
-  - 🔴 **注意**：此 Bug 的修复曾导致以下模块出问题：
+  - **现象**：登录30分钟后刷新页面显示空白
+  - **根因**：session cookie 未设置 maxAge
+  - **解决**：添加 cookie: { maxAge: 30 * 60 * 1000 }
+  - 🔴 可能影响以下模块：
     - src/cart/ (严重度 8/10)
       - 描述：修改 session 持久化导致购物车的用户状态判断失效
     - src/order/checkout.ts (严重度 6/10)
       - 描述：session 过期时间调整导致订单结算页频繁登出
 
-💡 **建议**：修改时务必检查是否会影响 cart/ 和 order/ 模块的用户状态逻辑
+💡 **提醒**：
+- ⚠️ 历史警示：之前修改此文件曾导致购物车状态判断错误（Bug #35），修改时需特别注意 session 与 cart 的依赖关系
+- 🔴 影响预警：当前文件相关的问题可能影响 cart/ 和 order/ 模块，修改后务必检查这些模块的用户状态逻辑
 ```
 
----
+### 2.1 按 autoRecall 模式召回
 
-**场景 B：跨模块预警（次要场景）**
-
-当 AI 即将修改某个文件时，查询哪些历史 bug 的修复曾影响过该文件：
+当用户想查询某个模块或功能相关的 bugs 时，使用 `recall_by_pattern()` 按 autoRecall 模式匹配：
 
 ```python
-from scripts.bug_ops import get_impacted_bugs
+from scripts.bug_ops import recall_by_pattern
 
-# 查询哪些 bug 的修复会影响 src/cart/add_to_cart.ts
-impacted = get_impacted_bugs("src/cart/add_to_cart.ts", limit=10)
+# 查询 auth 模块相关的所有 bugs
+results = recall_by_pattern("auth", limit=20)
+
+# 查询 src/views 目录下所有 bugs
+results = recall_by_pattern("src/views", limit=30)
 ```
 
-**返回示例：**
+**匹配规则：**
+- 前缀匹配：`auth` → 匹配 autoRecall 中包含 `auth/*`、`auth/**` 等模式的 bugs
+- 通配符支持：`src/views/*` → 精确匹配该模式
+- 多段匹配：`src/auth` → 匹配 `src/auth/*` 等
+
+**返回结构：**
 ```python
 [
     {
@@ -205,54 +249,15 @@ impacted = get_impacted_bugs("src/cart/add_to_cart.ts", limit=10)
         "title": "session 过期页面空白",
         "phenomenon": "登录30分钟后刷新页面显示空白",
         "score": 56.5,
-        "status": "resolved",
-        "verified": True,
-        "root_cause": "session cookie 未设置 maxAge",
-        "solution": "添加 cookie: { maxAge: 30 * 60 * 1000 }",
-        "test_case": "登录后等待30分钟再刷新",
-        "severity": 8,
-        "description": "修改 session 持久化导致购物车的用户状态判断失效",
+        "status": "resolved"
     }
 ]
 ```
 
 **使用场景：**
-- AI 准备修改 cart 模块，想知道之前有哪些 bug 的修复影响过这个模块
-- 用户说“小心别又搞坏了购物车”，AI 查询影响关系给出警告
-
-**展示格式：**
-```markdown
-🔴 **影响链警告**
-
-以下 bug 的修复曾影响过你即将修改的文件：
-
-- **Bug #42**: session 过期页面空白 (score: 56.5) ✅ 已验证
-  - ⚠️ 该 bug 的修复曾导致购物车模块出现问题！
-  - 影响路径：src/cart/add_to_cart.ts
-  - 严重度：8/10
-  - 描述：修改 session 持久化导致购物车的用户状态判断失效
-
-💡 **建议**：修改时务必检查与 auth/session 的交互逻辑
-```
-
-#### 2.3 按 autoRecall 模式召回
-
-```python
-from scripts.bug_ops import recall_by_pattern
-
-# AI 准备修改 src/auth/session.ts，自动召回相关 bug
-results = recall_by_pattern("src/auth/session.ts", limit=10)
-```
-
-**匹配规则：**
-- 只匹配 bug_recalls 表中的 pattern 字段
-- 支持路径前缀匹配：`auth/*` 可匹配 `auth/session.ts`、`auth/login.ts` 等
-- **注意**：这不是全文搜索，而是基于文件路径的智能召回
-
-**使用场景：**
-- ✅ AI 准备修改某个文件时，自动检查是否有相关的历史bug
-- ✅ 重构代码前，了解该模块的历史问题
-- ❌ **不适合**用户说"帮我找 session 相关的bug"（应使用关键词搜索或标签搜索）
+- 查看某个模块的历史问题概览
+- 了解某个功能的 bug 分布
+- 评估模块稳定性
 
 ### 3. 列表浏览
 

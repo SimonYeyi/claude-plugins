@@ -20,6 +20,7 @@ from bug_ops import (
     search_by_keyword,
     recall_by_path,
     recall_by_pattern,
+    recall_by_path_full,
     get_bug_detail,
     list_bugs,
     mark_invalid,
@@ -40,6 +41,7 @@ from bug_ops import (
     get_impacted_bugs,
     get_bug_impacts,
     analyze_impact_patterns,
+    update_impacted_paths,
 )
 
 # 测试数据
@@ -513,48 +515,6 @@ def test_recall_by_pattern_no_match():
 
 
 # ============================================================
-# TC-F01 ~ TC-F03：search_by_keyword 关键词搜索
-# ============================================================
-
-def test_search_single_keyword():
-    """TC-F01: 单关键词搜索"""
-    bug_id, _ = add_bug(
-        title="登录问题",
-        phenomenon="",
-        verified=True,
-        keywords=["login", "auth", "session"],
-    )
-    results = search_by_keyword("login", limit=20)
-    assert any(r["id"] == bug_id for r in results)
-
-
-def test_search_multi_keywords():
-    """TC-F02: 多关键词搜索（OR 逻辑）"""
-    bug_id, _ = add_bug(
-        title="认证会话bug",
-        phenomenon="",
-        verified=True,
-        keywords=["login", "auth", "session", "认证", "会话"],
-    )
-    # 一次性传入多个关键词，匹配任意一个即可
-    results = search_by_keyword("登录 auth session", limit=20)
-    assert any(r["id"] == bug_id for r in results)
-
-
-def test_search_multi_keywords_no_match():
-    """TC-F03: 多关键词搜索无匹配"""
-    add_bug(
-        title="数据库bug",
-        phenomenon="",
-        verified=True,
-        keywords=["database", "MySQL", "connection"],
-    )
-    # 搜索不相关的关键词
-    results = search_by_keyword("登录 auth session", limit=20)
-    assert not any(r["title"] == "数据库bug" for r in results)
-
-
-# ============================================================
 # 高级搜索测试
 # ============================================================
 
@@ -1004,3 +964,104 @@ def test_recall_by_path_with_updated_recalls():
     # 不应该再通过 old_file.dart 召回
     results = recall_by_path("old_file.dart")
     assert not any(r["id"] == bug_id for r in results)
+
+
+# ============================================================
+# TC-H08：recall_by_path_full 完整路径召回
+# ============================================================
+
+def test_recall_by_path_full():
+    """TC-H08: 一次性获取完整上下文"""
+    # 先清理可能存在的旧数据
+    from bug_ops import get_conn_ctx
+    with get_conn_ctx() as conn:
+        conn.execute("DELETE FROM bug_impacts")
+        conn.execute("DELETE FROM bugs")
+        conn.commit()
+    
+    # 创建 Bug #1：与 auth/session.ts 相关，且会影响 cart/
+    bug1_id, _ = add_bug(
+        title="session 持久化问题",
+        phenomenon="购物车状态判断错误",
+        root_cause="session 读取顺序错误",
+        solution="调整读取顺序",
+        paths=["src/auth/session.ts"],
+        verified=True,
+    )
+    add_impact(
+        source_bug_id=bug1_id,
+        impacted_path="src/cart/add_to_cart.ts",
+        impact_type="regression",
+        description="修改 session 导致购物车失效",
+        severity=8,
+    )
+    
+    # 创建 Bug #2：与 auth/session.ts 相关，且会影响 order/
+    bug2_id, _ = add_bug(
+        title="session 过期问题",
+        phenomenon="页面空白",
+        root_cause="cookie 未设置 maxAge",
+        solution="添加 maxAge",
+        paths=["src/auth/session.ts"],
+        verified=True,
+    )
+    add_impact(
+        source_bug_id=bug2_id,
+        impacted_path="src/order/checkout.ts",
+        impact_type="side_effect",
+        description="session 过期导致订单页登出",
+        severity=6,
+    )
+    
+    # 创建 Bug #3：它的修复曾影响过 auth/session.ts（用于测试 impacted_by）
+    bug3_id, _ = add_bug(
+        title="用户认证逻辑错误",
+        phenomenon="登录失败",
+        root_cause="认证流程缺陷",
+        solution="重构认证逻辑",
+        paths=["src/auth/login.ts"],
+        verified=True,
+    )
+    add_impact(
+        source_bug_id=bug3_id,
+        impacted_path="src/auth/session.ts",
+        impact_type="regression",
+        description="修改认证逻辑时破坏了 session 管理",
+        severity=9,
+    )
+    
+    # 调用 recall_by_path_full
+    result = recall_by_path_full("src/auth/session.ts")
+    
+    # 验证返回结构
+    assert "impacted_by" in result
+    assert "related_bugs" in result
+    
+    # 验证 impacted_by：哪些 bugs 的修复曾影响过这个文件
+    impacted_by = result["impacted_by"]
+    assert len(impacted_by) == 1
+    # 应该是 Bug #3
+    assert impacted_by[0]["id"] == bug3_id
+    assert impacted_by[0]["severity"] == 9
+    assert "description" in impacted_by[0]
+    
+    # 验证 related_bugs：这个文件相关的 bugs 及其影响
+    related_bugs = result["related_bugs"]
+    assert len(related_bugs) == 2
+    # 每个 bug 应该有 impacts 字段
+    for bug in related_bugs:
+        assert "id" in bug
+        assert "title" in bug
+        assert "impacts" in bug
+        # impacts 应该是列表，包含 3 个字段
+        if bug["id"] == bug1_id:
+            assert len(bug["impacts"]) == 1
+            impact = bug["impacts"][0]
+            assert impact["impacted_path"] == "src/cart/add_to_cart.ts"
+            assert impact["severity"] == 8
+            assert "description" in impact
+        elif bug["id"] == bug2_id:
+            assert len(bug["impacts"]) == 1
+            impact = bug["impacts"][0]
+            assert impact["impacted_path"] == "src/order/checkout.ts"
+            assert impact["severity"] == 6

@@ -128,22 +128,26 @@ AI 在改代码前主动查询相关 bug，主动预防而非事后补救。
 - 重构后保留 `oldPaths`，支持旧路径匹配
 - 整理时检查路径有效性，无效时提示用户更新
 
-### 双向召回设计
+### 按路径召回机制
 
-影响关系支持**双向召回**，通过组合 API 从两个方向预防回归问题：
+当 AI 修改代码时，通过 `recall_by_path_full(file_path)` 获取完整的上下文信息。
 
-**1. 正向召回（被影响方）**：修改文件时，查询"哪些历史 bug 会影响这个文件"
-- API: `get_impacted_bugs(file_path)` 
-- 场景：修改 `cart/add_to_cart.ts` 时，召回 "session bug → cart 受影响"
-- 目的：了解当前文件曾被哪些 bug 影响过，避免重蹈覆辙
+**返回结构：**
+```python
+{
+    "impacted_by": [...],      # 正向：哪些 bugs 曾影响过这个文件
+    "related_bugs": [...]      # 反向：这个文件相关的 bugs 及其影响
+}
+```
 
-**2. 反向召回（影响源）**：修改文件时，查询"这个文件的 bug 会影响哪些其他模块"
-- 实现方式：`recall_by_path(file_path)` + `get_bug_impacts(bug_id)` 组合使用
-- 场景：修改 `auth/session.ts` 时
-  1. 先通过 `recall_by_path("auth/session.ts")` 找到相关 bug（如 Bug #42）
-  2. 再通过 `get_bug_impacts(42)` 查询该 bug 影响了哪些模块（cart、order 等）
-  3. 警告用户："修改此文件可能影响 cart、order 等模块"
-- 目的：预警修改可能引发的连锁反应，提前检查受影响模块
+**使用场景：**
+修改 `auth/session.ts` 时调用 `recall_by_path_full("auth/session.ts")`：
+- **impacted_by**：警告"之前有哪些 bug 的修复影响过 auth/session.ts"
+- **related_bugs**：警告"auth/session.ts 相关的 bugs 会影响 cart、order 等模块"
+
+**性能优化：**
+- 内部组合 `get_impacted_bugs()` + `recall_by_path()` + `get_bug_impacts()`，一次调用获取完整信息
+- 批量查询避免 N+1 问题
 
 ## 组件设计
 
