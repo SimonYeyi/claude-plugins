@@ -16,7 +16,8 @@
 
 1. **先**：在 `docs/test-cases/database-ops/logic.md` 中添加测试用例（TC-XX 分类编号，如 TC-A01）
 2. **再**：在 `tests/test_bug_ops.py` 中实现对应测试代码，编号格式与文档一致
-3. **最后**：运行测试确保通过：`python -m pytest tests/test_bug_ops.py -v`
+3. **然后**：运行测试确保通过：`python -m pytest tests/test_bug_ops.py -v`
+4. **最后**：更新相关 Skill 文档中的 API 调用说明或示例（如 `skills/bug-search/SKILL.md`）
 
 文档和代码必须一一对应，每个用例编号在两侧保持一致（TC-A01 ~ TC-L03）。
 

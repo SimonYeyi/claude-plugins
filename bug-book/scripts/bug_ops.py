@@ -215,6 +215,7 @@ def _match_path(file_path: str, pattern: str) -> bool:
         if len(base_segs) > len(file_segs):
             return False
         if len(base_segs) == 1:
+            # 单段通配符：只要路径中包含该段即可
             return base_segs[0] in file_segs
         if any(p != f for p, f in zip(base_segs, file_segs)):
             return False
@@ -697,13 +698,17 @@ def _should_recall(file_path: str, bug_id: int, conn: sqlite3.Connection) -> boo
 def recall_by_pattern(pattern: str, limit: int = RECALL_LIMIT) -> list[dict[str, Any]]:
     """根据 autoRecall pattern 召回相关 bug。
     
+    用于重构场景下的兜底召回：当文件路径变化导致 recall_by_path 失败时，
+    通过模块名等更宽泛的模式召回相关 bugs。
+    
     注意：召回除 invalid 外的所有状态 Bug（active + resolved），因为已解决的 Bug 也有参考价值。
     """
     _logger.info("recall_by_pattern: pattern=%s limit=%d", pattern, limit)
     with get_conn_ctx() as conn:
         rows = conn.execute(
             """
-            SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status
+            SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status,
+                   b.verified, b.root_cause, b.solution, b.test_case
             FROM bugs b
             WHERE b.status != 'invalid'
               AND EXISTS (SELECT 1 FROM bug_recalls WHERE bug_id = b.id)
@@ -720,10 +725,26 @@ def recall_by_pattern(pattern: str, limit: int = RECALL_LIMIT) -> list[dict[str,
             patterns = [row[0] for row in conn.execute(
                 "SELECT pattern FROM bug_recalls WHERE bug_id = ?", (bug_id,)
             ).fetchall()]
-            if any(_match_path(pattern_norm, p) for p in patterns):
+            # 双向匹配：
+            # 1. 检查 pattern 是否匹配数据库中的 recall pattern（如 "auth/login.ts" 匹配 "auth/*"）
+            # 2. 检查数据库中的 recall pattern 是否匹配 pattern（如 "auth/*" 匹配 "auth"）
+            if any(_match_path(pattern_norm, p) or _match_path(p, pattern_norm) for p in patterns):
                 matched.append(r)
 
-        return [_row_to_dict(r) for r in matched[:limit]]
+        result = []
+        for r in matched[:limit]:
+            result.append({
+                "id": r[0],
+                "title": r[1],
+                "phenomenon": r[2],
+                "score": r[3],
+                "status": r[4],
+                "verified": r[5],
+                "root_cause": r[6] if len(r) > 6 else None,
+                "solution": r[7] if len(r) > 7 else None,
+                "test_case": r[8] if len(r) > 8 else None,
+            })
+        return result
 
 
 def get_bug_detail(bug_id: int) -> Optional[dict[str, Any]]:

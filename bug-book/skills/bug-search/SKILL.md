@@ -224,22 +224,29 @@ result = recall_by_path_full("src/auth/session.ts", limit=10)
 
 ### 2.1 按 autoRecall 模式召回
 
-当用户想查询某个模块或功能相关的 bugs 时，使用 `recall_by_pattern()` 按 autoRecall 模式匹配：
+当 AI 修改代码时，如果 `recall_by_path()` 返回结果较少（可能因为文件重构导致路径变化），使用 `recall_by_pattern()` 作为兜底机制进行模块级召回：
 
 ```python
-from scripts.bug_ops import recall_by_pattern
+from scripts.bug_ops import recall_by_path, recall_by_pattern
 
-# 查询 auth 模块相关的所有 bugs
-results = recall_by_pattern("auth", limit=20)
+# 第一步：尝试精确路径召回
+exact_matches = recall_by_path("auth/login.ts")
 
-# 查询 src/views 目录下所有 bugs
-results = recall_by_pattern("src/views", limit=30)
+# 第二步：如果结果较少，尝试模块级兜底召回
+if len(exact_matches) < 3:
+    module_matches = recall_by_pattern("auth", limit=20)
+    # 合并结果，去重后展示
 ```
 
-**匹配规则：**
-- 前缀匹配：`auth` → 匹配 autoRecall 中包含 `auth/*`、`auth/**` 等模式的 bugs
-- 通配符支持：`src/views/*` → 精确匹配该模式
-- 多段匹配：`src/auth` → 匹配 `src/auth/*` 等
+**使用场景：**
+- **重构兜底**：文件从 `auth/login.ts` 重构为 `user/login.ts` 后，通过模块名 `"auth"` 仍能召回相关 bugs
+- **模块概览**：查看某个模块的所有历史问题
+- **影响评估**：了解某模块的 bug 分布和稳定性
+
+**匹配规则（双向匹配）：**
+- 传入 `"auth/login.ts"` → 匹配 recalls 中包含 `"auth/*"` 的 bugs（文件路径匹配模式）
+- 传入 `"auth"` → 匹配 recalls 中包含 `"auth/*"` 或 `"auth"` 的 bugs（模块名模糊匹配）
+- 传入 `"src/auth"` → 匹配 recalls 中包含 `"src/auth"` 或 `"src/auth/*"` 的 bugs
 
 **返回结构：**
 ```python
@@ -249,7 +256,11 @@ results = recall_by_pattern("src/views", limit=30)
         "title": "session 过期页面空白",
         "phenomenon": "登录30分钟后刷新页面显示空白",
         "score": 56.5,
-        "status": "resolved"
+        "status": "resolved",
+        "verified": True,
+        "root_cause": "session cookie 未设置 maxAge",
+        "solution": "添加 cookie: { maxAge: 30 * 60 * 1000 }",
+        "test_case": "登录后等待30分钟再刷新"
     }
 ]
 ```

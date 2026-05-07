@@ -443,8 +443,9 @@ def test_match_single_to_single():
     assert _match_path("auth/login.ts", "auth") is True
 
 
+
 # ============================================================
-# TC-H01 ~ TC-H07：recall_by_path / recall_by_pattern 路径召回
+# TC-H01 ~ TC-H09：recall_by_path / recall_by_pattern 路径召回
 # ============================================================
 
 def test_recall_by_exact_path():
@@ -503,15 +504,31 @@ def test_recall_by_pattern():
         verified=True,
         recalls=["auth/*"],
     )
-    results = recall_by_pattern("auth")
+    # 传入完整文件路径，应该匹配 auth/* 模式
+    results = recall_by_pattern("auth/login.ts")
     assert any(r["id"] == bug_id for r in results)
 
 
 def test_recall_by_pattern_no_match():
     """TC-H07: recall_by_pattern 无匹配"""
     add_bug(title="nomatch", phenomenon="", verified=True, recalls=["xyz/*"])
-    results = recall_by_pattern("auth")
+    # 传入不同目录的文件路径，不应匹配
+    results = recall_by_pattern("auth/login.ts")
     assert not any(r["title"] == "nomatch" for r in results)
+
+
+def test_recall_by_pattern_bidirectional():
+    """TC-H08: recall_by_pattern 双向匹配——模块名召回"""
+    # 数据库存 auth/*，用户查模块名 auth，应该能召回
+    bug_id, _ = add_bug(
+        title="auth模块问题",
+        phenomenon="",
+        verified=True,
+        recalls=["auth/*"],
+    )
+    # 裸模块名查询，匹配 db 中的 auth/*
+    results = recall_by_pattern("auth")
+    assert any(r["id"] == bug_id for r in results)
 
 
 # ============================================================
