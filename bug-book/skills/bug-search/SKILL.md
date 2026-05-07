@@ -1,6 +1,6 @@
 ---
 name: bug-search
-description: 当需要搜索和召回历史 Bug 记录。核心触发场景：1. 用户主动搜索 Bug；2. **AI 准备修改代码前，必须调用此技能进行路径召回以检查历史报错**；3. 查询特定模块的已知缺陷。
+description: 当需要搜索和召回历史 Bug 记录。核心触发场景：1. **AI 准备修改代码前，必须调用此技能进行路径召回以检查历史报错**；2. 用户主动搜索 Bug；3. 查询特定模块的已知缺陷。
 ---
 
 # Bug Search Skill
@@ -18,107 +18,27 @@ description: 当需要搜索和召回历史 Bug 记录。核心触发场景：1.
 ```python
 import sys
 sys.path.insert(0, "{CLAUDE_PLUGIN_DIR}/bug-book")
-from scripts.bug_ops import search_by_keyword, recall_by_path, get_impacted_bugs
+from scripts.bug_ops import search_by_keyword, recall_by_path, recall_by_pattern, get_impacted_bugs
 ```
 
-## 搜索场景
+## 自动召回（改代码前必用）
 
-- 用户问"有没有 XX 相关的 bug"
-- 改代码前查询相关历史问题
-- 按文件/模块查找 bug
-- 按标签/关键词查找
+**核心原则**：AI 在修改任何代码文件前，必须调用召回 API 检查该文件的历史 bug 记录。
 
-## 搜索流程
+### 1. 按路径召回
 
-### 1. 关键词搜索
+当 AI 即将修改某个文件时，**必须使用** `recall_by_path_full()` 自动查询该文件相关的历史 bugs 及影响关系。
 
-使用 `scripts/bug_ops.py` 的 `search_by_keyword()`：
+> ⚠️ **重要**：不要使用 `recall_by_path()`，它只返回简单的 bug 列表，缺少影响关系信息，无法进行风险评估。
 
-```python
-from scripts.bug_ops import search_by_keyword
-
-# 单关键词搜索
-results = search_by_keyword("session", limit=20)
-
-# ✅ 多关键词搜索（推荐）：一次性传入多个等效关键词，OR 逻辑
-results = search_by_keyword("登录 auth session 会话", limit=20)
-```
-
-**多关键词搜索优势：**
-- ✅ **一次查询**：不需要逐个尝试，直接传入所有等效关键词
-- ✅ **OR 逻辑**：匹配任意一个关键词即可返回结果
-- ✅ **提高效率**：减少数据库查询次数
-
-**关键词提取策略：**
-
-当用户描述问题时，采用**渐进式搜索策略**：
-
-### 步骤 1：关键词搜索（首选）
-
-从上下文中提取关键词进行搜索：
-
-```python
-# 用户说：“用户表单添加有问题”
-keywords = "用户 表单 添加 user form add"
-results = search_by_keyword(keywords, limit=20)
-
-if results:
-    # 找到结果，直接返回
-    return results
-```
-
-### 步骤 2：路径推断 + 路径召回（备选）
-
-如果步骤 1 没有结果，根据用户的搜索提示词**推断相关文件路径**，再进行路径召回：
-
-```python
-# 用户说：“用户表单添加有问题”，但关键词搜不到
-# AI 推断可能的文件路径：
-# - "用户表单" → user_form.vue, user_form.tsx, UserForm.java
-# - "用户" + "表单" → components/UserForm.vue, pages/user/form.vue
-
-# 尝试路径召回
-possible_paths = ["user_form.vue", "UserForm.vue", "user/form.vue"]
-all_path_results = []
-
-for path in possible_paths:
-    path_results = recall_by_path(path, limit=10)
-    all_path_results.extend(path_results)
-```
-
-### 步骤 3：相关性筛选（关键）
-
-从路径召回的大量结果中，**AI 需要理解用户的搜索意图，判断哪些 bug 是相关的**：
-
-```python
-# 用户原始需求：“查询无法增加用户信息的问题”
-# 路径召回可能返回很多 user_form.vue 相关的 bug：
-# - Bug #1: 用户表单添加失败
-# - Bug #2: 用户表单删除按钮错位
-# - Bug #3: 用户表单查询超时
-# - Bug #4: 用户表单新增字段验证
-
-# AI 需要理解用户需求，筛选出相关的：
-# ✅ 保留：Bug #1（添加失败）、Bug #4（新增字段）
-# ❌ 排除：Bug #2（删除）、Bug #3（查询）
-
-relevant_bugs = ai_filter_by_intent(all_path_results, user_query="用户表单添加有问题")
-return relevant_bugs
-```
-
-**优势：**
-- ✅ **精准优先**：先用关键词快速定位
-- ✅ **智能 fallback**：关键词失败时，通过路径召回兜底
-- ✅ **人工筛选**：AI 根据用户意图从大量结果中识别相关 bug
-
-### 2. 按路径召回
-
-当 AI 即将修改某个文件时，使用 `recall_by_path_full()` 自动查询该文件相关的历史 bugs及影响关系：
+**函数对比：**
+- ❌ `recall_by_path()`: 仅返回与该文件相关的 bugs 列表（9个字段），**不适用于改代码前的风险评估**
+- ✅ `recall_by_path_full()`: 返回完整的上下文信息，包括 `impacted_by`（正向影响）和 `related_bugs`（反向影响），**用于风险评估**
 
 ```python
 from scripts.bug_ops import recall_by_path_full
 
-# 查询 src/auth/session.ts 相关的历史 bugs及影响关系
+# 查询 src/auth/session.ts 相关的历史 bugs 及影响关系
 result = recall_by_path_full("src/auth/session.ts", limit=10)
 ```
 
@@ -188,16 +108,20 @@ result = recall_by_path_full("src/auth/session.ts", limit=10)
 - `solution`: 具体的修复方案，可直接参考或借鉴思路
 - `test_case`: 验证修复的测试方法，确保修改后问题不再出现
 
-**影响关系信息：**
-- `severity`: 影响严重度 (1-10)，数值越大影响越严重，帮助评估修改风险
-- `description`: 详细描述该 bug 如何影响目标模块，理解影响机制
-- `impacted_path`: 受影响的文件路径，预警修改时可能需要检查的模块
+**影响关系信息（用于风险评估）：**
+- `impacted_by`: **历史警示**列表，记录之前修改其他文件时曾导致当前文件出问题的 bugs。修改当前文件时需避免重蹈覆辙。
+- `related_bugs.impacts`: **影响预警**列表，记录当前文件相关的 bugs 曾影响过的其他模块。修改后需检查这些受影响模块。
+- `severity`: 影响严重度 (1-10)，数值越大影响越严重。优先关注 `verified=True` 且 `severity>=7` 的高风险记录。
+- `description`: 详细描述该 bug 如何影响目标模块，帮助理解影响机制。
+- `impacted_path`: 受影响的文件路径，预警修改时可能需要检查的模块。
+
+> ⚠️ **重要**：若 `impacted_by` 或 `impacts` 非空，必须在修改前分析依赖关系，修改后验证相关模块。
 
 **展示格式：**
 ```markdown
 🔴 **历史 Bug 召回 - auth/session.ts**
 
-**1️⃣ 曾影响此文件的 Bugs：**
+**1️⃣ 曾影响此文件的 Bugs（历史警示）：**
 - **Bug #35**: 购物车状态判断逻辑错误 (score: 48.2) ✅ 已验证
   - ⚠️ 该 bug 的修复曾导致此文件出现问题！
   - **现象**：添加商品到购物车后显示数量为0
@@ -206,7 +130,7 @@ result = recall_by_path_full("src/auth/session.ts", limit=10)
   - **影响严重度**：8/10
   - **影响描述**：修改 auth/session.ts 的持久化逻辑时，未考虑到 cart 模块依赖 session 的用户状态
 
-**2️⃣ 此文件相关 Bugs 的影响范围：**
+**2️⃣ 此文件相关 Bugs 的影响范围（影响预警）：**
 - **Bug #42**: session 过期页面空白 (score: 56.5) ✅ 已验证
   - **现象**：登录30分钟后刷新页面显示空白
   - **根因**：session cookie 未设置 maxAge
@@ -218,24 +142,19 @@ result = recall_by_path_full("src/auth/session.ts", limit=10)
       - 描述：session 过期时间调整导致订单结算页频繁登出
 
 💡 **提醒**：
-- ⚠️ 历史警示：之前修改此文件曾导致购物车状态判断错误（Bug #35），修改时需特别注意 session 与 cart 的依赖关系
-- 🔴 影响预警：当前文件相关的问题可能影响 cart/ 和 order/ 模块，修改后务必检查这些模块的用户状态逻辑
+- ⚠️ 历史警示：之前修改其他文件曾导致当前文件出问题（Bug #35），修改时需避免重蹈覆辙
+- 🔴 影响预警：修改当前文件可能波及 cart/ 和 order/ 模块，修改后务必检查受影响的模块
 ```
 
-### 2.1 按 autoRecall 模式召回
+### 2. 按 autoRecall 模式召回（兜底机制）
 
-当 AI 修改代码时，如果 `recall_by_path()` 返回结果较少（可能因为文件重构导致路径变化），使用 `recall_by_pattern()` 作为兜底机制进行模块级召回：
+当文件重构导致路径变化时，使用 `recall_by_pattern()` 通过模块名等宽泛模式召回相关 bugs：
 
 ```python
-from scripts.bug_ops import recall_by_path, recall_by_pattern
+from scripts.bug_ops import recall_by_pattern
 
-# 第一步：尝试精确路径召回
-exact_matches = recall_by_path("auth/login.ts")
-
-# 第二步：如果结果较少，尝试模块级兜底召回
-if len(exact_matches) < 3:
-    module_matches = recall_by_pattern("auth", limit=20)
-    # 合并结果，去重后展示
+# 通过模块名召回 auth 模块的所有相关 bugs
+module_matches = recall_by_pattern("auth", limit=20)
 ```
 
 **使用场景：**
@@ -244,9 +163,9 @@ if len(exact_matches) < 3:
 - **影响评估**：了解某模块的 bug 分布和稳定性
 
 **匹配规则（双向匹配）：**
-- 传入 `"auth/login.ts"` → 匹配 recalls 中包含 `"auth/*"` 的 bugs（文件路径匹配模式）
-- 传入 `"auth"` → 匹配 recalls 中包含 `"auth/*"` 或 `"auth"` 的 bugs（模块名模糊匹配）
-- 传入 `"src/auth"` → 匹配 recalls 中包含 `"src/auth"` 或 `"src/auth/*"` 的 bugs
+- 传入 `"auth/login.ts"` → 匹配 recalls 中包含 `"auth/*"` 的 bugs（文件路径模糊匹配通配符模式）
+- 传入 `"auth"` → 匹配 recalls 中包含 `"auth/*"` 的 bugs（模块名单段模糊匹配，只要路径中包含 "auth" 段即可）
+- 传入 `"src/auth"` → 匹配 recalls 中包含 `"src/auth/*"` 或 `"src/auth"` 的 bugs（多段严格前缀匹配）
 
 **返回结构：**
 ```python
@@ -265,12 +184,91 @@ if len(exact_matches) < 3:
 ]
 ```
 
-**使用场景：**
-- 查看某个模块的历史问题概览
-- 了解某个功能的 bug 分布
-- 评估模块稳定性
+---
 
-### 3. 列表浏览
+## 用户搜索
+
+当用户明确询问或搜索 bug 时，使用以下 API。
+
+### 1. 关键词搜索
+
+使用 `scripts/bug_ops.py` 的 `search_by_keyword()`：
+
+```python
+from scripts.bug_ops import search_by_keyword
+
+# 单关键词搜索
+results = search_by_keyword("session", limit=20)
+
+# ✅ 多关键词搜索（推荐）：一次性传入多个等效关键词，OR 逻辑
+results = search_by_keyword("登录 auth session 会话", limit=20)
+```
+
+**多关键词搜索优势：**
+- ✅ **一次查询**：不需要逐个尝试，直接传入所有等效关键词
+- ✅ **OR 逻辑**：匹配任意一个关键词即可返回结果
+- ✅ **提高效率**：减少数据库查询次数
+
+**关键词提取策略：**
+
+当用户描述问题时，采用**渐进式搜索策略**：
+
+1. **步骤 1：关键词搜索（首选）**
+
+   从上下文中提取关键词进行搜索：
+
+   ```python
+   # 用户说：“用户表单添加有问题”
+   keywords = "用户 表单 添加 user form add"
+   results = search_by_keyword(keywords, limit=20)
+
+   if results:
+       # 找到结果，直接返回
+       return results
+   ```
+
+2. **步骤 2：路径推断 + 模块召回（备选）**
+
+   如果步骤 1 没有结果，根据用户的搜索提示词**推断相关模块名**，再进行模块级召回：
+
+   ```python
+   # 用户说：“用户表单添加有问题”，但关键词搜不到
+   # AI 推断可能的模块名：
+   # - "用户表单" → "user", "form"
+   # - "登录" → "auth", "login"
+
+   # 尝试模块级召回
+   possible_modules = ["user", "form"]
+   all_module_results = []
+
+   for module in possible_modules:
+       module_results = recall_by_pattern(module, limit=10)
+       all_module_results.extend(module_results)
+   ```
+
+3. **步骤 3：相关性筛选（关键）**
+
+   从模块召回的大量结果中，**AI 需要理解用户的搜索意图，判断哪些 bug 是相关的**：
+
+   ```python
+   # 用户原始需求：“查询无法增加用户信息的问题”
+   # 模块召回可能返回很多 user/form 相关的 bug：
+   # - Bug #1: 用户表单添加失败
+   # - Bug #2: 用户表单删除按钮错位
+   # - Bug #3: 用户表单查询超时
+   # - Bug #4: 用户表单新增字段验证
+   ```
+
+   AI 根据用户意图筛选相关结果：
+   - ✅ 保留：Bug #1（添加失败）、Bug #4（新增字段）
+   - ❌ 排除：Bug #2（删除）、Bug #3（查询）
+
+**优势：**
+- ✅ **精准优先**：先用关键词快速定位
+- ✅ **智能 fallback**：关键词失败时，通过路径召回兜底
+- ✅ **人工筛选**：AI 根据用户意图从大量结果中识别相关 bug
+
+### 2. 列表浏览
 
 当用户想查看所有 bugs 或按条件筛选时：
 
@@ -305,9 +303,11 @@ page2_bugs = list_bugs(status="active", order_by="score", limit=20, offset=20)
 > 提示：输入“查看 #3 详情”可展开完整信息
 ```
 
-### 4. 高级搜索
+### 3. 高级搜索
 
-#### 5.1 按标签搜索
+#### 3.1 按标签搜索
+
+按标签筛选 bugs，用于查找特定功能模块或技术栈相关的问题。
 
 ```python
 from scripts.bug_ops import search_by_tag
@@ -319,7 +319,7 @@ results = search_by_tag("auth", limit=20)
 results = search_by_tag("session", limit=20)
 ```
 
-#### 5.2 搜索最近创建的 bugs
+#### 3.2 搜索最近创建的 bugs
 
 ```python
 from scripts.bug_ops import search_recent
@@ -331,7 +331,7 @@ recent = search_recent(days=7, limit=20)
 recent_month = search_recent(days=30, limit=50)
 ```
 
-#### 5.3 搜索高分 bugs（需要重点关注）
+#### 3.3 搜索高分 bugs（需要重点关注）
 
 ```python
 from scripts.bug_ops import search_high_score
@@ -343,7 +343,7 @@ high_score = search_high_score(min_score=30.0, limit=20)
 medium_high = search_high_score(min_score=20.0, limit=30)
 ```
 
-#### 5.4 搜索最严重的前 N 个 bugs（高分 + 未验证）
+#### 3.4 搜索最严重的前 N 个 bugs（高分 + 未验证）
 
 ```python
 from scripts.bug_ops import search_top_critical
@@ -356,7 +356,7 @@ critical = search_top_critical(limit=20)
 - 快速定位最需要关注的问题
 - 优先处理高风险的未验证 bugs
 
-#### 5.5 搜索最近创建但未验证的 bugs
+#### 3.5 搜索最近创建但未验证的 bugs
 
 ```python
 from scripts.bug_ops import search_recent_unverified
@@ -372,7 +372,7 @@ month_unverified = search_recent_unverified(days=30, limit=50)
 - 检查新记录是否已验证
 - 跟踪最近的 bug 修复进度
 
-#### 5.6 组合搜索（状态 + 分数范围 + 验证状态）
+#### 3.6 组合搜索（状态 + 分数范围 + 验证状态）
 
 ```python
 from scripts.bug_ops import search_by_status_and_score
@@ -403,41 +403,27 @@ unverified_active = search_by_status_and_score(
 )
 ```
 
-## 展示搜索结果
+### 搜索结果展示规范
 
-搜索结果按分数排序，展示格式：
+搜索结果按分数排序，使用表格展示：
 
 ```
 ## 搜索结果：session（共 N 条）
 
-### Bug #3 - session 存储未设置持久化 - 分数 42.5 ⏳未验证
-**现象**：登录后 session 立即丢失
-**根因**：session 存储时未设置持久化（预估）
-**解决方案**：添加 cookie 的 maxAge 配置（预估）
-**相关文件**：src/auth/session.ts, src/middleware/auth.ts
-**autoRecall**：auth/*
+| ID | 标题 | 现象 | 分数 | 验证状态 |
+|----|------|------|------|----------|
+| #3 | session 存储未设置持久化 | 登录后 session 立即丢失 | 42.5 | ⏳未验证 |
+| #7 | 按钮样式错位 | 按钮被遮挡 | 18.0 | ✅已验证 |
+| #15 | 登录超时处理异常 | 超时后页面卡死 | 12.3 | ⏳未验证 |
 
-> ⏳ 此 bug 未验证，根因和方案可能不完整。改代码时谨慎参考，如已修复请告知我验证。
-
-### Bug #7 - 按钮样式错位 - 分数 18.0 ✅已验证(by User)
-**现象**：按钮被遮挡
-**根因**：CSS z-index 未设置
-**解决方案**：添加 z-index: 1
-**相关文件**：src/views/Login.vue
+> 💡 **提示**：输入"查看 #3 详情"获取根因、解决方案、相关文件等完整信息。
 ```
 
-每个结果包含：
-- Bug ID 和标题
-- 分数（高亮前 3 条）
-- 验证状态（未验证标注 ⏳，已验证标注 ✅）
-- 现象（1-2 句）
-- 根因和解决方案（预估的标注"预估"）
-- 相关文件路径
-- autoRecall 匹配模式
+---
 
 ## 展示完整详情
 
-如果用户需要查看某条 bug 的完整信息，使用 `get_bug_detail()`：
+当用户需要查看某条 bug 的完整信息时（无论是**自动召回**后还是**用户搜索**后），使用 `get_bug_detail()`：
 
 ```python
 detail = get_bug_detail(3)
@@ -490,15 +476,7 @@ auth, session, cookie
 auth/*
 ```
 
-## 主动召回提醒
-
-当搜索到相关 bug 时，AI 应该主动提醒用户：
-
-```
-⚠️ 提醒：这个功能之前踩过坑（Bug #3）
-涉及文件：src/auth/session.ts
-建议：修改前先查看完整记录
-```
+---
 
 ## 注意事项
 
