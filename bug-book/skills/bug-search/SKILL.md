@@ -240,17 +240,19 @@ impacted = get_impacted_bugs("src/cart/add_to_cart.ts", limit=10)
 ```python
 from scripts.bug_ops import recall_by_pattern
 
-# 查询所有 autoRecall 包含 "session" 的 bugs
-results = recall_by_pattern("session", limit=10)
+# AI 准备修改 src/auth/session.ts，自动召回相关 bug
+results = recall_by_pattern("src/auth/session.ts", limit=10)
 ```
 
 **匹配规则：**
 - 只匹配 bug_recalls 表中的 pattern 字段
-- 支持 glob 模式：`auth/*`, `*.ts`, `src/**/*`
+- 支持路径前缀匹配：`auth/*` 可匹配 `auth/session.ts`、`auth/login.ts` 等
+- **注意**：这不是全文搜索，而是基于文件路径的智能召回
 
 **使用场景：**
-- 用户说：“帮我找找所有和 session 相关的 bugs”
-- AI 准备修改 auth 模块，想看看有哪些 autoRecall 模式匹配的 bugs
+- ✅ AI 准备修改某个文件时，自动检查是否有相关的历史bug
+- ✅ 重构代码前，了解该模块的历史问题
+- ❌ **不适合**用户说"帮我找 session 相关的bug"（应使用关键词搜索或标签搜索）
 
 ### 3. 列表浏览
 

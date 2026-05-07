@@ -292,6 +292,8 @@ def check_organize_reminder(days_threshold: int = 30) -> dict[str, any]:
     days_since = (datetime.now() - last_time).days
     
     if days_since >= days_threshold:
+        # 不管用户是否根据建议整理，都重置提醒时间
+        set_last_organize_time()
         return {
             "should_remind": True,
             "last_organize_time": last_time_str,

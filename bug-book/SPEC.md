@@ -128,6 +128,23 @@ AI 在改代码前主动查询相关 bug，主动预防而非事后补救。
 - 重构后保留 `oldPaths`，支持旧路径匹配
 - 整理时检查路径有效性，无效时提示用户更新
 
+### 双向召回设计
+
+影响关系支持**双向召回**，通过组合 API 从两个方向预防回归问题：
+
+**1. 正向召回（被影响方）**：修改文件时，查询"哪些历史 bug 会影响这个文件"
+- API: `get_impacted_bugs(file_path)` 
+- 场景：修改 `cart/add_to_cart.ts` 时，召回 "session bug → cart 受影响"
+- 目的：了解当前文件曾被哪些 bug 影响过，避免重蹈覆辙
+
+**2. 反向召回（影响源）**：修改文件时，查询"这个文件的 bug 会影响哪些其他模块"
+- 实现方式：`recall_by_path(file_path)` + `get_bug_impacts(bug_id)` 组合使用
+- 场景：修改 `auth/session.ts` 时
+  1. 先通过 `recall_by_path("auth/session.ts")` 找到相关 bug（如 Bug #42）
+  2. 再通过 `get_bug_impacts(42)` 查询该 bug 影响了哪些模块（cart、order 等）
+  3. 警告用户："修改此文件可能影响 cart、order 等模块"
+- 目的：预警修改可能引发的连锁反应，提前检查受影响模块
+
 ## 组件设计
 
 ### Skills

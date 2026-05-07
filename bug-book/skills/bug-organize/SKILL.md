@@ -81,9 +81,15 @@ def check_bug_paths(bug_id):
         if not detail:
             return []
         invalid_paths = []
+        # 检查 paths 和 recalls
         for path in detail.get("paths", []) + detail.get("recalls", []):
             if not check_path_valid(path):
                 invalid_paths.append(path)
+        # 检查 impacts 中的 impacted_path
+        for impact in detail.get("impacts", []):
+            impacted_path = impact.get("impacted_path")
+            if impacted_path and not check_path_valid(impacted_path):
+                invalid_paths.append(impacted_path)
         return invalid_paths
 ```
 
