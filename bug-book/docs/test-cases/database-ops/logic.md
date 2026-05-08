@@ -14,14 +14,15 @@
 | search_by_keyword 关键词搜索 | 5 | TC-F01 ~ TC-F05 |
 | _match_path 路径匹配 | 15 | TC-G01 ~ TC-G15 |
 | recall_by_path / recall_by_pattern 路径召回 | 7 | TC-H01 ~ TC-H07 |
-| recall_by_path_full 完整上下文召回 | 1 | TC-H08 |
+| recall_by_path_full 完整上下文召回 | 2 | TC-H08 ~ TC-H09 |
 | get_bug_detail 详情查询 | 4 | TC-I01, TC-I02, TC-I03, TC-I05（TC-I04 已删除） |
 | list_bugs 列表查询 | 4 | TC-J01 ~ TC-J04 |
 | mark_invalid 失效标记 | 3 | TC-K01 ~ TC-K03 |
 | 懒初始化与集成 | 3 | TC-L01 ~ TC-L03 |
 | 影响关系管理 | 10 | TC-M01 ~ TC-M10 |
 | 路径和 recalls 管理 | 5 | TC-N01 ~ TC-N05 |
-| **总计** | **80** | |
+| 路径迁移 | 3 | TC-O01 ~ TC-O03 |
+| **总计** | **84** | |
 
 ---
 
@@ -131,11 +132,12 @@
 
 ---
 
-## TC-H08：recall_by_path_full 完整上下文召回
+## TC-H08 ~ TC-H09：recall_by_path_full 完整上下文召回
 
 | 用例编号 | 测试点描述 | 输入 | 预期输出 | 测试类型 |
 |---------|-----------|------|---------|----------|
 | TC-H08 | 一次性获取完整上下文 | `recall_by_path_full("src/auth/session.ts")` | 返回 `{"impacted_by": [...], "related_bugs": [...]}`，其中 related_bugs 每个包含 impacts 字段 | 正常流程 |
+| TC-H09 | 验证双向匹配逻辑 | Bug 有 recalls=`["auth/*"]`，分别用 `"auth/login.ts"` 和 `"auth"` 召回 | 两种调用都能召回该 bug，验证正向和反向匹配 | 正常流程 |
 
 ---
 
@@ -207,6 +209,16 @@
 | TC-N03 | 批量更新 bug 的 recall patterns | `update_bug_recalls(bug_id, ["new_pattern.dart", "other_pattern.dart"])` | 新 pattern 替换旧 pattern，其他保持 | 正常流程 |
 | TC-N04 | 清空所有 recall patterns | `update_bug_recalls(bug_id, [])` | 所有 pattern 被删除 | 正常流程 |
 | TC-N05 | 验证 recalls 更新后能正确召回 | 更新 recall pattern 后用新 pattern 召回 | 新 pattern 能召回，旧 pattern 不能召回 | 正常流程 |
+
+---
+
+## TC-O01 ~ TC-O03：路径迁移（migrate_bug_paths_after_refactor）
+
+| 用例编号 | 测试点描述 | 输入 | 预期输出 | 测试类型 |
+|---------|-----------|------|---------|----------|
+| TC-O01 | 迁移 paths 中的精确匹配 | Bug #1 有 `paths=["src/auth/session.ts"]`，调用 `migrate_bug_paths_after_refactor("src/auth/session.ts", "src/modules/auth/session.ts")` | Bug #1 的 paths 更新为 `["src/modules/auth/session.ts"]`，返回 `([1], 0)` | 正常流程 |
+| TC-O02 | 迁移 recalls 中的通配符模式 | Bug #2 有 `recalls=["auth/*"]`，调用 `migrate_bug_paths_after_refactor("src/auth/login.ts", "src/modules/auth/login.ts")` | Bug #2 的 recalls 更新为 `["src/modules/auth/*"]`，返回 `([2], 0)` | 正常流程 |
+| TC-O03 | 同时更新影响关系 | Bug #1 影响了 `src/auth/session.ts`，调用迁移后 | bug_impacts 表中的 impacted_path 更新为新路径，返回的影响关系数量 > 0 | 正常流程 |
 
 ---
 

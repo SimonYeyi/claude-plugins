@@ -675,7 +675,12 @@ def recall_by_path(file_path: str, limit: int = RECALL_LIMIT) -> list[dict[str, 
 
 
 def _should_recall(file_path: str, bug_id: int, conn: sqlite3.Connection) -> bool:
-    """判断文件路径是否匹配该 bug 的任意路径或 autoRecall 模式。"""
+    """判断文件路径是否匹配该 bug 的任意路径或 autoRecall 模式。
+    
+    采用双向匹配策略：
+    1. 文件路径匹配数据库中的 pattern（如 "auth/login.ts" 匹配 "auth/*"）
+    2. 数据库中的 pattern 匹配文件路径（如 "auth/*" 匹配 "auth"）
+    """
     file_path = _normalize_path(file_path)
 
     paths = [row[0] for row in conn.execute(
@@ -689,7 +694,8 @@ def _should_recall(file_path: str, bug_id: int, conn: sqlite3.Connection) -> boo
         "SELECT pattern FROM bug_recalls WHERE bug_id = ?", (bug_id,)
     ).fetchall()]
     for r in recalls:
-        if _match_path(file_path, r):
+        # 双向匹配：支持重构场景下的兜底召回
+        if _match_path(file_path, r) or _match_path(r, file_path):
             return True
 
     return False
@@ -1265,6 +1271,82 @@ def analyze_impact_patterns(limit: int = 10) -> list[dict[str, Any]]:
             }
             for r in rows
         ]
+
+def migrate_bug_paths_after_refactor(
+    old_path: str,
+    new_path: str,
+) -> tuple[list[int], int]:
+    """重构后自动迁移 Bug 的路径和 recalls。
+    
+    当文件路径发生变更时，自动更新相关 Bug 的 paths、recalls 和影响关系。
+    
+    Args:
+        old_path: 旧路径
+        new_path: 新路径
+    
+    Returns:
+        (更新的 bug_id 列表, 更新的影响关系数量)
+    """
+    _logger.info("migrate_bug_paths_after_refactor: %s -> %s", old_path, new_path)
+    
+    migrated_bugs = []
+    impacted_count = 0
+    
+    # 1. 查找所有受影响的 Bug
+    affected_bugs = recall_by_path(old_path)
+    
+    for bug in affected_bugs:
+        bug_id = bug["id"]
+        detail = get_bug_detail(bug_id)
+        
+        if not detail:
+            continue
+        
+        updated = False
+        
+        # 2. 更新 paths（精确匹配）
+        current_paths = detail.get("paths", [])
+        if old_path in current_paths:
+            updated_paths = [new_path if p == old_path else p for p in current_paths]
+            update_bug_paths(bug_id, updated_paths)
+            updated = True
+        
+        # 3. 更新 recalls（双向匹配）
+        current_recalls = detail.get("recalls", [])
+        matched_recalls = []
+        for r in current_recalls:
+            # 正向：old_path 匹配 pattern
+            if _match_path(_normalize_path(old_path), r):
+                matched_recalls.append(r)
+            # 反向：pattern 匹配 old_path（如 "auth/*" 匹配 "auth"）
+            elif r.endswith("/*"):
+                base = r[:-2]
+                if base == old_path or old_path.startswith(base + "/"):
+                    matched_recalls.append(r)
+        
+        if matched_recalls:
+            updated_recalls = []
+            for r in current_recalls:
+                if r in matched_recalls:
+                    # 保持通配符结构
+                    if r.endswith("/*"):
+                        base_dir = "/".join(new_path.split("/")[:-1])
+                        updated_recalls.append(f"{base_dir}/*")
+                    else:
+                        updated_recalls.append(new_path)
+                else:
+                    updated_recalls.append(r)
+            
+            update_bug_recalls(bug_id, updated_recalls)
+            updated = True
+        
+        if updated:
+            migrated_bugs.append(bug_id)
+    
+    # 4. 更新影响关系中的 impacted_path
+    impacted_count = update_impacted_paths(old_path, new_path)
+    
+    return list(set(migrated_bugs)), impacted_count
 
 
 # ---------------------------------------------------------------------------

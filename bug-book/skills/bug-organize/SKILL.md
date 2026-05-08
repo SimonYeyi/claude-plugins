@@ -363,85 +363,33 @@ print(f"""
 
 **执行原则**：**静默执行，无需用户确认**
 
-**检测逻辑**：
-```python
-from pathlib import Path
-from scripts.bug_ops import get_bug_detail, update_bug_paths, update_bug_recalls, update_impacted_paths, recall_by_path
-
-def auto_migrate_paths_after_refactor(old_paths: list[str], new_paths_map: dict[str, str]):
-    """
-    重构后自动迁移路径和 autoRecall patterns
-    
-    Args:
-        old_paths: 本次重构涉及的旧路径列表
-        new_paths_map: 旧路径到新路径的映射 {old_path: new_path}
-    """
-    migrated_bugs = []
-    impacted_count = 0
-    
-    for old_path in old_paths:
-        # 查找所有受影响的 Bug
-        affected_bugs = recall_by_path(old_path)
-        
-        if affected_bugs and old_path in new_paths_map:
-            new_path = new_paths_map[old_path]
-            
-            for bug in affected_bugs:
-                bug_id = bug["id"]
-                detail = get_bug_detail(bug_id)
-                
-                if detail:
-                    # 1. 更新该 Bug 的路径
-                    current_paths = detail.get("paths", [])
-                    updated_paths = [
-                        new_path if p == old_path else p
-                        for p in current_paths
-                    ]
-                    update_bug_paths(bug_id, updated_paths)
-                    
-                    # 2. 更新该 Bug 的 autoRecall patterns
-                    current_recalls = detail.get("recalls", [])
-                    updated_recalls = [
-                        new_path if r == old_path else r
-                        for r in current_recalls
-                    ]
-                    update_bug_recalls(bug_id, updated_recalls)
-                    
-                    migrated_bugs.append(bug_id)
-            
-            # 3. 更新影响关系中的 impacted_path
-            count = update_impacted_paths(old_path, new_path)
-            impacted_count += count
-    
-    return list(set(migrated_bugs)), impacted_count  # 去重
-```
-
 **使用示例**：
 ```python
-# AI 完成了重构：src/auth/ → src/modules/auth/
-old_paths = ["src/auth/session.ts", "src/auth/middleware.ts"]
-new_paths_map = {
-    "src/auth/session.ts": "src/modules/auth/session.ts",
-    "src/auth/middleware.ts": "src/modules/auth/middleware.ts",
-}
+from scripts.bug_ops import migrate_bug_paths_after_refactor
 
-migrated_bug_ids, impacted_count = auto_migrate_paths_after_refactor(old_paths, new_paths_map)
-print(f"✅ 已自动更新 {len(migrated_bug_ids)} 个 Bug 的路径：{', '.join([f'#{bid}' for bid in migrated_bug_ids])}")
+# AI 完成了重构：src/auth/session.ts → src/modules/auth/session.ts
+migrated_bugs, impacted_count = migrate_bug_paths_after_refactor(
+    old_path="src/auth/session.ts",
+    new_path="src/modules/auth/session.ts"
+)
+
+print(f"✅ 已自动更新 {len(migrated_bugs)} 个 Bug：{', '.join([f'#{bid}' for bid in migrated_bugs])}")
 if impacted_count > 0:
-    print(f"✅ 已自动更新 {impacted_count} 条影响关系中的路径")
+    print(f"✅ 已自动更新 {impacted_count} 条影响关系")
 ```
 
-**输出格式**：
-```
-✅ 检测到重构：src/auth/ → src/modules/auth/
-✅ 已自动更新 3 个 Bug 的路径：#42, #38, #15
-✅ 已自动更新 2 条影响关系中的路径
-```
+**API 说明**：
+- `migrate_bug_paths_after_refactor(old_path, new_path)` 会自动：
+  1. 查找所有受影响的 Bug（通过 paths 和 recalls 双向匹配）
+  2. 更新 paths（精确匹配替换）
+  3. 更新 recalls（保持通配符结构，如 `auth/*` → `modules/auth/*`）
+  4. 更新影响关系中的 impacted_path
+- 返回 `(更新的 bug_id 列表, 更新的影响关系数量)`
 
 **注意事项**：
 - ⚠️ 此流程**仅在重构完成后自动执行**，不需要用户确认
 - ⚠️ AI 需要自己识别本次重构涉及的路径变更
-- ⚠️ 如果同一文件有多个匹配，AI 应该根据重构上下文确定正确的新路径
+- ⚠️ 如果重构涉及多个文件，对每个文件分别调用此 API
 
 ## 注意事项
 

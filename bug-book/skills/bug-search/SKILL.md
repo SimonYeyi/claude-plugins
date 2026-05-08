@@ -146,44 +146,6 @@ result = recall_by_path_full("src/auth/session.ts", limit=10)
 - 🔴 影响预警：修改当前文件可能波及 cart/ 和 order/ 模块，修改后务必检查受影响的模块
 ```
 
-### 2. 按 autoRecall 模式召回（兜底机制）
-
-当文件重构导致路径变化时，使用 `recall_by_pattern()` 通过模块名等宽泛模式召回相关 bugs：
-
-```python
-from scripts.bug_ops import recall_by_pattern
-
-# 通过模块名召回 auth 模块的所有相关 bugs
-module_matches = recall_by_pattern("auth", limit=20)
-```
-
-**使用场景：**
-- **重构兜底**：文件从 `auth/login.ts` 重构为 `user/login.ts` 后，通过模块名 `"auth"` 仍能召回相关 bugs
-- **模块概览**：查看某个模块的所有历史问题
-- **影响评估**：了解某模块的 bug 分布和稳定性
-
-**匹配规则（双向匹配）：**
-- 传入 `"auth/login.ts"` → 匹配 recalls 中包含 `"auth/*"` 的 bugs（文件路径模糊匹配通配符模式）
-- 传入 `"auth"` → 匹配 recalls 中包含 `"auth/*"` 的 bugs（模块名单段模糊匹配，只要路径中包含 "auth" 段即可）
-- 传入 `"src/auth"` → 匹配 recalls 中包含 `"src/auth/*"` 或 `"src/auth"` 的 bugs（多段严格前缀匹配）
-
-**返回结构：**
-```python
-[
-    {
-        "id": 42,
-        "title": "session 过期页面空白",
-        "phenomenon": "登录30分钟后刷新页面显示空白",
-        "score": 56.5,
-        "status": "resolved",
-        "verified": True,
-        "root_cause": "session cookie 未设置 maxAge",
-        "solution": "添加 cookie: { maxAge: 30 * 60 * 1000 }",
-        "test_case": "登录后等待30分钟再刷新"
-    }
-]
-```
-
 ---
 
 ## 用户搜索

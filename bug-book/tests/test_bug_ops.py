@@ -42,6 +42,8 @@ from bug_ops import (
     get_bug_impacts,
     analyze_impact_patterns,
     update_impacted_paths,
+    # 路径迁移
+    migrate_bug_paths_after_refactor,
 )
 
 # 测试数据
@@ -1082,3 +1084,138 @@ def test_recall_by_path_full():
             impact = bug["impacts"][0]
             assert impact["impacted_path"] == "src/order/checkout.ts"
             assert impact["severity"] == 6
+
+
+def test_recall_bidirectional_match():
+    """TC-H09: 验证 recall_by_path 的双向匹配逻辑"""
+    # 清理数据
+    from bug_ops import get_conn_ctx
+    with get_conn_ctx() as conn:
+        conn.execute("DELETE FROM bug_impacts")
+        conn.execute("DELETE FROM bugs")
+        conn.commit()
+    
+    # 创建 Bug：使用 autoRecall 模式 "auth/*"
+    bug_id, _ = add_bug(
+        title="auth 模块问题",
+        phenomenon="测试",
+        verified=True,
+        recalls=["auth/*"],
+    )
+    
+    # 测试1：正向匹配 - 文件路径匹配通配符模式
+    results = recall_by_path("auth/login.ts")
+    assert any(r["id"] == bug_id for r in results), "正向匹配失败：auth/login.ts 应该匹配 auth/*"
+    
+    # 测试2：反向匹配 - 模块名被通配符覆盖
+    results = recall_by_path("auth")
+    assert any(r["id"] == bug_id for r in results), "反向匹配失败：auth 应该被 auth/* 覆盖"
+
+
+# ============================================================
+# TC-O01 ~ TC-O03：路径迁移（migrate_bug_paths_after_refactor）
+# ============================================================
+
+def test_migrate_paths_exact_match():
+    """TC-O01: 迁移 paths 中的精确匹配"""
+    # 清理数据
+    from bug_ops import get_conn_ctx
+    with get_conn_ctx() as conn:
+        conn.execute("DELETE FROM bug_impacts")
+        conn.execute("DELETE FROM bugs")
+        conn.commit()
+    
+    # 创建 Bug #1：paths=["src/auth/session.ts"]
+    bug_id, _ = add_bug(
+        title="session 问题",
+        phenomenon="测试",
+        verified=True,
+        paths=["src/auth/session.ts"],
+    )
+    
+    # 执行迁移
+    migrated_bugs, impacted_count = migrate_bug_paths_after_refactor(
+        old_path="src/auth/session.ts",
+        new_path="src/modules/auth/session.ts"
+    )
+    
+    # 验证结果
+    assert bug_id in migrated_bugs, f"Bug #{bug_id} 应该被迁移"
+    detail = get_bug_detail(bug_id)
+    assert "src/modules/auth/session.ts" in detail["paths"], "paths 应该更新为新路径"
+    assert "src/auth/session.ts" not in detail["paths"], "旧路径应该被移除"
+    assert impacted_count == 0, "没有影响关系，返回 0"
+
+
+def test_migrate_recalls_wildcard():
+    """TC-O02: 迁移 recalls 中的通配符模式"""
+    # 清理数据
+    from bug_ops import get_conn_ctx
+    with get_conn_ctx() as conn:
+        conn.execute("DELETE FROM bug_impacts")
+        conn.execute("DELETE FROM bugs")
+        conn.commit()
+    
+    # 创建 Bug #2：recalls=["auth/*"]
+    bug_id, _ = add_bug(
+        title="auth 模块问题",
+        phenomenon="测试",
+        verified=True,
+        recalls=["auth/*"],
+    )
+    
+    # 执行迁移：文件路径 "src/auth/login.ts" 匹配 "auth/*"
+    migrated_bugs, impacted_count = migrate_bug_paths_after_refactor(
+        old_path="src/auth/login.ts",
+        new_path="src/modules/auth/login.ts"
+    )
+    
+    # 验证结果
+    assert bug_id in migrated_bugs, f"Bug #{bug_id} 应该被迁移"
+    detail = get_bug_detail(bug_id)
+    # 通配符模式应该保持结构，但更新目录
+    assert "src/modules/auth/*" in detail["recalls"], "recalls 应该更新为 src/modules/auth/*"
+    assert "auth/*" not in detail["recalls"], "旧模式应该被移除"
+    assert impacted_count == 0, "没有影响关系，返回 0"
+
+
+def test_migrate_impacted_paths():
+    """TC-O03: 同时更新影响关系"""
+    # 清理数据
+    from bug_ops import get_conn_ctx
+    with get_conn_ctx() as conn:
+        conn.execute("DELETE FROM bug_impacts")
+        conn.execute("DELETE FROM bugs")
+        conn.commit()
+    
+    # 创建 Bug #1
+    bug_id, _ = add_bug(
+        title="session 问题",
+        phenomenon="测试",
+        verified=True,
+        paths=["src/auth/session.ts"],
+    )
+    
+    # 添加影响关系：Bug #1 影响了 src/auth/session.ts
+    impact_id = add_impact(
+        source_bug_id=bug_id,
+        impacted_path="src/auth/session.ts",
+        impact_type="regression",
+        description="修改 session 导致问题",
+        severity=8,
+    )
+    
+    # 执行迁移
+    migrated_bugs, impacted_count = migrate_bug_paths_after_refactor(
+        old_path="src/auth/session.ts",
+        new_path="src/modules/auth/session.ts"
+    )
+    
+    # 验证结果
+    assert bug_id in migrated_bugs, f"Bug #{bug_id} 应该被迁移"
+    assert impacted_count > 0, "应该更新了至少一条影响关系"
+    
+    # 验证影响关系中的路径已更新
+    impacts = get_bug_impacts(bug_id)
+    assert len(impacts) == 1, "应该有1条影响记录"
+    assert impacts[0]["impacted_path"] == "src/modules/auth/session.ts", "影响路径应该更新"
