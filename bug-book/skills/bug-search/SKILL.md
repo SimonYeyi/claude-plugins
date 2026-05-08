@@ -146,6 +146,66 @@ result = recall_by_path_full("src/auth/session.ts", limit=10)
 - 🔴 影响预警：修改当前文件可能波及 cart/ 和 order/ 模块，修改后务必检查受影响的模块
 ```
 
+### 2. 按模块名召回
+
+当 AI 需要了解某个**模块的整体问题**时，使用 `recall_by_pattern()` 进行模块级召回。
+
+**与按路径召回的区别：**
+- `recall_by_path_full(file_path)`: 查询**具体文件**的历史 bugs（如 `src/auth/session.ts`）
+- `recall_by_pattern(pattern)`: 查询**整个模块**的 bugs（如 `auth` 或 `auth/*`）
+
+**使用场景：**
+- 准备重构某个模块，需要了解该模块的所有历史问题
+- 将要修复的问题涉及多个模块内文件时，需要了解该模块的所有历史问题
+
+```python
+from scripts.bug_ops import recall_by_pattern
+
+# 查询 auth 模块的所有相关 bugs
+results = recall_by_pattern("auth", limit=20)
+
+# 也可以使用通配符模式
+results = recall_by_pattern("auth/*", limit=20)
+```
+
+**返回结构：**
+```python
+[
+    {
+        "id": 42,
+        "title": "session 过期页面空白",
+        "phenomenon": "登录30分钟后刷新页面显示空白",
+        "score": 56.5,
+        "status": "resolved",
+        "verified": True,
+        "root_cause": "session cookie 未设置 maxAge",
+        "solution": "添加 cookie: { maxAge: 30 * 60 * 1000 }",
+        "test_case": "登录后等待30分钟再刷新"
+    },
+    # ... 更多 bugs
+]
+```
+
+**匹配规则：**
+- 输入 `"auth"` → 匹配 recalls 中包含 `"auth/*"`、`"src/auth/*"` 等的 bugs
+- 输入 `"auth/*"` → 精确匹配 recalls 中的 `"auth/*"` 模式
+- 支持双向匹配：模块名 ↔ 通配符模式
+
+**展示格式：**
+```markdown
+🔍 **模块级 Bug 召回 - auth 模块**
+
+找到 3 个相关 bugs：
+
+| ID | 标题 | 分数 | 状态 | 验证 |
+|----|------|------|------|------|
+| #42 | session 过期页面空白 | 56.5 | ✅ | ✅ |
+| #35 | 购物车状态判断逻辑错误 | 48.2 | ✅ | ✅ |
+| #18 | auth 中间件执行顺序错误 | 32.1 | ✅ | ⏳ |
+
+> 💡 **提示**：输入"查看 #42 详情"获取完整信息
+```
+
 ---
 
 ## 用户搜索
