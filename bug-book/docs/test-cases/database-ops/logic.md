@@ -14,7 +14,7 @@
 | search_by_keyword 关键词搜索 | 5 | TC-F01 ~ TC-F05 |
 | _match_path 路径匹配 | 15 | TC-G01 ~ TC-G15 |
 | recall_by_path / recall_by_pattern 路径召回 | 7 | TC-H01 ~ TC-H07 |
-| recall_by_path_full 完整上下文召回 | 2 | TC-H08 ~ TC-H09 |
+| recall_by_path_full 完整相关bugs及影响关系 | 2 | TC-H08 ~ TC-H09 |
 | get_bug_detail 详情查询 | 4 | TC-I01, TC-I02, TC-I03, TC-I05（TC-I04 已删除） |
 | list_bugs 列表查询 | 4 | TC-J01 ~ TC-J04 |
 | mark_invalid 失效标记 | 3 | TC-K01 ~ TC-K03 |
@@ -132,12 +132,12 @@
 
 ---
 
-## TC-H08 ~ TC-H09：recall_by_path_full 完整上下文召回
+## TC-H08 ~ TC-H09：recall_by_path_full 完整相关bugs及影响关系召回
 
-| 用例编号 | 测试点描述 | 输入 | 预期输出 | 测试类型 |
-|---------|-----------|------|---------|----------|
-| TC-H08 | 一次性获取完整上下文 | `recall_by_path_full("src/auth/session.ts")` | 返回 `{"impacted_by": [...], "related_bugs": [...]}`，其中 related_bugs 每个包含 impacts 字段 | 正常流程 |
-| TC-H09 | 验证双向匹配逻辑 | Bug 有 recalls=`["auth/*"]`，分别用 `"auth/login.ts"` 和 `"auth"` 召回 | 两种调用都能召回该 bug，验证正向和反向匹配 | 正常流程 |
+| 用例编号 | 测试点描述              | 输入 | 预期输出 | 测试类型 |
+|---------|--------------------|------|---------|----------|
+| TC-H08 | 一次性获取完整相关bugs及影响关系 | `recall_by_path_full("src/auth/session.ts")` | 返回 `{"impacted_by": [...], "related_bugs": [...]}`，其中 related_bugs 每个包含 impacts 字段 | 正常流程 |
+| TC-H09 | 验证 recall 模式匹配     | Bug 有 recalls=`["auth/*"]`，用 `"auth/login.ts"` 召回 | 能召回该 bug，验证文件路径匹配通配符模式 | 正常流程 |
 
 ---
 

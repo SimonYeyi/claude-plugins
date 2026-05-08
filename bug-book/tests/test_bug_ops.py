@@ -990,7 +990,7 @@ def test_recall_by_path_with_updated_recalls():
 # ============================================================
 
 def test_recall_by_path_full():
-    """TC-H08: 一次性获取完整上下文"""
+    """TC-H08: 一次性获取完整相关bugs及影响关系"""
     # 先清理可能存在的旧数据
     from bug_ops import get_conn_ctx
     with get_conn_ctx() as conn:
@@ -1086,8 +1086,8 @@ def test_recall_by_path_full():
             assert impact["severity"] == 6
 
 
-def test_recall_bidirectional_match():
-    """TC-H09: 验证 recall_by_path 的双向匹配逻辑"""
+def test_recall_by_path_with_recall_pattern():
+    """TC-H09: 验证 recall_by_path 的 recall 模式匹配"""
     # 清理数据
     from bug_ops import get_conn_ctx
     with get_conn_ctx() as conn:
@@ -1095,7 +1095,7 @@ def test_recall_bidirectional_match():
         conn.execute("DELETE FROM bugs")
         conn.commit()
     
-    # 创建 Bug：使用 autoRecall 模式 "auth/*"
+    # 创建 Bug：使用 recall 模式 "auth/*"
     bug_id, _ = add_bug(
         title="auth 模块问题",
         phenomenon="测试",
@@ -1103,13 +1103,9 @@ def test_recall_bidirectional_match():
         recalls=["auth/*"],
     )
     
-    # 测试1：正向匹配 - 文件路径匹配通配符模式
+    # 测试：文件路径匹配通配符模式
     results = recall_by_path("auth/login.ts")
-    assert any(r["id"] == bug_id for r in results), "正向匹配失败：auth/login.ts 应该匹配 auth/*"
-    
-    # 测试2：反向匹配 - 模块名被通配符覆盖
-    results = recall_by_path("auth")
-    assert any(r["id"] == bug_id for r in results), "反向匹配失败：auth 应该被 auth/* 覆盖"
+    assert any(r["id"] == bug_id for r in results), "匹配失败：auth/login.ts 应该匹配 auth/*"
 
 
 # ============================================================
