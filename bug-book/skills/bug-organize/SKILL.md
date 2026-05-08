@@ -68,7 +68,7 @@ Bug #N 已记录 45 天仍未验证：
 
 ### 3. 检查路径有效性
 
-对每条活跃 bug，检查 `autoRecall` 中的路径是否仍然存在于代码库中：
+对每条活跃 bug，检查 `recalls` 中的路径是否仍然存在于代码库中：
 
 ```python
 from scripts.bug_ops import check_path_valid

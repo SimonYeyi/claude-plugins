@@ -62,7 +62,33 @@ from scripts.bug_ops import add_bug, add_impact
 | **相关文件/路径** | 哪些文件相关 | `["src/auth/session.ts"]` |
 | **标签** | 分类标签 | `["auth", "session"]` |
 | **关键词** | 便于搜索，**必须包含中英文** | `["session", "会话", "cookie", "持久化"]` |
-| **autoRecall** | 触发召回的模式 | `["auth/*"]` |
+| **recalls** | 触发召回的模块级通配符模式 | `["auth/*"]` |
+
+**recalls 赋值规范**：
+- ✅ **必须使用模块级通配符模式**，不是完整文件路径
+- ✅ **格式**：`"目录/*"` - 匹配该目录下所有文件（如 `"auth/*"`、`"src/modules/auth/*"`）
+- ❌ **不要使用完整文件路径**：如 `"app/src/MainActivity.java"`（应该用 paths 字段）
+- ❌ **不要使用类名/函数名**：如 `"MainActivity"`、`"SessionManager"`（无法正确匹配）
+- ✅ **适用场景**：当 bug 影响整个模块/目录时使用，单文件问题不需要设置 recalls
+- ✅ **路径相对于项目根目录**：使用 `/` 分隔，不要用 `\`
+
+**示例：**
+```python
+# ✅ 正确：模块级通配符（推荐）
+recalls=["auth/*", "src/modules/cart/*"]
+
+# ❌ 错误：完整文件路径（应该用 paths 字段）
+recalls=["app/src/MainAct.java"]  # 不要这样写！
+
+# ❌ 错误：类名/函数名（无法匹配）
+recalls=["MainAct", "SessionManager"]  # 不要这样写！
+```
+
+**recalls vs paths 对比**：
+| 字段 | 用途 | 示例 |
+|------|------|------|
+| **paths** | 精确文件路径，表示“这个 bug 涉及哪些文件” | `["app/src/MainAct.java"]` |
+| **recalls** | 模块级通配符，表示“修改哪些文件时需要召回” | `["app/src/*"]` |
 
 #### 评分字段（独立存储在 bug_scores 表）
 
@@ -531,7 +557,7 @@ add_impact(
 - 标题控制在 20 字以内
 - 现象和根因要具体，避免模糊描述
 - 相关路径用相对于项目根的路径
-- autoRecall 优先使用文件路径前缀（如 `auth/`），避免使用太泛的关键词
+- recalls 优先使用文件路径前缀（如 `auth/*`），避免使用太泛的关键词
 - 复杂问题不要急着记录，先排查清楚再记
 - 根因和解决方案在记录时可以填推断值，后续修复时再更新为准确值
 - 小问题自动验证，复杂问题等修复时统一审核

@@ -499,7 +499,7 @@ def update_bug_paths(bug_id: int, new_paths: list[str]) -> None:
         # 添加新路径
         if new_paths:
             conn.executemany(
-                "INSERT INTO bug_paths (bug_id, path, is_old) VALUES (?, ?, 0)",
+                "INSERT INTO bug_paths (bug_id, path) VALUES (?, ?)",
                 [(bug_id, p) for p in new_paths]
             )
         
@@ -769,10 +769,7 @@ def get_bug_detail(bug_id: int) -> Optional[dict[str, Any]]:
             "SELECT dimension, value FROM bug_scores WHERE bug_id = ?", (bug_id,)
         ).fetchall()
         data["paths"] = [r[0] for r in conn.execute(
-            "SELECT path FROM bug_paths WHERE bug_id = ? AND is_old = 0", (bug_id,)
-        ).fetchall()]
-        data["old_paths"] = [r[0] for r in conn.execute(
-            "SELECT path FROM bug_paths WHERE bug_id = ? AND is_old = 1", (bug_id,)
+            "SELECT path FROM bug_paths WHERE bug_id = ?", (bug_id,)
         ).fetchall()]
         data["tags"] = [r[0] for r in conn.execute(
             "SELECT tag FROM bug_tags WHERE bug_id = ?", (bug_id,)

@@ -95,7 +95,6 @@ AI 在改代码前主动查询相关 bug，主动预防而非事后补救。
 | 字段 | 说明 |
 |------|------|
 | path | 相关文件路径 |
-| is_old | 是否为旧路径（重构后保留） |
 
 ### bug_tags / bug_keywords / bug_recalls 表
 
@@ -120,12 +119,11 @@ AI 在改代码前主动查询相关 bug，主动预防而非事后补救。
 - 改代码前查询 `get_impacted_bugs()`，预警潜在回归风险
 - 整理时调用 `analyze_impact_patterns()`，识别高频回归模块
 
-### autoRecall 机制
+### recalls 机制
 
-每条 bug 记录包含 `autoRecall` 匹配模式，当 AI 修改相关文件时自动召回。
+每条 bug 记录包含 `recalls` 匹配模式，当 AI 修改相关文件时自动召回。
 
 - 使用文件路径前缀匹配（如 `auth/*`），避免使用太泛的关键词
-- 重构后保留 `oldPaths`，支持旧路径匹配
 - 整理时检查路径有效性，无效时提示用户更新
 
 ### 按路径召回机制

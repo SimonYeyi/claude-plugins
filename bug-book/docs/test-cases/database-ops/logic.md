@@ -79,8 +79,8 @@
 | 用例编号 | 测试点描述 | 输入 | 预期输出 | 测试类型 |
 |---------|-----------|------|---------|---------|
 | TC-E01 | 添加路径 | `add_path(id, "src/auth.ts")` | 路径插入 bug_paths 表，updated_at 更新 | 正常流程 |
-| TC-E02 | 添加 is_old=True 路径 | `add_path(id, "old/Auth.ts", is_old=True)` | 路径插入且 is_old=1，出现在 old_paths | 正常流程 |
-| TC-E03 | 添加 autoRecall 模式 | `add_recall(id, "auth/*")` | 模式插入 bug_recalls 表，updated_at 更新 | 正常流程 |
+| TC-E02 | 添加多条 paths | `add_bug(..., paths=["a.py", "b.py"])` | 两条路径都正确插入 | 正常流程 |
+| TC-E03 | 添加 recalls 模式 | `add_recall(id, "auth/*")` | 模式插入 bug_recalls 表，updated_at 更新 | 正常流程 |
 
 ---
 

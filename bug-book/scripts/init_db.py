@@ -39,7 +39,6 @@ CREATE TABLE IF NOT EXISTS bug_paths (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     bug_id      INTEGER NOT NULL,
     path        TEXT NOT NULL,
-    is_old      INTEGER DEFAULT 0,
     FOREIGN KEY (bug_id) REFERENCES bugs(id) ON DELETE CASCADE
 );
 

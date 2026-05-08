@@ -434,7 +434,7 @@ cookie: { maxAge: 7 * 24 * 60 * 60 * 1000 }
 ### 标签
 auth, session, cookie
 
-### autoRecall
+### recalls
 auth/*
 ```
 
