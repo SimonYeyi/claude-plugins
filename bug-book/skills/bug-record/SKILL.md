@@ -437,22 +437,28 @@ keywords = [
 
 ## 🚨 影响关系管理（回归风险）
 
-**核心原则**：影响关系是**客观事实**，一旦用户指出“修改 A 后 B 出问题了”，必须**立即记录**。
+**核心原则**：影响关系是**客观事实**，一旦用户指出”修改 A 后 B 出问题了”，必须**立即记录**。
 
 ### 触发条件
 
-- 用户在修复过程中说：“你改了 XX 后，YY 出问题了”
+- 用户在修复过程中说：”你改了 XX 后，YY 出问题了”
 - 用户明确指出模块间的依赖或副作用
 
 ### 处理流程
 
 **发现影响时立即执行**：
 
-参考「API 调用指南」中的「记录影响关系」章节，调用 `add_impact()` 和 `increment_score()`。
-
 **关键步骤**：
-1. 调用 `add_impact()` 记录影响关系到独立表
-2. 调用 `increment_score(bug_id, "prevention", 3.0~5.0)` 更新主 bug 的 prevention 分数
+1. 根据 severity 按规则计算 prevention_delta
+2. 调用 `add_impact(..., prevention_delta=X)` 记录影响关系（delta 由第 1 步算出）
+3. `add_impact` 会自动为源 bug 累加 `prevention` 分数
+
+**severity 与 prevention_delta 对应规则：**
+| severity 范围 | prevention_delta |
+|-------------|-----------------|
+| 9-10 | 5.0 |
+| 4-8 | 3.0 |
+| 0-3 | 1.0 |
 
 **影响类型选择：**
 - `regression`（回归）：修复一个 bug 导致另一个功能完全失效（最严重）
@@ -466,13 +472,11 @@ keywords = [
 - 3-4：轻微影响（边缘场景报错、性能轻微下降）
 - 0-2：几乎无影响（日志格式变化、注释错误）
 
-**为什么立即更新 prevention？**
-- prevention 反映预防价值，有回归风险的 bug 价值更高
-- 立即更新确保召回时分数准确，能优先提醒其他 AI
+### 特殊情况
 
-### 例外情况
-
-- 如果用户说"搞错了"，调用 `delete_impact(impact_id)` 并调整 prevention 分数：`increment_score(bug_id, "prevention", -3.0~-5.0)`
+- 如果用户说”搞错了”，先调用 `get_bug_impacts(bug_id)` 找到要删除的影响记录，然后：
+  1. 调用 `delete_impact(impact_id, prevention_delta=X)` 删除影响关系并回退分数
+  2. X 使用 `add_impact` 时传入的 prevention_delta 值
 
 ## API 调用指南
 
@@ -543,12 +547,26 @@ increment_score(bug_id, "emotion", 2.0)
 ```python
 from scripts.bug_ops import add_impact
 
+# severity=8，按规则 delta=3.0
 add_impact(
     source_bug_id=42,
     impacted_path="src/cart/add_to_cart.ts",
     impact_type="regression",  # 或 side_effect/dependency
     description="修改 session 持久化导致购物车的用户状态判断失效",
     severity=8,  # 严重程度 0-10
+    prevention_delta=3.0,  # skill 根据 severity 规则算出并传入
+)
+```
+
+### 删除影响关系
+
+```python
+from scripts.bug_ops import delete_impact
+
+# 删除时传入添加时相同的 delta（severity=8 -> delta=3.0）
+delete_impact(
+    impact_id=123,
+    prevention_delta=3.0,  # 与 add_impact 时传入的值相同
 )
 ```
 

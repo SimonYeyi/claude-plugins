@@ -70,28 +70,18 @@ Bug #N 已记录 45 天仍未验证：
 
 对每条活跃 bug，检查 `recalls` 中的路径是否仍然存在于代码库中：
 
-```python
-from scripts.bug_ops import check_path_valid
+**调用后端 `check_bug_paths(bug_id)` 方法：**
 
-def check_bug_paths(bug_id):
-    """检查 bug 的所有路径是否有效"""
-    from scripts.bug_ops import get_conn_ctx, get_bug_detail
-    with get_conn_ctx() as conn:
-        detail = get_bug_detail(bug_id)
-        if not detail:
-            return []
-        invalid_paths = []
-        # 检查 paths 和 recalls
-        for path in detail.get("paths", []) + detail.get("recalls", []):
-            if not check_path_valid(path):
-                invalid_paths.append(path)
-        # 检查 impacts 中的 impacted_path
-        for impact in detail.get("impacts", []):
-            impacted_path = impact.get("impacted_path")
-            if impacted_path and not check_path_valid(impacted_path):
-                invalid_paths.append(impacted_path)
-        return invalid_paths
+```python
+from scripts.bug_ops import check_bug_paths
+
+# 检查 bug 的所有路径是否有效
+invalid_paths = check_bug_paths(bug_id)
+if invalid_paths:
+    print(f"Bug #{bug_id} 有 {len(invalid_paths)} 个无效路径：{invalid_paths}")
 ```
+
+**返回无效路径列表**，空列表表示所有路径有效。
 
 **路径失效的处理**：
 1. 标记该 bug 为"待确认失效"

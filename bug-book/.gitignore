@@ -1,10 +1,6 @@
 # Python
 __pycache__/
 *.py[cod]
-*.db
-*.db-journal
-*.db-wal
-*.db-shm
 
 # OS
 .DS_Store
@@ -14,3 +10,11 @@ Thumbs.db
 htmlcov/
 .coverage
 .pytest_cache/
+
+# Bug-book 数据目录（忽略所有数据库文件）
+bug-book-data/*.db
+bug-book-data/*.db-journal
+bug-book-data/*.db-wal
+bug-book-data/*.db-shm
+bug-book-data/*.lock
+!bug-book-data/bugs.jsonl    # JSONL 数据（文本格式，团队共享）

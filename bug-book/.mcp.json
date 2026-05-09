@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "bug-book": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/mcp/mcp_server.py"],
+      "env": {
+        "BUG_BOOK_STORAGE": "jsonl"
+      }
+    }
+  }
+}

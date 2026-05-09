@@ -5,14 +5,15 @@ import sys
 import json
 from pathlib import Path
 
-# 确保可以导入 bug_ops
-sys.path.insert(0, str(Path(__file__).parent))
-from bug_ops import check_organize_reminder
+# 确保可以导入 mcp 模块
+sys.path.insert(0, str(Path(__file__).parent.parent / 'mcp'))
+
+from metadata_store import metadata_store
 
 
 def main():
     """检查是否需要提醒整理错题集"""
-    result = check_organize_reminder(days_threshold=30)
+    result = metadata_store.check_organize_reminder(days_threshold=30)
 
     if result["should_remind"]:
         # 长期未整理 - 提醒但不强制

@@ -5,10 +5,13 @@ import sqlite3
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent))
-from config import find_project_root
+# 添加 mcp 目录到 path，以便导入 config
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from config import find_project_root, get_data_dir
 
-DB_PATH = find_project_root() / "bug-book.db"
+DATA_DIR = get_data_dir()
+DATA_DIR.mkdir(parents=True, exist_ok=True)  # 确保目录存在
+DB_PATH = DATA_DIR / "bug-book.db"
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS bugs (
