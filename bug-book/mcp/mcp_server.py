@@ -38,7 +38,7 @@ class MCPServer:
                 'result': {
                     'protocolVersion': '2024-11-05',
                     'capabilities': {
-                        'tools': {},
+                        'tools': { 'listChanged': False },
                     },
                     'serverInfo': {
                         'name': 'bug-book',
@@ -47,7 +47,7 @@ class MCPServer:
                 }
             }
         elif method == 'tools/list':
-            return {'jsonrpc': '2.0', 'id': request_id, 'result': self.list_tools()}
+            return {'jsonrpc': '2.0', 'id': request_id, 'result': { 'tools': self.list_tools() }}
         elif method == 'tools/call':
             tool_name = params.get('name')
             arguments = params.get('arguments', {})
