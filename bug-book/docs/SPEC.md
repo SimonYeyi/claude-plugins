@@ -177,7 +177,7 @@ AI 在改代码前主动查询相关 bug，主动预防而非事后补救。
 - **数据目录**：所有数据文件统一存储在 `bug-book-data/` 目录
 - **双后端支持**：
   - SQLite（默认）：每人独立，数据库位于 `bug-book-data/bug-book.db`
-  - JSONL（可选）：通过 `BUG_BOOK_STORAGE=jsonl` 启用，数据位于 `bug-book-data/bugs.jsonl`
+  - JSONL（可选）：通过 `BUG_BOOK_STORAGE=jsonl` 启用，数据位于 `bug-book-data/bug-book.jsonl`
 - **多项目支持**：每个项目有独立的数据目录，互不干扰
 - **懒初始化**：首次记录时自动创建数据库或 JSONL 文件
 - **按需查询**：AI 只查需要的字段，不加载全量数据

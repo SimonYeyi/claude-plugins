@@ -17,5 +17,5 @@ bug-book-data/*.db-journal
 bug-book-data/*.db-wal
 bug-book-data/*.db-shm
 bug-book-data/*.lock
-bug-book-data/bugs.jsonl
-# !bug-book-data/bugs.jsonl    # JSONL 数据（文本格式，团队共享）
+bug-book-data/*.jsonl
+# !bug-book-data/*.jsonl    # JSONL 数据（文本格式，团队共享）

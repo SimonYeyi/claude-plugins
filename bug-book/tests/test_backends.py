@@ -40,7 +40,7 @@ def backend(request):
     from config import get_data_dir
     data_dir = get_data_dir()
     db_path = data_dir / "bug-book.db"
-    jsonl_path = data_dir / "bugs.jsonl"
+    jsonl_path = data_dir / "bug-book.jsonl"
 
     # 删除 JSONL 文件
     try:
@@ -629,7 +629,7 @@ def test_lazy_init(backend):
         backend.add_bug(title="懒初始化", phenomenon="", verified=True)
         assert db_path.exists()
     else:  # jsonl
-        jsonl_path = data_dir / "bugs.jsonl"
+        jsonl_path = data_dir / "bug-book.jsonl"
         try:
             os.remove(str(jsonl_path))
         except OSError:

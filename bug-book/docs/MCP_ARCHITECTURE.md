@@ -11,7 +11,7 @@
 ## 二、架构
 
 ```
-skill → MCP Server → jsonl_store.py → bugs.jsonl
+skill → MCP Server → jsonl_store.py → bug-book.jsonl
             ↑
           Hook 触发（PreToolUse）
 ```
@@ -48,13 +48,13 @@ bug-book/
 
 ```
 bug-book-data/                     # 数据目录
-├── bugs.jsonl                     # 主数据（追加写）
+├── bug-book.jsonl                     # 主数据（追加写）
 └── meta.json                      # 元数据（键值对，直接覆盖）
 ```
 
 ### 4.2 数据格式
 
-**bugs.jsonl**：每行一条完整状态
+**bug-book.jsonl**：每行一条完整状态
 
 ```jsonl
 {"id": 174676260012345, "title": "崩溃", "score": 20, "phenomenon": "...", "paths": ["a.py:23"]}

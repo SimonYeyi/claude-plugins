@@ -24,7 +24,7 @@ from path_utils import normalize_path, match_path
 # ---------------------------------------------------------------------------
 PROJECT_ROOT = find_project_root()
 DATA_DIR = get_data_dir()
-BUGS_FILE = DATA_DIR / "bugs.jsonl"
+BUGS_FILE = DATA_DIR / "bug-book.jsonl"
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 # 权重配置（与 SQLite 保持一致）
