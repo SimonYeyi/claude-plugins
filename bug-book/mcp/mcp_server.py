@@ -103,8 +103,8 @@ class MCPServer:
                 '按状态、分数范围、验证状态组合搜索'),
 
             # 召回
-            self._tool('recall_by_path', '按路径召回',
-                '根据文件路径召回相关 bug，用于改代码前检查'),
+            # self._tool('recall_by_path', '按路径召回',
+            #     '根据文件路径召回相关 bug，用于改代码前检查'),
             # self._tool('recall_by_path_full', '按路径召回完整上下文',
             #     '召回相关 bug 及其影响关系（正向+反向）'),
             self._tool('recall_by_pattern', '按模式召回',
@@ -215,7 +215,7 @@ class MCPServer:
                     'limit': {'type': 'integer'},
                 },
             },
-            'recall_by_path': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['file_path']},
+            # 'recall_by_path': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['file_path']},
             # 'recall_by_path_full': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['file_path']},
             'recall_by_pattern': {'type': 'object', 'properties': {'pattern': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['pattern']},
             'recall_by_path_for_hook': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'transcript_path': {'type': 'string'}, 'limit': {'type': 'integer', 'default': 10}}, 'required': ['file_path', 'transcript_path']},
@@ -285,7 +285,7 @@ class MCPServer:
                 args.get('status', 'active'), args.get('min_score', 0.0), args.get('max_score'),
                 args.get('verified'), args.get('order_by', 'score'), args.get('limit', 20)
             ),
-            'recall_by_path': lambda: self.backend.recall_by_path(args['file_path'], args.get('limit', 10)),
+            # 'recall_by_path': lambda: self.backend.recall_by_path(args['file_path'], args.get('limit', 10)),
             # 'recall_by_path_full': lambda: self.backend.recall_by_path_full(args['file_path'], args.get('limit', 10)),
             'recall_by_pattern': lambda: self.backend.recall_by_pattern(args['pattern'], args.get('limit', 10)),
             'recall_by_path_for_hook': lambda: self._handle_recall_for_hook(args['file_path'], args['transcript_path'], args.get('limit', 10)),

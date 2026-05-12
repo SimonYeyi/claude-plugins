@@ -225,7 +225,8 @@ def run_mcp_test(storage_type: str, temp_dir: str):
         # ============================================================
         # 5. 召回功能
         # ============================================================
-        test("recall_by_path", lambda: call_tool('recall_by_path', {'file_path': 'test.py', 'limit': 10}))
+        # recall_by_path 已改为内部使用
+        # test("recall_by_path", lambda: call_tool('recall_by_path', {'file_path': 'test.py', 'limit': 10}))
         # recall_by_path_full 已改为内部使用，改为测试 recall_by_path_for_hook
         # test("recall_by_path_full", lambda: call_tool('recall_by_path_full', {'file_path': 'test.py', 'limit': 10}))
         test("recall_by_pattern", lambda: call_tool('recall_by_pattern', {'pattern': 'test/*', 'limit': 10}))

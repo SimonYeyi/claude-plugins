@@ -4,7 +4,7 @@
 
 **测试文件**: `tests/test_mcp_server_e2e.py`
 **测试对象**: MCP Server 通过 stdio 协议的所有工具函数
-**总用例数**: **29 个 MCP 工具** × 2 后端 = **58 次调用**（Hook 专用工具仅测试通用流程）
+**总用例数**: **27 个 MCP 工具** × 2 后端 = **54 次调用**（Hook 专用工具仅测试通用流程）
 
 ---
 
@@ -15,11 +15,11 @@
 | CRUD 操作 | 5 | TC-M01 ~ TC-M05 | add_bug, update_bug, delete_bug, mark_invalid, increment_score |
 | 查询功能 | 3 | TC-Q01 ~ TC-Q03 | get_bug_detail, list_bugs, count_bugs |
 | 搜索功能 | 7 | TC-S01 ~ TC-S07 | search_by_keyword, search_by_tag, search_recent, search_high_score, search_top_critical, search_recent_unverified, search_by_status_and_score |
-| 召回功能 | 2 | TC-R01 ~ TC-R02 | recall_by_path, recall_by_pattern |
+| 召回功能 | 1 | TC-R01 | recall_by_pattern |
 | 影响关系管理 | 6 | TC-I01 ~ TC-I06 | add_impact, get_bug_impacts, get_impacted_bugs, analyze_impact_patterns, update_impacted_paths, delete_impact |
 | 高级功能 | 2 | TC-A01 ~ TC-A02 | list_unverified_old, check_path_valid |
 | Hook 专用功能 | 2 | TC-H01 ~ TC-H02 | recall_by_path_for_hook, migrate_from_bash_command |
-| **总计** | **29** | | 每个工具在 SQLite 和 JSONL 后端各测试一次 |
+| **总计** | **27** | | 每个工具在 SQLite 和 JSONL 后端各测试一次 |
 
 ---
 
@@ -59,14 +59,13 @@
 
 ---
 
-## TC-R01 ~ TC-R02：召回功能
+## TC-R01：召回功能
 
 | 用例编号 | 测试点描述 | MCP 工具 | 输入参数 | 预期输出 | 测试类型 |
 |---------|-----------|---------|---------|---------|---------|
-| TC-R01 | 按路径召回 | `recall_by_path` | file_path="test.py", limit=10 | 返回与该路径相关的 bugs（精确匹配或通配符匹配） | 正常流程 |
-| TC-R02 | 按模式召回 | `recall_by_pattern` | pattern="test/*", limit=10 | 返回 recalls 匹配该模式的 bugs | 正常流程 |
+| TC-R01 | 按模式召回 | `recall_by_pattern` | pattern="test/*", limit=10 | 返回 recalls 匹配该模式的 bugs | 正常流程 |
 
-> **注意**：`recall_by_path_full` 已改为内部使用，不再公开暴露。如需完整召回，使用 `recall_by_path_for_hook`。
+> **注意**：`recall_by_path` 和 `recall_by_path_full` 已改为内部使用，不再公开暴露。如需路径召回，使用 `recall_by_path_for_hook`。
 
 ---
 
@@ -112,7 +111,7 @@
 | 用例编号 | 测试点描述 | MCP 方法 | 预期输出 | 测试类型 |
 |---------|-----------|---------|---------|---------|
 | TC-P01 | MCP 初始化 | `initialize` | 返回服务器能力声明 | 正常流程 |
-| TC-P02 | 列出所有工具 | `tools/list` | 返回 29 个工具的定义列表 | 正常流程 |
+| TC-P02 | 列出所有工具 | `tools/list` | 返回 27 个工具的定义列表 | 正常流程 |
 
 ---
 
@@ -206,11 +205,11 @@ MCP Server 进程
 | CRUD | 5 | 100% |
 | 查询 | 3 | 100% |
 | 搜索 | 7 | 100% |
-| 召回 | 2 | 100% |
+| 召回 | 1 | 100% |
 | 影响关系 | 6 | 100% |
 | 高级功能 | 2 | 100% |
 | Hook 专用 | 2 | 100% |
-| **总计** | **29** | **100%** |
+| **总计** | **27** | **100%** |
 
 ### 后端接口覆盖率
 
