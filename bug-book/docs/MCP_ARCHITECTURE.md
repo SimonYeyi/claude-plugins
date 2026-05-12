@@ -128,16 +128,12 @@ def generate_id():
 - `mcp__bug_book__add_recall`
 - `mcp__bug_book__add_impact`
 
-**查询**（8个）：
+**查询**（3个）：
 - `mcp__bug_book__list_bugs`
 - `mcp__bug_book__get_bug_detail`
-- `mcp__bug_book__get_metadata`
-- `mcp__bug_book__set_metadata`
-- `mcp__bug_book__check_organize_reminder`
-- `mcp__bug_book__get_last_organize_time`
-- `mcp__bug_book__set_last_organize_time`
-- `mcp__bug_book__check_path_valid`
 - `mcp__bug_book__count_bugs`
+
+> **注意**：metadata 相关功能（`get_metadata`、`set_metadata`、`check_organize_reminder` 等）不通过 MCP 暴露，而是直接使用 `metadata_store.py` 模块调用。
 
 **搜索**（8个）：
 - `mcp__bug_book__search_by_keyword`
@@ -197,47 +193,13 @@ def generate_id():
 
 ## 六、Hook 设计
 
-### 6.1 触发时机
-
-**PreToolUse**：Edit、Write、Bash 执行前
-
-### 6.2 逻辑流程
-
-```python
-def on_pre_tool_use(tool_name, tool_input, transcript_path):
-    if tool_name not in ["Edit", "Write", "Bash"]:
-        return {"permissionDecision": "allow"}
-
-    file_path = extract_path(tool_input)
-
-    # 1. 检查最近 10 轮是否已有该 path 的 recall
-    if has_recent_recall(transcript_path, file_path, lookback=10):
-        return {"permissionDecision": "allow"}
-
-    # 2. 调用 MCP recall_by_path
-    result = mcp.call("recall_by_path", {"file_path": file_path})
-
-    if result.get("bugs"):
-        # 3. 写入 systemMessage 注入 AI 上下文
-        return {
-            "permissionDecision": "allow",
-            "systemMessage": f"已召回相关 Bug（{result['count']}条）：\n" + format_bugs(result['bugs'])
-        }
-
-    return {"permissionDecision": "allow"}
-```
-
-### 6.3 三种结果处理
-
-| 结果 | 处理 |
-|------|------|
-| 没有相关 bug | 不写入 |
-| 有 bug 但未缓存 | 写入 systemMessage |
-| 有缓存（10轮内已召回） | 跳过，不重复召回 |
+详见 [HOOK_IMPLEMENTATION.md](./HOOK_IMPLEMENTATION.md)
 
 ## 七、缓存机制
 
-### 7.1 MCP 层缓存
+### 7.1 MCP 层缓存（数据加载）
+
+MCP Server 使用 mtime 检测 JSONL 文件变化，实现多实例感知的缓存机制：
 
 ```python
 class MCPStore:
@@ -298,13 +260,13 @@ class MCPStore:
 
 | 优先级 | 任务 | 状态 |
 |--------|------|------|
-| P0 | 创建 MCP Server（所有 tool） | 待实现 |
-| P0 | 修复 bug_id 类型（时间戳 int） | 待实现 |
-| P0 | 补全 `recall_by_pattern()` | 待实现 |
-| P0 | 补全 metadata 相关函数 | 待实现 |
-| P1 | Hook 触发 recall + systemMessage | 待实现 |
+| P0 | 创建 MCP Server（所有 tool） | ✅ 已完成 |
+| P0 | 修复 bug_id 类型（时间戳 int） | ✅ 已完成 |
+| P0 | 补全 `recall_by_pattern()` | ✅ 已完成 |
+| P1 | Hook 1：Recall（PreToolUse） | 详见 [HOOK_IMPLEMENTATION.md](./HOOK_IMPLEMENTATION.md) |
+| P1 | Hook 2：路径迁移（PostToolUse） | 详见 [HOOK_IMPLEMENTATION.md](./HOOK_IMPLEMENTATION.md) |
 | P1 | Skill 改用 MCP 调用 | 待实现 |
-| P2 | mtime 缓存机制 | 待实现 |
+| P2 | mtime 缓存机制 | **未实现**（当前每次全量读取，性能可接受） |
 
 ## 十、已确认事项
 

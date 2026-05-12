@@ -105,10 +105,12 @@ class MCPServer:
             # 召回
             self._tool('recall_by_path', '按路径召回',
                 '根据文件路径召回相关 bug，用于改代码前检查'),
-            self._tool('recall_by_path_full', '按路径召回完整上下文',
-                '召回相关 bug 及其影响关系（正向+反向）'),
+            # self._tool('recall_by_path_full', '按路径召回完整上下文',
+            #     '召回相关 bug 及其影响关系（正向+反向）'),
             self._tool('recall_by_pattern', '按模式召回',
                 '根据 autoRecall pattern 召回相关 bug'),
+            self._tool('recall_by_path_for_hook', '按路径召回（Hook专用）',
+                '为Hook返回additionalContext格式的召回结果，包含缓存机制'),
 
             # 影响关系
             # get_impacted_bugs - 被 recall_by_path_full 内部调用
@@ -127,8 +129,10 @@ class MCPServer:
                 '检查路径是否仍存在于代码库'),
             self._tool('check_bug_paths', '检查 bug 路径有效性',
                 '检查 bug 的 paths/recalls/impacts 路径是否有效，返回无效路径列表'),
-            self._tool('migrate_bug_paths_after_refactor', '迁移重构后的路径',
-                '重构后自动迁移相关 bug 的路径和 recalls'),
+            # self._tool('migrate_bug_paths_after_refactor', '迁移重构后的路径',
+            #     '重构后自动迁移相关 bug 的路径和 recalls'),
+            self._tool('migrate_from_bash_command', '从Bash命令迁移路径',
+                '接收mv/git mv命令，自动提取路径并迁移bug记录'),
         ]
 
     def _tool(self, name: str, description: str, long_description: str = '') -> dict:
@@ -212,8 +216,9 @@ class MCPServer:
                 },
             },
             'recall_by_path': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['file_path']},
-            'recall_by_path_full': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['file_path']},
+            # 'recall_by_path_full': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['file_path']},
             'recall_by_pattern': {'type': 'object', 'properties': {'pattern': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['pattern']},
+            'recall_by_path_for_hook': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'transcript_path': {'type': 'string'}, 'limit': {'type': 'integer', 'default': 10}}, 'required': ['file_path', 'transcript_path']},
             'get_impacted_bugs': {'type': 'object', 'properties': {'file_path': {'type': 'string'}, 'limit': {'type': 'integer'}}, 'required': ['file_path']},
             'get_bug_impacts': {'type': 'object', 'properties': {'bug_id': {'type': 'integer'}}, 'required': ['bug_id']},
             'add_impact': {
@@ -233,7 +238,8 @@ class MCPServer:
             'list_unverified_old': {'type': 'object', 'properties': {'days': {'type': 'integer'}, 'limit': {'type': 'integer'}}},
             'check_path_valid': {'type': 'object', 'properties': {'path': {'type': 'string'}, 'root': {'type': 'string'}}},
             'check_bug_paths': {'type': 'object', 'properties': {'bug_id': {'type': 'integer'}}, 'required': ['bug_id']},
-            'migrate_bug_paths_after_refactor': {'type': 'object', 'properties': {'old_path': {'type': 'string'}, 'new_path': {'type': 'string'}}, 'required': ['old_path', 'new_path']},
+            # 'migrate_bug_paths_after_refactor': {'type': 'object', 'properties': {'old_path': {'type': 'string'}, 'new_path': {'type': 'string'}}, 'required': ['old_path', 'new_path']},
+            'migrate_from_bash_command': {'type': 'object', 'properties': {'command': {'type': 'string'}}, 'required': ['command']},
         }
         return schemas.get(tool_name, {'type': 'object', 'properties': {}})
 
@@ -245,10 +251,14 @@ class MCPServer:
 
         try:
             result = self._call(tool_name, arguments)
-            
+
+            # hook handler 已返回 {content, additionalContext} 格式，直接返回
+            if isinstance(result, dict) and 'additionalContext' in result:
+                return result
+
             # 统一格式化输出（兼容 SQLite 和 JSONL）
             result = self._normalize_result(tool_name, result)
-            
+
             return {'content': [{'type': 'text', 'text': json.dumps(result, ensure_ascii=False)}]}
         except Exception as e:
             return {'content': [{'type': 'text', 'text': f'Error: {str(e)}'}], 'isError': True}
@@ -276,8 +286,9 @@ class MCPServer:
                 args.get('verified'), args.get('order_by', 'score'), args.get('limit', 20)
             ),
             'recall_by_path': lambda: self.backend.recall_by_path(args['file_path'], args.get('limit', 10)),
-            'recall_by_path_full': lambda: self.backend.recall_by_path_full(args['file_path'], args.get('limit', 10)),
+            # 'recall_by_path_full': lambda: self.backend.recall_by_path_full(args['file_path'], args.get('limit', 10)),
             'recall_by_pattern': lambda: self.backend.recall_by_pattern(args['pattern'], args.get('limit', 10)),
+            'recall_by_path_for_hook': lambda: self._handle_recall_for_hook(args['file_path'], args['transcript_path'], args.get('limit', 10)),
             'get_impacted_bugs': lambda: self.backend.get_impacted_bugs(args['file_path'], args.get('limit', 10)),
             'get_bug_impacts': lambda: self.backend.get_bug_impacts(args['bug_id']),
             'add_impact': lambda: self.backend.add_impact(
@@ -290,7 +301,8 @@ class MCPServer:
             'list_unverified_old': lambda: self.backend.list_unverified_old(args.get('days', 30), args.get('limit', 20)),
             'check_path_valid': lambda: self.backend.check_path_valid(args['path'], args.get('root')),
             'check_bug_paths': lambda: self.backend.check_bug_paths(args['bug_id']),
-            'migrate_bug_paths_after_refactor': lambda: self.backend.migrate_bug_paths_after_refactor(args['old_path'], args['new_path']),
+            # 'migrate_bug_paths_after_refactor': lambda: self.backend.migrate_bug_paths_after_refactor(args['old_path'], args['new_path']),
+            'migrate_from_bash_command': lambda: self._handle_migrate_from_command(args['command']),
         }
 
         func = functions.get(tool_name)
@@ -335,6 +347,99 @@ class MCPServer:
             'status': str(bug.get('status', 'active')),
             'verified': bug.get('verified', False),
             'created_at': str(bug.get('created_at', '')),
+        }
+
+    def _handle_recall_for_hook(self, file_path: str, transcript_path: str, limit: int):
+        """为Hook返回additionalContext格式"""
+        # 1. 检查是否在最近 10 轮内已召回
+        if self._has_recent_recall(transcript_path, file_path, lookback=10):
+            return {
+                "content": [{"type": "text", "text": ""}],
+                "additionalContext": ""
+            }
+
+        # 2. 调用后端召回
+        result = self.backend.recall_by_path_full(file_path, limit=limit)
+
+        related = result.get("related_bugs", [])
+        impacted = result.get("impacted_by", [])
+        all_bugs = related + impacted
+        if not all_bugs:
+            return {
+                "content": [{"type": "text", "text": ""}],
+                "additionalContext": ""
+            }
+
+        # 3. 格式化输出，在 content 中写入标记供后续检查
+        message = f"📋 相关 Bug 召回（{len(all_bugs)}条）：\n\n"
+        for bug in all_bugs:
+            message += f"**Bug #{bug['id']}**: {bug['title']}\n"
+            message += f"- Score: {bug['score']}\n"
+            message += f"- Status: {bug.get('status', 'unknown')}\n"
+            phenomenon = bug.get('phenomenon', '') or ''
+            if phenomenon:
+                message += f"- Phenomenon: {phenomenon[:150]}\n"
+            root_cause = bug.get('root_cause', '') or ''
+            if root_cause:
+                message += f"- Root Cause: {root_cause[:150]}\n"
+            solution = bug.get('solution', '') or ''
+            if solution:
+                message += f"- Solution: {solution[:150]}\n"
+            message += "\n"
+
+        recall_tag = "已召回 " + str(len(all_bugs)) + " 个相关 bug [recall " + file_path + "]"
+        return {
+            "content": [{"type": "text", "text": recall_tag}],
+            "additionalContext": message
+        }
+
+    def _has_recent_recall(self, transcript_path: str, file_path: str, lookback: int = 10) -> bool:
+        """检查 transcript 中最近 N 轮是否已有该 path 的 recall"""
+        try:
+            path = Path(transcript_path)
+            if not path.exists():
+                return False
+
+            with open(path, 'r') as f:
+                transcript = json.load(f)
+
+            # 检查最近 lookback 轮对话
+            messages = transcript.get('messages', [])[-lookback * 2:]
+
+            for msg in messages:
+                if msg.get('role') == 'assistant':
+                    content = msg.get('content', '')
+                    if f'[recall ' + file_path + ']' in content:
+                        return True
+
+            return False
+        except Exception:
+            return False
+
+    def _handle_migrate_from_command(self, command: str):
+        """从Bash命令提取路径并迁移"""
+        import re
+        
+        # 提取 mv 或 git mv 命令的路径
+        match = re.search(r'(?:git\s+)?mv\s+(\S+)\s+(\S+)', command)
+        if not match:
+            return {
+                "content": [{"type": "text", "text": "未检测到有效的mv命令"}],
+                "additionalContext": ""
+            }
+        
+        old_path, new_path = match.groups()
+
+        # 调用后端迁移
+        migrated_bugs, impacted_count = self.backend.migrate_bug_paths_after_refactor(old_path, new_path)
+
+        migrated_count = impacted_count
+        summary = f"🔄 路径迁移完成，影响 {migrated_count} 个 bug 记录"
+        detail = f"路径 `{old_path}` → `{new_path}` 已更新，{migrated_count} 个 bug 的 paths/recalls 已同步迁移"
+
+        return {
+            "content": [{"type": "text", "text": summary}],
+            "additionalContext": detail
         }
 
 

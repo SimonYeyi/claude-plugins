@@ -9,6 +9,39 @@
             "command": "python \"${CLAUDE_PLUGIN_ROOT}/scripts/block_prohibited.py\""
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "bug-book",
+            "tool": "recall_by_path_for_hook",
+            "input": {
+              "file_path": "${tool_input.file_path}",
+              "transcript_path": "${event.transcript_path}",
+              "limit": 10
+            },
+            "additionalContext": true
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "if": "(?:git\\s+)?mv\\s+.+",
+        "hooks": [
+          {
+            "type": "mcp_tool",
+            "server": "bug-book",
+            "tool": "migrate_from_bash_command",
+            "input": {
+              "command": "${tool_input.command}"
+            },
+            "additionalContext": true
+          }
+        ]
       }
     ],
     "SessionStart": [
