@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "mcp_tool",
-            "server": "bug-book",
+            "server": "plugin:bug-book:bug-book",
             "tool": "recall_by_path_for_hook",
             "input": {
               "file_path": "${tool_input.file_path}",
@@ -34,7 +34,7 @@
         "hooks": [
           {
             "type": "mcp_tool",
-            "server": "bug-book",
+            "server": "plugin:bug-book:bug-book",
             "tool": "migrate_from_bash_command",
             "input": {
               "command": "${tool_input.command}"
