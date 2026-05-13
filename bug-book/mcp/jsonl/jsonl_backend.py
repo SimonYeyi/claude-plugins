@@ -97,36 +97,39 @@ class ValidationError(Exception):
 
 class JSONLBackend(BugStorageBackend):
     """JSONL 存储后端完整实现"""
-    
+
     def __init__(self):
         # 内存数据结构
         self._bugs = {}                     # id(int) → bug 折叠后
         self._mtime = 0                      # 上次加载时的文件 mtime
         self._loaded = False                  # 是否已加载
-        
+
         # 索引
         self.keyword_index = defaultdict(list)
         self.path_index = defaultdict(list)
         self.tag_index = defaultdict(list)
         self.recall_index = defaultdict(list)
         self.impacts_index = defaultdict(list)
-        
+
+        # 反向索引：bug_id → {index_type: [keys...]}，用于 O(1) 清除索引
+        self._bug_index_refs = {}          # bug_id → {type: [keys...]}
+
         # 初始化数据
         self._ensure_loaded()
-    
+
     def _ensure_loaded(self):
         """确保数据已加载（mtime 变化时重新加载）"""
         if not self._loaded:
             self._load_data()
             self._loaded = True
             return
-        
+
         try:
             current_mtime = os.path.getmtime(BUGS_FILE)
         except OSError:
             return
-        
-        if current_mtime != self._mtime:
+
+        if current_mtime > self._mtime:
             self._load_data()
     
     def _load_data(self):
@@ -137,6 +140,7 @@ class JSONLBackend(BugStorageBackend):
         self.tag_index.clear()
         self.recall_index.clear()
         self.impacts_index.clear()
+        self._bug_index_refs.clear()
         
         if not BUGS_FILE.exists():
             self._mtime = 0
@@ -182,63 +186,58 @@ class JSONLBackend(BugStorageBackend):
         self._rebuild_indices(bug)
     
     def _clear_indices(self, bug_id: int):
-        """清除指定 bug 的所有索引"""
-        # 清除关键词索引
-        for kw in list(self.keyword_index.keys()):
-            self.keyword_index[kw] = [bid for bid in self.keyword_index[kw] if bid != bug_id]
-            if not self.keyword_index[kw]:
-                del self.keyword_index[kw]
-        
-        # 清除路径索引
-        for path in list(self.path_index.keys()):
-            self.path_index[path] = [bid for bid in self.path_index[path] if bid != bug_id]
-            if not self.path_index[path]:
-                del self.path_index[path]
-        
-        # 清除标签索引
-        for tag in list(self.tag_index.keys()):
-            self.tag_index[tag] = [bid for bid in self.tag_index[tag] if bid != bug_id]
-            if not self.tag_index[tag]:
-                del self.tag_index[tag]
-        
-        # 清除 Recall pattern 索引
-        for pattern in list(self.recall_index.keys()):
-            self.recall_index[pattern] = [bid for bid in self.recall_index[pattern] if bid != bug_id]
-            if not self.recall_index[pattern]:
-                del self.recall_index[pattern]
-        
-        # 清除影响关系索引
-        for impacted_path in list(self.impacts_index.keys()):
-            self.impacts_index[impacted_path] = [bid for bid in self.impacts_index[impacted_path] if bid != bug_id]
-            if not self.impacts_index[impacted_path]:
-                del self.impacts_index[impacted_path]
-    
+        """清除指定 bug 的所有索引（O(k)，k=该 bug 涉及的索引 key 数）"""
+        if bug_id not in self._bug_index_refs:
+            return
+
+        refs = self._bug_index_refs.pop(bug_id, {})
+
+        for index_type, keys in refs.items():
+            index = getattr(self, f'{index_type}_index', None)
+            if index is None:
+                continue
+            for key in keys:
+                if key in index:
+                    index[key] = [bid for bid in index[key] if bid != bug_id]
+                    if not index[key]:
+                        del index[key]
+
     def _rebuild_indices(self, bug: dict):
-        """重建单个 bug 的索引"""
+        """重建单个 bug 的索引，并维护反向引用（调用方需先清除旧索引）"""
         bug_id = bug.get('id')
-        
+        refs = {}
+
         # 关键词索引
         for kw in bug.get('keywords', []):
-            self.keyword_index[kw.lower()].append(bug_id)
-        
+            key = kw.lower()
+            self.keyword_index[key].append(bug_id)
+            refs.setdefault('keyword', []).append(key)
+
         # 路径索引
         for path in bug.get('paths', []):
             self.path_index[path].append(bug_id)
-        
+            refs.setdefault('path', []).append(path)
+
         # 标签索引
         for tag in bug.get('tags', []):
-            self.tag_index[tag.lower()].append(bug_id)
-        
+            key = tag.lower()
+            self.tag_index[key].append(bug_id)
+            refs.setdefault('tag', []).append(key)
+
         # Recall pattern 索引
         for pattern in bug.get('recalls', []):
             self.recall_index[pattern].append(bug_id)
-        
+            refs.setdefault('recall', []).append(pattern)
+
         # 影响关系索引
         for impact in bug.get('impacts', []):
             impacted_path = impact.get('impacted_path', '')
             if impacted_path:
                 self.impacts_index[impacted_path].append(bug_id)
-    
+                refs.setdefault('impacts', []).append(impacted_path)
+
+        self._bug_index_refs[bug_id] = refs
+
     def _save_bug(self, bug: dict):
         """保存单个 bug（追加写入）"""
         with open(BUGS_FILE, 'a', encoding='utf-8') as f:
@@ -441,28 +440,20 @@ class JSONLBackend(BugStorageBackend):
         keywords = [k.strip().lower() for k in keyword.split() if k.strip()]
         if not keywords:
             return []
-        
+
         matched_ids = set()
-        
+
         for kw in keywords:
-            # 关键词索引
+            # 关键词索引（子串匹配）
             for index_kw, ids in self.keyword_index.items():
                 if kw in index_kw or index_kw in kw:
                     matched_ids.update(ids)
-            
-            # 标签索引
+
+            # 标签索引（子串匹配）
             for t, ids in self.tag_index.items():
                 if kw in t or t in kw:
                     matched_ids.update(ids)
-            
-            # 标题和现象搜索
-            for bug_id, bug in self._bugs.items():
-                if (kw in (bug.get('title') or '').lower() or
-                    kw in (bug.get('phenomenon') or '').lower() or
-                    kw in (bug.get('root_cause') or '').lower() or
-                    kw in (bug.get('solution') or '').lower()):
-                    matched_ids.add(bug_id)
-        
+
         results = [self._bugs[bid] for bid in matched_ids if bid in self._bugs]
         results.sort(key=lambda x: x.get('score', 0), reverse=True)
         return results[:limit]
@@ -684,19 +675,9 @@ class JSONLBackend(BugStorageBackend):
         file_path = _normalize_path(file_path)
         matched_ids = set()
         
-        # 通过 impacted_path 前缀过滤
-        path_parts = file_path.split("/")
-        candidate_prefixes = []
-        for i in range(1, len(path_parts) + 1):
-            prefix = "/".join(path_parts[:i])
-            candidate_prefixes.append(prefix)
-        
         for impacted_path, ids in self.impacts_index.items():
-            for prefix in candidate_prefixes:
-                if impacted_path.startswith(prefix):
-                    if _match_path(file_path, impacted_path):
-                        matched_ids.update(ids)
-                    break
+            if _match_path(file_path, impacted_path):
+                matched_ids.update(ids)
         
         results = []
         for bug_id in matched_ids:
