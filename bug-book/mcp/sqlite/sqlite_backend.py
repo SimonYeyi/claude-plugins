@@ -634,76 +634,36 @@ class SQLiteBackend(BugStorageBackend):
     # =========================================================================
     # 影响关系
     # =========================================================================
-    def add_impact(self, source_bug_id: int, impacted_path: str,
-                   impact_type: str = "regression", description: Optional[str] = None,
+    def add_impact(self, source_bug_id: int,
+                   solution_change: str,
+                   impact_description: str,
+                   impact_type: str = "regression",
                    severity: int = 5,
                    prevention_delta: float = 3.0) -> int:
-        if impact_type not in ("regression", "side_effect", "dependency"):
-            raise ValidationError(f"无效的影响类型: {impact_type}")
-        if not (0 <= severity <= 10):
-            raise ValidationError(f"严重程度必须在 0-10 之间: {severity}")
-
-        with self.get_conn_ctx() as conn:
-            exists = conn.execute("SELECT id FROM bugs WHERE id = ?", (source_bug_id,)).fetchone()
-            if not exists:
-                raise ValidationError(f"Bug #{source_bug_id} 不存在")
-
-            cur = conn.execute(
-                "INSERT INTO bug_impacts (source_bug_id, impacted_path, impact_type, description, severity) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (source_bug_id, self._normalize_path(impacted_path), impact_type, description, severity),
-            )
-            conn.commit()
-
-            # 自动累加 prevention 分数（delta 由调用方根据 severity 规则计算传入）
-            self.increment_score(source_bug_id, "prevention", prevention_delta)
-
-            return cur.lastrowid
+        """
+        注意：SQLite 后端仍使用旧的 impacts 数据结构（含 impacted_path）。
+        此方法仅为满足抽象接口签名而存在，实际应迁移到 JSONL 后端。
+        """
+        raise NotImplementedError(
+            "SQLite 后端的 impacts 结构已过时，请使用 JSONL 后端。\n"
+            "设置环境变量: BUG_BOOK_STORAGE=jsonl"
+        )
 
     def get_impacted_bugs(self, file_path: str, limit: int = RECALL_LIMIT) -> list[dict[str, Any]]:
-        file_path = self._normalize_path(file_path)
-        
-        with self.get_conn_ctx() as conn:
-            path_parts = file_path.split("/")
-            candidate_prefixes = []
-            for i in range(1, len(path_parts) + 1):
-                prefix = "/".join(path_parts[:i])
-                candidate_prefixes.append(prefix + "%")
-            
-            if not candidate_prefixes:
-                return []
-            
-            like_conditions = " OR ".join(["i.impacted_path LIKE ?"] * len(candidate_prefixes))
-            
-            rows = conn.execute(
-                f"""
-                SELECT DISTINCT b.id, b.title, b.phenomenon, b.score, b.status,
-                       b.verified, b.root_cause, b.solution, b.test_case,
-                       i.impacted_path, i.severity, i.description
-                FROM bugs b
-                INNER JOIN bug_impacts i ON b.id = i.source_bug_id
-                WHERE b.status != 'invalid'
-                  AND ({like_conditions})
-                ORDER BY i.severity DESC, b.score DESC
-                LIMIT ?
-                """,
-                (*candidate_prefixes, RECALL_BATCH_LIMIT),
-            ).fetchall()
-            
-            matched = []
-            for r in rows:
-                bug_id, title, phenomenon, score, status, verified, root_cause, solution, test_case, impacted_path, severity, description = r
-                if self._match_path(file_path, impacted_path):
-                    matched.append({
-                        "id": bug_id, "title": title, "phenomenon": phenomenon,
-                        "score": score, "status": status, "verified": verified,
-                        "root_cause": root_cause, "solution": solution, "test_case": test_case,
-                        "severity": severity, "description": description,
-                    })
-            
-            return matched[:limit]
+        """
+        此方法已废弃：impacts 数据结构已改为记录解决方案变更的影响，不再关联路径。
+        SQLite 后端不支持新的 impacts 架构，请使用 JSONL 后端。
+        """
+        raise NotImplementedError(
+            "SQLite 后端的 impacts 结构已过时，请使用 JSONL 后端。\n"
+            "设置环境变量: BUG_BOOK_STORAGE=jsonl"
+        )
 
     def get_bug_impacts(self, bug_id: int) -> list[dict[str, Any]]:
+        """
+        SQLite 后端返回旧格式的 impacts（含 impacted_path）。
+        建议迁移到 JSONL 后端以使用新的 impacts 结构。
+        """
         with self.get_conn_ctx() as conn:
             rows = conn.execute(
                 """
@@ -714,40 +674,19 @@ class SQLiteBackend(BugStorageBackend):
                 """,
                 (bug_id,),
             ).fetchall()
+            # 返回旧格式以保持向后兼容
             return [{"impacted_path": r[0], "severity": r[1], "description": r[2]} for r in rows]
 
-    def analyze_impact_patterns(self, limit: int = 10) -> list[dict[str, Any]]:
-        with self.get_conn_ctx() as conn:
-            rows = conn.execute(
-                """
-                SELECT impacted_path, COUNT(*) as impact_count, AVG(severity) as avg_severity, MAX(severity) as max_severity
-                FROM bug_impacts
-                GROUP BY impacted_path
-                ORDER BY impact_count DESC, avg_severity DESC
-                LIMIT ?
-                """,
-                (limit,),
-            ).fetchall()
-            return [{"path": r[0], "impact_count": r[1], "avg_severity": round(r[2], 2), "max_severity": r[3]} for r in rows]
-
     def update_impacted_paths(self, old_path: str, new_path: str) -> int:
-        with self.get_conn_ctx() as conn:
-            result = conn.execute(
-                "UPDATE bug_impacts SET impacted_path = ? WHERE impacted_path = ?",
-                (new_path, old_path),
-            )
-            conn.commit()
-            return result.rowcount
+        """此方法已废弃：impacts 不再存储路径信息"""
+        return 0
 
-    def delete_impact(self, impact_id: int, prevention_delta: float) -> None:
+    def delete_impact(self, impact_id: int, prevention_delta: float = 0) -> None:
+        """
+        SQLite 后端的 delete_impact 仅用于清理旧数据。
+        建议使用 JSONL 后端进行 impacts 管理。
+        """
         with self.get_conn_ctx() as conn:
-            # 先查询 source_bug_id 以便扣减分数
-            row = conn.execute("SELECT source_bug_id FROM bug_impacts WHERE id = ?", (impact_id,)).fetchone()
-            if row:
-                source_bug_id = row[0]
-                # 扣减 prevention 分数（delta 为正值，内部取负）
-                self.increment_score(source_bug_id, "prevention", -prevention_delta)
-
             conn.execute("DELETE FROM bug_impacts WHERE id = ?", (impact_id,))
             conn.commit()
 
@@ -801,16 +740,11 @@ class SQLiteBackend(BugStorageBackend):
 
             invalid_paths = []
 
-            # 检查 paths 和 recalls
+            # 注意：SQLite 后端 impacts 仍包含 impacted_path，但已废弃
+            # 这里仅检查 paths 和 recalls
             for path in detail.get("paths", []) + detail.get("recalls", []):
                 if not self.check_path_valid(path):
                     invalid_paths.append(path)
-
-            # 检查 impacts 中的 impacted_path
-            for impact in detail.get("impacts", []):
-                impacted_path = impact.get("impacted_path")
-                if impacted_path and not self.check_path_valid(impacted_path):
-                    invalid_paths.append(impacted_path)
 
             return invalid_paths
 
@@ -858,5 +792,29 @@ class SQLiteBackend(BugStorageBackend):
         
         impacted_count = self.update_impacted_paths(old_path, new_path)
         return list(set(migrated_bugs)), impacted_count
+    
+    # -------------------- 重构后的新接口实现 --------------------
+    
+    def save_bugs(self, bugs_data) -> Any:
+        """统一保存接口（支持多种 mode，支持批量操作）
+        
+        SQLite 后端暂不支持新的 save_bugs 接口，请使用 JSONL 后端。
+        """
+        raise NotImplementedError(
+            "SQLite 后端暂不支持 save_bugs 接口，请使用 JSONL 后端。\n"
+            "设置环境变量: BUG_BOOK_STORAGE=jsonl"
+        )
+    
+    def search_bugs(self, **kwargs) -> dict[str, Any]:
+        """统一搜索接口（支持多种模式 + 分页）- 委托给 JSONL 后端的实现逻辑"""
+        # SQLite 后端暂时不支持新的 search_bugs 接口，抛出异常提示使用 JSONL 后端
+        raise NotImplementedError(
+            "SQLite 后端暂不支持 search_bugs 接口，请使用 JSONL 后端。\n"
+            "设置环境变量: BUG_BOOK_STORAGE=jsonl"
+        )
+
+    def compact_file(self) -> int:
+        """压缩文件：SQLite 不需要压缩（数据库自动管理）"""
+        return 0
 
 

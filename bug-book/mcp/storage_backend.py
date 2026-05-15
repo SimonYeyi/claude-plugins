@@ -174,10 +174,11 @@ class BugStorageBackend(ABC):
     def add_impact(
         self,
         source_bug_id: Any,
-        impacted_path: str,
+        solution_change: str,
+        impact_description: str,
         impact_type: str = "regression",
-        description: Optional[str] = None,
         severity: int = 5,
+        prevention_delta: float = 3.0,
     ) -> Any:
         """添加影响关系，返回 impact_id"""
         pass
@@ -195,17 +196,12 @@ class BugStorageBackend(ABC):
         pass
     
     @abstractmethod
-    def analyze_impact_patterns(self, limit: int = 10) -> list[dict[str, Any]]:
-        """分析影响模式"""
-        pass
-    
-    @abstractmethod
     def update_impacted_paths(self, old_path: str, new_path: str) -> int:
         """批量更新影响路径"""
         pass
     
     @abstractmethod
-    def delete_impact(self, impact_id: Any) -> None:
+    def delete_impact(self, impact_id: Any, prevention_delta: float = 0) -> None:
         """删除影响记录"""
         pass
     
@@ -238,6 +234,31 @@ class BugStorageBackend(ABC):
         self, old_path: str, new_path: str
     ) -> tuple[list[Any], int]:
         """迁移重构后的路径"""
+        pass
+    
+    # -------------------- 重构后的新接口 --------------------
+    
+    @abstractmethod
+    def save_bugs(self, bugs_data) -> Any:
+        """统一保存接口（支持多种 mode，支持批量操作）
+        
+        Args:
+            bugs_data: 可以是单个 bug dict、数组或 {'bugs': [...]} 格式
+        """
+        pass
+    
+    @abstractmethod
+    def search_bugs(self, **kwargs) -> dict[str, Any]:
+        """统一搜索接口（支持多种模式 + 分页）"""
+        pass
+    
+    @abstractmethod
+    def compact_file(self) -> int:
+        """压缩文件：移除已删除的记录，相同ID只保留最后一条
+        
+        Returns:
+            清理的记录数量（被移除的旧记录数）
+        """
         pass
     
 

@@ -185,7 +185,6 @@ def run_mcp_test(storage_type: str, temp_dir: str):
         
         test("get_bug_impacts", lambda: call_tool('get_bug_impacts', {'bug_id': bug_id}))
         test("get_impacted_bugs", lambda: call_tool('get_impacted_bugs', {'file_path': 'affected.py'}))
-        test("analyze_impact_patterns", lambda: call_tool('analyze_impact_patterns', {'limit': 10}))
         
         if impact_result and isinstance(impact_result, (list, tuple)) and len(impact_result) > 0:
             impact_id = impact_result[0]
